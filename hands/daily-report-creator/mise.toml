@@ -1,0 +1,11 @@
+[tasks.create-new-daily-report]
+description = "Create today's new daily report"
+run = "go run main.go create"
+
+[tasks.fetch-github-activity]
+description = "Collect today's GitHub work activity"
+run = "go run main.go fetch-github-activity"
+
+[tasks.daily-report]
+description = "Generate comprehensive daily report using Claude Code"
+run = "claude /daily-report"

@@ -1,0 +1,4 @@
+model = "gpt-5"
+model_reasoning_effort = "high"
+preferred_auth_method = "chatgpt"
+trust_level = "trusted"

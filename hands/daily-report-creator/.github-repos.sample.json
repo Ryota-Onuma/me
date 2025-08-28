@@ -1,0 +1,24 @@
+{
+  "repositories": [
+    {
+      "owner": "Ryota-Onuma",
+      "repo": "ai-agents",
+      "description": "AI agents and automation scripts"
+    },
+    {
+      "owner": "Ryota-Onuma", 
+      "repo": "daily-report-creator",
+      "description": "Daily report generation tool"
+    }
+  ],
+  "organizations": [
+  ],
+  "settings": {
+    "include_private": true,
+    "max_repos": 50,
+    "include_periods": [
+      "created_today",
+      "updated_today"
+    ]
+  }
+}
