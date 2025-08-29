@@ -17,4 +17,4 @@
 
 ### ルールの読み込み
 
-`./CLAUDE.local.md` があれば、必ず熟読すること
+@./CLAUDE.local.md

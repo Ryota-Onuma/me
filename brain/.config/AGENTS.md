@@ -17,4 +17,4 @@
 
 ### ルールの読み込み
 
-`./AGENTS.local.md` があれば、必ず熟読すること
+@./AGENTS.local.md
