@@ -1,13 +1,13 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
-	"log"
-	"os"
-	"path/filepath"
-	"sync"
-	"time"
+    "encoding/json"
+    "errors"
+    "log"
+    "os"
+    "path/filepath"
+    "sync"
+    "time"
 )
 
 type taskStore struct {
@@ -87,18 +87,18 @@ func (s *taskStore) list() []*Task {
 }
 
 func (s *taskStore) create(title, desc, status string) *Task {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if status == "" {
-		status = "todo"
-	}
-	id := newID()
-	now := time.Now()
-	order := s.nextOrderLocked(status)
-	t := &Task{ID: id, Title: title, Description: desc, Status: status, Order: order, CreatedAt: now, UpdatedAt: now}
-	s.tasks[id] = t
-	_ = s.persistLocked()
-	return cloneTask(t)
+    s.mu.Lock()
+    defer s.mu.Unlock()
+    if status == "" {
+        status = "todo"
+    }
+    id := newID()
+    now := time.Now()
+    order := s.nextOrderLocked(status)
+    t := &Task{ID: id, Title: title, Description: desc, Status: status, Order: order, CreatedAt: now, UpdatedAt: now}
+    s.tasks[id] = t
+    _ = s.persistLocked()
+    return cloneTask(t)
 }
 
 func (s *taskStore) nextOrderLocked(status string) int {
@@ -122,9 +122,9 @@ func (s *taskStore) get(id string) (*Task, bool) {
 }
 
 func (s *taskStore) update(id string, title, desc, status *string) (*Task, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	t, ok := s.tasks[id]
+    s.mu.Lock()
+    defer s.mu.Unlock()
+    t, ok := s.tasks[id]
 	if !ok {
 		return nil, os.ErrNotExist
 	}
@@ -135,15 +135,15 @@ func (s *taskStore) update(id string, title, desc, status *string) (*Task, error
 	if desc != nil {
 		t.Description = *desc
 	}
-	if status != nil && *status != t.Status {
-		t.Status = *status
-		t.Order = s.nextOrderLocked(t.Status)
-	}
-	t.UpdatedAt = time.Now()
-	if err := s.persistLocked(); err != nil {
-		return nil, err
-	}
-	return cloneTask(t), nil
+    if status != nil && *status != t.Status {
+        t.Status = *status
+        t.Order = s.nextOrderLocked(t.Status)
+    }
+    t.UpdatedAt = time.Now()
+    if err := s.persistLocked(); err != nil {
+        return nil, err
+    }
+    return cloneTask(t), nil
 }
 
 func (s *taskStore) delete(id string) error {
@@ -194,3 +194,5 @@ func (s *taskStore) move(id, toStatus string, toIndex int) (*Task, error) {
 	}
 	return cloneTask(t), nil
 }
+
+// Tag機能は廃止

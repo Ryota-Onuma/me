@@ -1,15 +1,15 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"math/rand"
-	"net/http"
-	"os"
-	"os/exec"
-	"sort"
-	"strings"
-	"time"
+    "encoding/json"
+    "fmt"
+    "math/rand"
+    "net/http"
+    "os"
+    "os/exec"
+    "sort"
+    "strings"
+    "time"
 )
 
 func cloneTask(t *Task) *Task {
@@ -43,6 +43,8 @@ func statusRank(s string) int {
 		return 99
 	}
 }
+
+// タグ機能は廃止（sanitizeTags 削除）
 
 func newID() string {
 	ts := time.Now().UTC().Format("20060102150405")

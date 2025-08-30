@@ -1,10 +1,11 @@
 package main
 
 import (
-	"encoding/json"
-	"io"
-	"net/http"
-	"strings"
+    "encoding/json"
+    "io"
+    "net/http"
+    "strconv"
+    "strings"
 )
 
 func handleTasks(store *taskStore) http.HandlerFunc {
@@ -12,13 +13,85 @@ func handleTasks(store *taskStore) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			list := store.list()
-			writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: list})
-		case http.MethodPost:
-			var body struct {
-				Title       string `json:"title"`
-				Description string `json:"description"`
-				Status      string `json:"status"`
+			// Filtering
+			q := r.URL.Query()
+			if s := strings.TrimSpace(q.Get("status")); s != "" && s != "all" {
+				statuses := map[string]struct{}{}
+				for _, x := range strings.Split(s, ",") {
+					x = strings.TrimSpace(x)
+					if x != "" {
+						statuses[x] = struct{}{}
+					}
+				}
+				if len(statuses) > 0 {
+					filtered := make([]*Task, 0, len(list))
+					for _, t := range list {
+						if _, ok := statuses[t.Status]; ok {
+							filtered = append(filtered, t)
+						}
+					}
+					list = filtered
+				}
 			}
+            // タグによるフィルタは廃止
+			if qq := strings.TrimSpace(q.Get("q")); qq != "" {
+				L := strings.ToLower
+				key := L(qq)
+				filtered := make([]*Task, 0, len(list))
+				for _, t := range list {
+					txt := L(t.Title + " " + t.Description)
+					if strings.Contains(txt, key) {
+						filtered = append(filtered, t)
+					}
+				}
+				list = filtered
+			}
+			// Optional pagination via limit/offset + meta(total)
+			// recompute query map
+			q = r.URL.Query()
+			total := len(list)
+			if limStr := q.Get("limit"); limStr != "" {
+				var lim, off int
+				if n, err := strconv.Atoi(limStr); err == nil && n > 0 {
+					lim = n
+				}
+				if offStr := q.Get("offset"); offStr != "" {
+					if n, err := strconv.Atoi(offStr); err == nil && n >= 0 {
+						off = n
+					}
+				}
+				if lim > 0 {
+					if off < 0 {
+						off = 0
+					}
+					if off > len(list) {
+						off = len(list)
+					}
+					end := off + lim
+					if end > len(list) {
+						end = len(list)
+					}
+					list = list[off:end]
+				}
+			}
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
+			enc := json.NewEncoder(w)
+			_ = enc.Encode(map[string]any{
+				"success": true,
+				"data":    list,
+				"meta": map[string]any{
+					"total":  total,
+					"limit":  q.Get("limit"),
+					"offset": q.Get("offset"),
+				},
+			})
+		case http.MethodPost:
+            var body struct {
+                Title       string `json:"title"`
+                Description string `json:"description"`
+                Status      string `json:"status"`
+            }
 			if err := json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(&body); err != nil {
 				writeError(w, http.StatusBadRequest, "invalid JSON body")
 				return
@@ -27,7 +100,7 @@ func handleTasks(store *taskStore) http.HandlerFunc {
 				writeError(w, http.StatusBadRequest, "title is required")
 				return
 			}
-			t := store.create(strings.TrimSpace(body.Title), strings.TrimSpace(body.Description), strings.TrimSpace(body.Status))
+            t := store.create(strings.TrimSpace(body.Title), strings.TrimSpace(body.Description), strings.TrimSpace(body.Status))
 			writeJSON(w, http.StatusCreated, apiResponse{Success: true, Data: t})
 		default:
 			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -84,7 +157,7 @@ func handleTasksWithID(store *taskStore) http.HandlerFunc {
 				writeError(w, http.StatusBadRequest, "invalid JSON body")
 				return
 			}
-			var titlePtr, descPtr, statusPtr *string
+            var titlePtr, descPtr, statusPtr *string
 			if v, ok := body["title"].(string); ok {
 				v = strings.TrimSpace(v)
 				titlePtr = &v
@@ -96,7 +169,7 @@ func handleTasksWithID(store *taskStore) http.HandlerFunc {
 				v = strings.TrimSpace(v)
 				statusPtr = &v
 			}
-			t, err := store.update(id, titlePtr, descPtr, statusPtr)
+            t, err := store.update(id, titlePtr, descPtr, statusPtr)
 			if err != nil {
 				writeError(w, http.StatusNotFound, "task not found")
 				return
@@ -120,6 +193,33 @@ func handleAttempts(attempts *attemptStore) http.HandlerFunc {
 		case http.MethodGet:
 			taskID := r.URL.Query().Get("task_id")
 			list := attempts.list(taskID)
+			// Optional pagination: limit/offset query params
+			q := r.URL.Query()
+			if limStr := q.Get("limit"); limStr != "" {
+				// parse limit/offset conservatively
+				var lim, off int
+				if n, err := strconv.Atoi(limStr); err == nil && n > 0 {
+					lim = n
+				}
+				if offStr := q.Get("offset"); offStr != "" {
+					if n, err := strconv.Atoi(offStr); err == nil && n >= 0 {
+						off = n
+					}
+				}
+				if lim > 0 {
+					if off < 0 {
+						off = 0
+					}
+					if off > len(list) {
+						off = len(list)
+					}
+					end := off + lim
+					if end > len(list) {
+						end = len(list)
+					}
+					list = list[off:end]
+				}
+			}
 			writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: list})
 		case http.MethodPost:
 			var body struct {
@@ -147,6 +247,8 @@ func handleAttempts(attempts *attemptStore) http.HandlerFunc {
 		}
 	}
 }
+
+// タグ機能は廃止
 
 func handleAttemptsWithID(attempts *attemptStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -225,7 +327,95 @@ func handleExecutions(execs *execStore, profMgr *profileManager) http.HandlerFun
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: execs.list()})
+			list := execs.list()
+			q := r.URL.Query()
+			// Filters: profile, status (comma separated), q (search in prompt/cwd)
+			if aid := strings.TrimSpace(q.Get("attempt_id")); aid != "" {
+				filtered := make([]*ExecProcess, 0, len(list))
+				for _, e := range list {
+					if e.AttemptID == aid {
+						filtered = append(filtered, e)
+					}
+				}
+				list = filtered
+			}
+			if p := strings.TrimSpace(q.Get("profile")); p != "" {
+				filtered := make([]*ExecProcess, 0, len(list))
+				for _, e := range list {
+					if e.Profile == p {
+						filtered = append(filtered, e)
+					}
+				}
+				list = filtered
+			}
+			if st := strings.TrimSpace(q.Get("status")); st != "" && st != "all" {
+				statuses := map[string]struct{}{}
+				for _, s := range strings.Split(st, ",") {
+					s = strings.TrimSpace(s)
+					if s != "" {
+						statuses[s] = struct{}{}
+					}
+				}
+				if len(statuses) > 0 {
+					filtered := make([]*ExecProcess, 0, len(list))
+					for _, e := range list {
+						if _, ok := statuses[string(e.Status)]; ok {
+							filtered = append(filtered, e)
+						}
+					}
+					list = filtered
+				}
+			}
+			if qq := strings.TrimSpace(q.Get("q")); qq != "" {
+				L := strings.ToLower
+				k := L(qq)
+				filtered := make([]*ExecProcess, 0, len(list))
+				for _, e := range list {
+					if strings.Contains(L(e.Prompt), k) || strings.Contains(L(e.Cwd), k) {
+						filtered = append(filtered, e)
+					}
+				}
+				list = filtered
+			}
+			total := len(list)
+			// Pagination
+			if limStr := q.Get("limit"); limStr != "" {
+				var lim, off int
+				if n, err := strconv.Atoi(limStr); err == nil && n > 0 {
+					lim = n
+				}
+				if offStr := q.Get("offset"); offStr != "" {
+					if n, err := strconv.Atoi(offStr); err == nil && n >= 0 {
+						off = n
+					}
+				}
+				if lim > 0 {
+					if off < 0 {
+						off = 0
+					}
+					if off > len(list) {
+						off = len(list)
+					}
+					end := off + lim
+					if end > len(list) {
+						end = len(list)
+					}
+					list = list[off:end]
+				}
+			}
+			// Include meta for UI improvements
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
+			enc := json.NewEncoder(w)
+			_ = enc.Encode(map[string]any{
+				"success": true,
+				"data":    list,
+				"meta": map[string]any{
+					"total":  total,
+					"limit":  q.Get("limit"),
+					"offset": q.Get("offset"),
+				},
+			})
 			return
 		case http.MethodPost:
 			var body struct {
@@ -327,4 +517,87 @@ func handleProfiles(profMgr *profileManager) http.HandlerFunc {
 			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 		}
 	}
+}
+
+// --- Repo bookmarks ---
+
+func handleRepos(repos *repoStore) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        switch r.Method {
+        case http.MethodGet:
+            writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: repos.list()})
+        case http.MethodPost:
+            var body struct{
+                Label string `json:"label"`
+                Path  string `json:"path"`
+                DefaultBaseBranch string `json:"default_base_branch"`
+            }
+            if err := json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(&body); err != nil {
+                writeError(w, http.StatusBadRequest, "invalid JSON body")
+                return
+            }
+            rb, err := repos.create(body.Label, body.Path, body.DefaultBaseBranch)
+            if err != nil {
+                writeError(w, http.StatusBadRequest, err.Error())
+                return
+            }
+            writeJSON(w, http.StatusCreated, apiResponse{Success: true, Data: rb})
+        default:
+            writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+        }
+    }
+}
+
+func handleReposWithID(repos *repoStore) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        path := strings.TrimPrefix(r.URL.Path, "/api/repos/")
+        parts := strings.Split(path, "/")
+        if len(parts) == 0 || parts[0] == "" {
+            writeError(w, http.StatusBadRequest, "missing repo id")
+            return
+        }
+        id := parts[0]
+
+        switch r.Method {
+        case http.MethodGet:
+            if rb, ok := repos.get(id); ok {
+                writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: rb})
+            } else {
+                writeError(w, http.StatusNotFound, "repo not found")
+            }
+        case http.MethodPatch:
+            var body map[string]interface{}
+            if err := json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(&body); err != nil {
+                writeError(w, http.StatusBadRequest, "invalid JSON body")
+                return
+            }
+            var labelPtr, pathPtr, defBasePtr *string
+            if v, ok := body["label"].(string); ok {
+                vv := strings.TrimSpace(v)
+                labelPtr = &vv
+            }
+            if v, ok := body["path"].(string); ok {
+                vv := strings.TrimSpace(v)
+                pathPtr = &vv
+            }
+            if v, ok := body["default_base_branch"].(string); ok {
+                vv := strings.TrimSpace(v)
+                defBasePtr = &vv
+            }
+            rb, err := repos.update(id, labelPtr, pathPtr, defBasePtr)
+            if err != nil {
+                writeError(w, http.StatusBadRequest, err.Error())
+                return
+            }
+            writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: rb})
+        case http.MethodDelete:
+            if err := repos.delete(id); err != nil {
+                writeError(w, http.StatusNotFound, "repo not found")
+                return
+            }
+            writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: map[string]any{"id": id}})
+        default:
+            writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+        }
+    }
 }

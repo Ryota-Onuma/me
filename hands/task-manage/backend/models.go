@@ -5,13 +5,13 @@ import (
 )
 
 type Task struct {
-	ID          string    `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description,omitempty"`
-	Status      string    `json:"status"` // todo | doing | done
-	Order       int       `json:"order"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+    ID          string    `json:"id"`
+    Title       string    `json:"title"`
+    Description string    `json:"description,omitempty"`
+    Status      string    `json:"status"` // todo | doing | done
+    Order       int       `json:"order"`
+    CreatedAt   time.Time `json:"created_at"`
+    UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type Attempt struct {
@@ -82,7 +82,17 @@ type profile struct {
 }
 
 type apiResponse struct {
-	Success bool        `json:"success"`
-	Data    interface{} `json:"data,omitempty"`
-	Message string      `json:"message,omitempty"`
+    Success bool        `json:"success"`
+    Data    interface{} `json:"data,omitempty"`
+    Message string      `json:"message,omitempty"`
+}
+
+// RepoBookmark は、ユーザーが保存するリポジトリ（ラベルとパスのペア）
+type RepoBookmark struct {
+    ID        string    `json:"id"`
+    Label     string    `json:"label"`
+    Path      string    `json:"path"`
+    DefaultBaseBranch string `json:"default_base_branch,omitempty"`
+    CreatedAt time.Time `json:"created_at"`
+    UpdatedAt time.Time `json:"updated_at"`
 }

@@ -1,189 +1,37 @@
-# Tools (versions are managed by mise)
+## Minimal local-only mise tasks
+## - 目的: ローカル開発で使う dev/lint/fmt のみ
+## - 依存: Go と Node をmiseで固定（余計な依存は追加しない）
+
 [tools]
 go = "1.25"
 node = "20"
 
-# Default environment
-[env]
-API = "http://localhost:8888"
-
-# --- Dev server ---
+# 開発サーバー（バックエンド:8888 + フロント:5173）
 [tasks.dev]
-description = "Start backend server (serves the Japanese FE)"
-dir = "backend"
-run = "GOCACHE=\"$(pwd)/.gocache\" go run ."
+description = "開発サーバー起動 (backend:8888 + frontend:5173)"
+dir = "."
+run = "scripts/dev.sh"
 raw = true
 
-[tasks."dev.open"]
-description = "Start server and open UI (waits for readiness). Set DEV_KILL=1 to free :8888 first."
-dir = "."
-run = "bash -lc 'set -euo pipefail; if [ \"${DEV_KILL:-}\" = 1 ]; then if command -v lsof >/dev/null 2>&1; then PIDS=$(lsof -ti tcp:8888 || true); [ -z \"$PIDS\" ] || kill $PIDS 2>/dev/null || true; elif command -v fuser >/dev/null 2>&1; then fuser -k 8888/tcp || true; fi; fi; (cd backend && GOCACHE=\"$(pwd)/.gocache\" go run .) & PID=$!; trap \"kill $PID 2>/dev/null || true\" INT TERM EXIT; for i in $(seq 1 60); do if curl -sSf ${API:-http://localhost:8888}/ >/dev/null 2>&1; then break; fi; sleep 0.5; done; URL=${API:-http://localhost:8888}/; if command -v open >/dev/null 2>&1; then open \"$URL\"; elif command -v xdg-open >/dev/null 2>&1; then xdg-open \"$URL\"; else echo \"Open: $URL\"; fi; wait $PID'"
-raw = true
-
-[tasks."dev.stop"]
-description = "Stop any process listening on :8888"
-dir = "."
-run = "bash -lc 'set -e; if command -v lsof >/dev/null 2>&1; then PIDS=$(lsof -ti tcp:8888 || true); if [ -z \"$PIDS\" ]; then echo \"No process on :8888\"; else echo \"Killing: $PIDS\"; kill $PIDS || true; fi; elif command -v fuser >/dev/null 2>&1; then fuser -k 8888/tcp || true; else echo \"Neither lsof nor fuser found. Kill manually.\"; fi'"
-raw = true
-
-[tasks."dev.restart"]
-description = "Stop :8888 then start dev server"
-dir = "."
-run = "bash -lc 'mise run dev.stop; DEV_KILL=1 mise run dev.open'"
-raw = true
-
-# --- Build/Test/Format/Lint ---
-[tasks.build]
-description = "Go build backend"
-dir = "backend"
-run = "GOCACHE=\"$(pwd)/.gocache\" go build ./..."
-
-[tasks."web.build"]
-description = "Build React+TS frontend into web/"
-dir = "frontend"
-run = "npm run build"
-
-[tasks."web.dev"]
-description = "Run Vite dev server with API proxy"
-dir = "frontend"
-run = "npm run dev"
-raw = true
-
-[tasks."web.preview"]
-description = "Preview built frontend"
-dir = "frontend"
-run = "npm run preview"
-raw = true
-
-[tasks.test]
-description = "Go test backend"
-dir = "backend"
-run = "GOCACHE=\"$(pwd)/.gocache\" go test ./..."
-
-[tasks."fmt.go"]
-description = "go fmt"
-dir = "backend"
-run = "go fmt ./..."
-
-[tasks."fmt.web"]
-description = "prettier format web (html/js/css/ts/tsx)"
-dir = "."
-run = "npx -y prettier@3 --write \"web/**/*.{js,css,html}\" \"frontend/**/*.{ts,tsx,css,html}\""
-
-[tasks.fmt]
-description = "Format Go and Web sources"
-dir = "."
-run = "mise run fmt.go && mise run fmt.web"
-
-[tasks."lint.go"]
-description = "go vet"
-dir = "backend"
-run = "go vet ./..."
-
-[tasks."lint.web"]
-description = "prettier check web + frontend"
-dir = "."
-run = "npx -y prettier@3 --check \"web/**/*.{js,css,html}\" \"frontend/**/*.{ts,tsx,css,html}\""
-
+# Lint（Go: vet、Frontend: ESLint）
 [tasks.lint]
-description = "Run lightweight linters (go vet + prettier check)"
+description = "軽量Lint: go vet + Prettier check"
 dir = "."
-run = "mise run lint:go && mise run lint:web"
-
-[tasks.check]
-description = "fmt + lint + build"
-dir = "."
-run = "mise run fmt && mise run lint && mise run build"
-
-# --- Setup utilities ---
-[tasks."setup.data"]
-description = "Create data folders/files if missing"
-dir = "."
-run = "bash -lc 'mkdir -p data/executions && : > data/tasks.json && : > data/attempts.json && [ -f data/profiles.json ] || echo \"[]\" > data/profiles.json'"
-
-# --- Convenience ---
-[tasks.open]
-description = "Open UI in default browser"
-dir = "."
-run = "bash -lc 'URL=${API:-http://localhost:8888}/ ; if command -v open >/dev/null 2>&1; then open \"$URL\"; elif command -v xdg-open >/dev/null 2>&1; then xdg-open \"$URL\"; else echo \"Open: $URL\"; fi'"
-
-# --- Profiles quick edit ---
-[tasks."profiles.edit"]
-description = "Open data/profiles.json with \"$EDITOR\""
-dir = ".."
-run = "${EDITOR:-vi} task-manage/data/profiles.json"
-raw = true
-
-# --- Task APIs ---
-[tasks."task.create"]
-description = "Create a Task: TITLE='...' [DESC='...'] [STATUS=todo|doing|done]"
-dir = ".."
-run = "curl -sS -H 'Content-Type: application/json' -d '{\"title\":\"'\"${TITLE:?title required}\"'\",\"description\":\"'\"${DESC:-}\"'\",\"status\":\"'\"${STATUS:-todo}\"'\"}' ${API}/api/tasks | jq -r 'if .success then .data.id else .message end'"
-
-[tasks."task.list"]
-description = "List Tasks"
-dir = ".."
-run = "curl -sS ${API}/api/tasks | jq ."
-
-# --- Attempt APIs ---
-[tasks."attempt.new"]
-description = "Create Attempt: TASK='id' PROFILE='claude-code|cursor|codex' REPO='path' BASE='branch'"
-dir = ".."
-run = "curl -sS -H 'Content-Type: application/json' -d '{\"task_id\":\"'\"${TASK:?TASK required}\"'\",\"profile\":\"'\"${PROFILE:?PROFILE required}\"'\",\"repo_path\":\"'\"${REPO:?REPO required}\"'\",\"base_branch\":\"'\"${BASE:?BASE required}\"'\"}' ${API}/api/attempts | jq -r 'if .success then .data.id else .message end'"
-
-[tasks."attempt.status"]
-description = "Show Attempt branch status: ID='attempt_id'"
-dir = ".."
-run = "curl -sS ${API}/api/attempts/${ID:?ID required}/status | jq ."
-
-[tasks."attempt.push"]
-description = "Push Attempt branch to origin: ID='attempt_id'"
-dir = ".."
-run = "curl -sS -X POST ${API}/api/attempts/${ID:?ID required}/push | jq ."
-
-[tasks."attempt.pr"]
-description = "Create PR from Attempt: ID='attempt_id' [TITLE='..'] [BODY='..'] [BASE='..']"
-dir = ".."
-run = "curl -sS -H 'Content-Type: application/json' -d '{\"title\":\"'\"${TITLE:-}\"'\",\"body\":\"'\"${BODY:-}\"'\",\"base_branch\":\"'\"${BASE:-}\"'\"}' ${API}/api/attempts/${ID:?ID required}/pr | jq ."
-
-# --- Execution APIs ---
-[tasks."exec.start"]
-description = "Start execution: PROFILE='claude-code|cursor|codex' PROMPT='..' [CWD='path'] [ATTEMPT='attempt_id']"
-dir = ".."
-run = "curl -sS -H 'Content-Type: application/json' -d '{\"profile\":\"'\"${PROFILE:?PROFILE required}\"'\",\"prompt\":\"'\"${PROMPT:?PROMPT required}\"'\",\"cwd\":\"'\"${CWD:-}\"'\",\"attempt_id\":\"'\"${ATTEMPT:-}\"'\"}' ${API}/api/executions | jq -r 'if .success then .data.id else .message end'"
-
-[tasks."exec.list"]
-description = "List executions"
-dir = ".."
-run = "curl -sS ${API}/api/executions | jq ."
-
-[tasks."exec.stream"]
-description = "Stream execution logs (SSE): ID='execution_id'"
-dir = ".."
-run = "curl -Ns ${API}/api/executions/${ID:?ID required}/stream"
-raw = true
-
-# --- Direct agent runners (bypass API) ---
-[tasks."agent.claude"]
-description = "Run Claude Code directly: PROMPT='..' [CWD='path']"
-dir = ".."
 run = '''
-bash -lc 'cd ${CWD:-.} && npx -y @anthropic-ai/claude-code@latest -p "'"'${PROMPT:?PROMPT required}'"'" --dangerously-skip-permissions'
+bash -lc 'set -e
+  (cd backend && go vet ./...)
+  (cd frontend && npx -y prettier@3 --check "**/*.{ts,tsx,css,html}")
+'
 '''
-raw = true
 
-[tasks."agent.cursor"]
-description = "Run Cursor agent directly: PROMPT='..' [CWD='path']"
-dir = ".."
+# Format（Go: go fmt、Frontend: Prettier書き込み）
+# NOTE: プロジェクトにPrettierは依存追加しない方針のため npx で取得
+[tasks.fmt]
+description = "go fmt + prettier --write"
+dir = "."
 run = '''
-bash -lc 'cd ${CWD:-.} && cursor-agent -p "'"'${PROMPT:?PROMPT required}'"'" --output-format=stream-json'
+bash -lc 'set -e
+  (cd backend && go fmt ./...)
+  (cd frontend && npx -y prettier@3 --write "**/*.{ts,tsx,css,html}")
+'
 '''
-raw = true
-
-[tasks."agent.codex"]
-description = "Run Codex CLI directly: PROMPT='..' [CWD='path']"
-dir = ".."
-run = '''
-bash -lc 'cd ${CWD:-.} && npx -y @openai/codex exec --json -p "'"'${PROMPT:?PROMPT required}'"'"'
-'''
-raw = true

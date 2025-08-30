@@ -21,12 +21,14 @@ This is a full-stack Kanban-style task management application with Git workflow 
 ## Common Development Commands
 
 ### Backend Development
+
 ```bash
 cd backend
 go run .                    # Start server on :8888
 ```
 
 ### Frontend Development
+
 ```bash
 cd frontend
 npm install                 # Install dependencies
@@ -35,11 +37,11 @@ npm run build              # Build to ../web/ for Go server
 ```
 
 ### With mise (recommended)
+
 ```bash
-mise run dev               # Start backend server
-mise run dev.open          # Start server and open browser
-mise run web:dev           # Frontend dev server
-mise run web:build         # Build frontend
+mise run dev               # Start backend + frontend servers and open browser
+mise run frontend.dev      # Frontend dev server only
+mise run frontend.build    # Build frontend
 mise run fmt               # Format Go + Frontend
 mise run lint              # Lint check
 mise run test              # Run tests
@@ -56,7 +58,7 @@ mise run check             # Full check suite
 ## Key Data Flow
 
 1. Tasks created via UI → JSON persistence
-2. Attempts create Git feature branches (always `feature/` prefixed)  
+2. Attempts create Git feature branches (always `feature/` prefixed)
 3. Executions run coding agents with streaming output
 4. Branch status tracking (ahead/behind vs base and remote)
 5. PR creation via GitHub CLI integration
@@ -68,3 +70,5 @@ mise run check             # Full check suite
 - Base branch required per attempt
 - Agent executions can be linked to attempts via `attempt_id`
 - Server expects `git` and `gh` CLI tools for Git operations
+
+@./UBIQUITOUS_LANGUAGE.md

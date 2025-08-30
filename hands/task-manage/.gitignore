@@ -1,2 +1,18 @@
 **/node_modules/
 **/.gocache/
+/.backend.pipe
+/.frontend.pipe
+
+# Go build artifacts
+/backend/backend
+
+# Built frontend assets (Vite outDir=web)
+/web/assets/
+/web/*.map
+/web/*.svg
+
+# Runtime data (empty dir kept for structure)
+/data/executions/
+
+# Vite dev cache
+/frontend/.vite/

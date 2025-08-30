@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
-import Modal from "./Modal";
-import type { Status } from "../types";
+import { useEffect, useState } from "react";
+import Modal from "../ui/Modal";
+import { emitToast } from "../../lib/toast";
+import type { Status } from "../../types";
 
 const statusNames: Record<Status, string> = {
   todo: "未着手",
@@ -17,10 +18,12 @@ export default function TaskAddModal({
   open: boolean;
   status: Status | null;
   onClose: () => void;
-  onCreate: (title: string, description: string) => void;
+  onCreate: (title: string, description: string) => Promise<void> | void;
 }) {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [titleErr, setTitleErr] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -40,9 +43,14 @@ export default function TaskAddModal({
           <input
             autoFocus
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (titleErr && e.target.value.trim()) setTitleErr(false);
+            }}
             type="text"
             placeholder="タスクのタイトルを入力"
+            disabled={busy}
+            className={titleErr ? "input--error" : undefined}
           />
         </label>
         <label>
@@ -51,23 +59,33 @@ export default function TaskAddModal({
             rows={3}
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
+            disabled={busy}
             placeholder="タスクの詳細説明を入力"
           />
         </label>
         <div className="row">
+          <button className="ghost" onClick={onClose} disabled={busy}>
+            キャンセル
+          </button>
           <button
-            onClick={() => {
+            onClick={async () => {
               if (!title.trim()) {
-                alert("タイトルを入力してください");
+                emitToast("タイトルを入力してください", "error");
+                setTitleErr(true);
                 return;
               }
-              onCreate(title.trim(), desc.trim());
+              try {
+                setBusy(true);
+                await Promise.resolve(onCreate(title.trim(), desc.trim()));
+                onClose();
+              } finally {
+                setBusy(false);
+              }
             }}
+            disabled={busy}
+            className={busy ? "btnIcon" : undefined}
           >
-            追加
-          </button>
-          <button className="ghost" onClick={onClose}>
-            キャンセル
+            {busy && <span className="spinner spinner--sm" aria-hidden="true" />}追加
           </button>
         </div>
       </div>

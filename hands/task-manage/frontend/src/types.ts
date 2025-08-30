@@ -50,3 +50,12 @@ export interface ProfileDef {
   label: string;
   command: string[];
 }
+
+export interface RepoBookmark {
+  id: string;
+  label: string;
+  path: string;
+  default_base_branch?: string;
+  created_at: string;
+  updated_at: string;
+}
