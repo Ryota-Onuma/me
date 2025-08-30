@@ -1,0 +1,20 @@
+[
+  {
+    "label": "claude-code",
+    "command": [
+      "claude"
+    ]
+  },
+  {
+    "label": "cursor",
+    "command": [
+      "cursor-agent"
+    ]
+  },
+  {
+    "label": "codex",
+    "command": [
+      "codex"
+    ]
+  }
+]

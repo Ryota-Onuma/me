@@ -1,0 +1,52 @@
+[
+  {
+    "id": "20250830030600-2syso2",
+    "task_id": "20250830030522-b83o8m",
+    "profile": "claude-code",
+    "repo_path": ".",
+    "base_branch": "main",
+    "branch": "feature/20250830-20250830-030555",
+    "created_at": "2025-08-30T12:06:00.427048+09:00",
+    "updated_at": "2025-08-30T12:06:00.427048+09:00"
+  },
+  {
+    "id": "20250830030602-mkuc0g",
+    "task_id": "20250830030522-b83o8m",
+    "profile": "claude-code",
+    "repo_path": ".",
+    "base_branch": "main",
+    "branch": "feature/20250830-20250830-030558",
+    "created_at": "2025-08-30T12:06:02.782137+09:00",
+    "updated_at": "2025-08-30T12:06:02.782137+09:00"
+  },
+  {
+    "id": "20250830030813-ojxgd6",
+    "task_id": "20250830030522-b83o8m",
+    "profile": "claude-code",
+    "repo_path": ".",
+    "base_branch": "main",
+    "branch": "feature/20250830-20250830-030808",
+    "created_at": "2025-08-30T12:08:13.315614+09:00",
+    "updated_at": "2025-08-30T12:08:13.315614+09:00"
+  },
+  {
+    "id": "20250830030817-7ji5m9",
+    "task_id": "20250830030522-b83o8m",
+    "profile": "claude-code",
+    "repo_path": ".",
+    "base_branch": "main",
+    "branch": "feature/20250830-20250830-030813",
+    "created_at": "2025-08-30T12:08:17.672212+09:00",
+    "updated_at": "2025-08-30T12:08:17.672212+09:00"
+  },
+  {
+    "id": "20250830040111-aw4e6c",
+    "task_id": "20250830040010-ks2dn8",
+    "profile": "claude-code",
+    "repo_path": "/Users/ryota/desktop/programming/me/hands",
+    "base_branch": "main",
+    "branch": "feature/20250830-20250830-040107",
+    "created_at": "2025-08-30T13:01:11.936751+09:00",
+    "updated_at": "2025-08-30T13:01:11.936751+09:00"
+  }
+]
