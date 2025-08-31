@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useId, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useFocusTrap } from "../../lib/useFocusTrap";
 
 export default function Modal({
@@ -28,7 +29,7 @@ export default function Modal({
   });
 
   if (!open) return null;
-  return (
+  const node = (
     <div
       className="modal"
       onMouseDown={(e) => {
@@ -53,7 +54,11 @@ export default function Modal({
             ref={closeBtnRef}
             className="ghost btnIcon"
             aria-label="閉じる"
-            onClick={onClose}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7 4.3 4.3l6.3 6.3 6.3-6.3 1.7 1.4z" fill="currentColor"/>
@@ -64,4 +69,5 @@ export default function Modal({
       </div>
     </div>
   );
+  return createPortal(node, document.body);
 }

@@ -8,24 +8,25 @@ type Task struct {
     ID          string    `json:"id"`
     Title       string    `json:"title"`
     Description string    `json:"description,omitempty"`
-    Status      string    `json:"status"` // todo | doing | done
+    Status      string    `json:"status"` // todo | doing | reviewing | done
     Order       int       `json:"order"`
     CreatedAt   time.Time `json:"created_at"`
     UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type Attempt struct {
-	ID          string     `json:"id"`
-	TaskID      string     `json:"task_id"`
-	Profile     string     `json:"profile"`
-	RepoPath    string     `json:"repo_path"`
-	BaseBranch  string     `json:"base_branch"`
-	Branch      string     `json:"branch"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	PRNumber    *int       `json:"pr_number,omitempty"`
-	PRURL       *string    `json:"pr_url,omitempty"`
-	PRStatus    *string    `json:"pr_status,omitempty"`
+    ID          string     `json:"id"`
+    TaskID      string     `json:"task_id"`
+    RepoPath    string     `json:"repo_path"`
+    WorktreePath string    `json:"worktree_path"`
+    BaseBranch  string     `json:"base_branch"`
+    Branch      string     `json:"branch"`
+    Locked      bool       `json:"locked"`
+    CreatedAt   time.Time  `json:"created_at"`
+    UpdatedAt   time.Time  `json:"updated_at"`
+    PRNumber    *int       `json:"pr_number,omitempty"`
+    PRURL       *string    `json:"pr_url,omitempty"`
+    PRStatus    *string    `json:"pr_status,omitempty"`
 	PRMergedAt  *time.Time `json:"pr_merged_at,omitempty"`
 	MergeCommit *string    `json:"merge_commit_sha,omitempty"`
 }

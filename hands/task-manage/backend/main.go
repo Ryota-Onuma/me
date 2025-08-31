@@ -18,13 +18,13 @@ import (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	// Resolve paths relative to backend/
-	wd, _ := os.Getwd()
+    wd, _ := os.Getwd()
 	baseDataDir := filepath.Clean(filepath.Join(wd, "..", "data"))
 	_ = os.MkdirAll(baseDataDir, 0o755)
 	tasksPath := filepath.Join(baseDataDir, "tasks.json")
 	profilesPath := filepath.Join(baseDataDir, "profiles.json")
-	attemptsPath := filepath.Join(baseDataDir, "attempts.json")
+    attemptsPath := filepath.Join(baseDataDir, "attempts.json")
+    worktreesRoot := filepath.Clean(filepath.Join(wd, "..", "worktrees"))
 	reposPath := filepath.Join(baseDataDir, "repos.json")
 	execsDir := filepath.Join(baseDataDir, "executions")
 	_ = os.MkdirAll(execsDir, 0o755)
@@ -32,66 +32,58 @@ func main() {
 
 	store := newTaskStore(tasksPath)
 	profMgr := &profileManager{path: profilesPath}
-	attempts := newAttemptStore(attemptsPath)
+    attempts := newAttemptStore(attemptsPath, worktreesRoot)
 	repos := newRepoStore(reposPath)
 	execs := newExecStore(execsDir)
 
 	mux := http.NewServeMux()
 
-	// API routes
     mux.HandleFunc("/api/tasks", handleTasks(store))
     mux.HandleFunc("/api/tasks/", handleTasksWithID(store))
-	mux.HandleFunc("/api/attempts", handleAttempts(attempts))
+    mux.HandleFunc("/api/attempts", handleAttempts(attempts))
+    mux.HandleFunc("/api/attempts/gc", handleAttemptsGC(attempts))
 	mux.HandleFunc("/api/attempts/", handleAttemptsWithID(attempts))
 	mux.HandleFunc("/api/executions", handleExecutions(execs, profMgr))
 	mux.HandleFunc("/api/executions/", handleExecutionsWithID(execs))
 	mux.HandleFunc("/api/profiles", handleProfiles(profMgr))
 	mux.HandleFunc("/api/repos", handleRepos(repos))
-	mux.HandleFunc("/api/repos/", handleReposWithID(repos))
+    mux.HandleFunc("/api/repos/", handleReposWithID(repos))
+    mux.HandleFunc("/api/admin/migrate_attempts", handleAdmin(execs, attempts))
 
-	// Simple health endpoint for dev orchestration
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: map[string]string{"status": "ok"}})
-	})
+    mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+        writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: map[string]string{"status": "ok"}})
+    })
 
-	// Static web UI with cache headers
-	fs := http.FileServer(http.Dir(webPath))
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		p := r.URL.Path
-		if p == "/" || p == "/index.html" {
-			// Ensure the shell HTML is always revalidated
-			w.Header().Set("Cache-Control", "no-cache")
-		} else if strings.HasPrefix(p, "/assets/") {
-			// Fingerprinted assets from Vite; safe to cache long
-			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-		} else {
-			// Other files (images, etc.) get a modest cache
-			w.Header().Set("Cache-Control", "public, max-age=300")
-		}
+    fs := http.FileServer(http.Dir(webPath))
+    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        p := r.URL.Path
+        if p == "/" || p == "/index.html" {
+            w.Header().Set("Cache-Control", "no-cache")
+        } else if strings.HasPrefix(p, "/assets/") {
+            w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+        } else {
+            w.Header().Set("Cache-Control", "public, max-age=300")
+        }
 
-		// Try to serve static file if present; otherwise fallback to index.html, then minimal help page
-		// Normalize path and prevent traversal
-		cleaned := strings.TrimPrefix(path.Clean(p), "/")
-		local := filepath.Join(webPath, cleaned)
-		if info, err := os.Stat(local); err == nil && !info.IsDir() {
-			fs.ServeHTTP(w, r)
-			return
-		}
+        cleaned := strings.TrimPrefix(path.Clean(p), "/")
+        local := filepath.Join(webPath, cleaned)
+        if info, err := os.Stat(local); err == nil && !info.IsDir() {
+            fs.ServeHTTP(w, r)
+            return
+        }
 
-		// Fallback to index.html if exists (SPA support)
-		index := filepath.Join(webPath, "index.html")
-		if b, err := os.ReadFile(index); err == nil {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.Header().Set("Cache-Control", "no-cache")
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write(b)
-			return
-		}
+        index := filepath.Join(webPath, "index.html")
+        if b, err := os.ReadFile(index); err == nil {
+            w.Header().Set("Content-Type", "text/html; charset=utf-8")
+            w.Header().Set("Cache-Control", "no-cache")
+            w.WriteHeader(http.StatusOK)
+            _, _ = w.Write(b)
+            return
+        }
 
-		// Last resort: minimal help page (avoids 404 on fresh checkout)
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.WriteHeader(http.StatusOK)
+        w.Header().Set("Content-Type", "text/html; charset=utf-8")
+        w.Header().Set("Cache-Control", "no-cache")
+        w.WriteHeader(http.StatusOK)
 		_, _ = fmt.Fprintf(w, `<!doctype html>
 <meta charset="utf-8" />
 <title>task-manage</title>
@@ -108,8 +100,7 @@ func main() {
 `, webPath)
 	})
 
-	// Determine listen address from env (BACKEND_PORT or PORT), default 8888
-	port := os.Getenv("BACKEND_PORT")
+    port := os.Getenv("BACKEND_PORT")
 	if port == "" {
 		port = os.Getenv("PORT")
 	}
@@ -122,23 +113,20 @@ func main() {
 		Handler: withCORS(mux),
 	}
 
-	// Start server in a goroutine
-	go func() {
-		log.Printf("task-manage listening on %s (web: %s, data: %s)", addr, webPath, baseDataDir)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
-		}
-	}()
+    go func() {
+        log.Printf("task-manage listening on %s (web: %s, data: %s)", addr, webPath, baseDataDir)
+        if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+            log.Fatal(err)
+        }
+    }()
 
-	// Wait for interrupt signal to gracefully shutdown the server
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shutting down server...")
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+    <-quit
+    log.Println("Shutting down server...")
 
-	// Give outstanding requests a deadline to complete
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+    defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
 		log.Printf("Server forced to shutdown: %v", err)

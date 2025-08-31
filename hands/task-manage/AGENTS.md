@@ -72,18 +72,19 @@ mise run exec.stream ID="$ID"
 mise run exec.list
 ```
 
-### 3. Attempt-Linked Execution
+### 3. Attempt（作業ブランチ）に紐づけた実行
 
-Link executions to specific attempts (Git branches) for better organization:
+作業ブランチは「エージェント非依存」で作成し、実行時にエージェントを選択します。`task-manage` は作業ブランチを git worktree で並列に保持します。
 
 ```bash
-# Create attempt first
-ATTEMPT_ID=$(mise run attempt.new TASK='task123' PROFILE='claude-code' REPO='/path/to/repo' BASE='main')
+# 先に Attempt を作成（worktree 生成）
+# PROFILE 指定は不要になりました
+ATTEMPT_ID=$(mise run attempt.new TASK='task123' REPO='/path/to/repo' BASE='main' BRANCH='feature/my-task')
 
-# Execute with attempt linkage
+# 実行時にエージェントを選ぶ
 EXEC_ID=$(mise run exec.start PROFILE='claude-code' PROMPT='Fix issue' ATTEMPT="$ATTEMPT_ID")
 
-# Stream execution
+# ログをライブ表示
 mise run exec.stream ID="$EXEC_ID"
 ```
 
@@ -142,10 +143,10 @@ mise run exec.stream ID="$EXEC_ID"
 
 ### Integration with Attempts
 
-- Each execution can be linked to an attempt via `attempt_id`
-- Attempts create feature branches automatically (`feature/` prefix)
-- Execution logs are preserved for later review
-- Branch status tracking includes uncommitted changes from agent runs
+- 実行は `attempt_id` で Attempt に紐づけ可能
+- Attempt 作成時に git worktree が生成され、ブランチは base から切られます
+- エージェント選択は実行時に行い、任意に切り替えられます
+- 実行ログは履歴に保存され、再接続/再開が可能
 
 ### Monitoring and Debugging
 

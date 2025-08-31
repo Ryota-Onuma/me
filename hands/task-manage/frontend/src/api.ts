@@ -12,14 +12,12 @@ type ApiEnvelope<T> = {
   success?: boolean;
   message?: string;
   data?: T;
-  // 任意で meta 等が付与される場合がある
   [key: string]: unknown;
 };
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null;
 
-// JSON 専用の安全パーサ: Content-Type を見て不正（HTML 等）なら分かりやすく失敗させる
 const readJson = async (res: Response): Promise<unknown> => {
   const ct = (res.headers.get("content-type") || "").toLowerCase();
   const looksJson = ct.includes("json");
@@ -27,21 +25,17 @@ const readJson = async (res: Response): Promise<unknown> => {
     if (looksJson) {
       return await res.json();
     }
-    // JSON ではない → テキストを読み取り、状況に応じて詳細なエラーを投げる
     const text = await res.text();
     const hint = text.trim().slice(0, 256);
-    // HTML が返ってきた典型（バックエンド未起動やプロキシ不備）
     if (hint.startsWith("<!doctype") || hint.startsWith("<html")) {
       throw new Error(
-        `[${res.status}] API 応答が JSON ではなく HTML です。バックエンドが起動しているか、/api プロキシ設定を確認してください。`,
+        `[${res.status}] API 応答が JSON ではなく HTML です。バックエンドや /api プロキシ設定を確認してください。`,
       );
     }
-    // それ以外のプレーンテキスト
     throw new Error(
       `[${res.status}] API 応答が JSON ではありません: ${res.statusText} ${hint ? `- ${hint}` : ""}`,
     );
   } catch (e) {
-    // Content-Type は JSON だがパースできない場合に備え、テキストで補助情報を付与
     const err = e as Error;
     if (looksJson) {
       try {
@@ -71,6 +65,22 @@ const j = async <T>(res: Response): Promise<T> => {
     if ("data" in env && env.data !== undefined) return env.data as T;
   }
   return data as T;
+};
+
+// NOTE: 一部エンドポイントで応答が返らず UI が永遠に「更新中」になるのを避けるため、
+// 明示的なタイムアウト付き fetch を用意する（不要な外部依存は追加しない）。
+const fetchWithTimeout = async (
+  input: RequestInfo | URL,
+  init?: RequestInit & { timeoutMs?: number },
+): Promise<Response> => {
+  const { timeoutMs = 8000, signal, ...rest } = init || {};
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...rest, signal: signal ?? controller.signal });
+  } finally {
+    window.clearTimeout(timer);
+  }
 };
 
 export const API = {
@@ -159,6 +169,8 @@ export const API = {
 export const ExecAPI = {
   listProfiles: async (): Promise<ProfileDef[]> =>
     j<ProfileDef[]>(await fetch("/api/profiles")),
+  get: async (id: string): Promise<ExecProcess> =>
+    j<ExecProcess>(await fetch(`/api/executions/${encodeURIComponent(id)}`)),
   listPaged: async (opts: {
     limit: number;
     offset?: number;
@@ -230,9 +242,9 @@ export const AttemptAPI = {
     j<Attempt>(await fetch(`/api/attempts/${encodeURIComponent(id)}`)),
   create: async (body: {
     task_id: string;
-    profile: string;
     repo_path: string;
     base_branch: string;
+    branch?: string;
   }): Promise<Attempt> =>
     j<Attempt>(
       await fetch("/api/attempts", {
@@ -267,13 +279,71 @@ export const AttemptAPI = {
     ),
   status: async (id: string): Promise<BranchStatus> =>
     j<BranchStatus>(
-      await fetch(`/api/attempts/${encodeURIComponent(id)}/status`),
+      await fetchWithTimeout(
+        `/api/attempts/${encodeURIComponent(id)}/status`,
+        { timeoutMs: 8000 },
+      ),
     ),
   push: async (id: string): Promise<Attempt> =>
     j<Attempt>(
       await fetch(`/api/attempts/${encodeURIComponent(id)}/push`, {
         method: "POST",
       }),
+    ),
+  diff: async (
+    id: string,
+    opts?: { context?: number; worktree?: boolean; renderer?: string },
+  ): Promise<{ text: string }> => {
+    const sp = new URLSearchParams();
+    if (opts?.context != null) sp.set("context", String(opts.context));
+    if (opts?.worktree) sp.set("worktree", "1");
+    if (opts?.renderer) sp.set("renderer", opts.renderer);
+    return j<{ text: string }>(
+      await fetch(`/api/attempts/${encodeURIComponent(id)}/diff?${sp.toString()}`),
+    );
+  },
+  difit: async (
+    id: string,
+    opts?: { worktree?: boolean; remote?: string; no_open?: boolean },
+  ): Promise<{ started: boolean } & Record<string, unknown>> => {
+    const sp = new URLSearchParams();
+    if (opts?.worktree) sp.set("worktree", "1");
+    if (opts?.remote) sp.set("remote", opts.remote);
+    if (opts?.no_open) sp.set("no_open", "1");
+    return j<{ started: boolean } & Record<string, unknown>>(
+      await fetch(`/api/attempts/${encodeURIComponent(id)}/difit?${sp.toString()}`, {
+        method: "POST",
+      }),
+    );
+  },
+  lock: async (id: string, locked: boolean): Promise<Attempt> =>
+    j<Attempt>(
+      await fetch(`/api/attempts/${encodeURIComponent(id)}/lock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locked }),
+      }),
+    ),
+  worktreeStatus: async (
+    id: string,
+  ): Promise<{ path: string; exists: boolean; branch: string; locked: boolean }> =>
+    j<{ path: string; exists: boolean; branch: string; locked: boolean }>(
+      await fetch(`/api/attempts/${encodeURIComponent(id)}/worktree/status`),
+    ),
+  worktreeRemove: async (id: string, keepBranch = true): Promise<Attempt> =>
+    j<Attempt>(
+      await fetch(
+        `/api/attempts/${encodeURIComponent(id)}/worktree/remove?keep_branch=${keepBranch ? "1" : "0"}`,
+        { method: "POST" },
+      ),
+    ),
+  worktreeRecreate: async (id: string): Promise<Attempt> =>
+    j<Attempt>(
+      await fetch(`/api/attempts/${encodeURIComponent(id)}/worktree/recreate`, { method: "POST" }),
+    ),
+  gc: async (): Promise<Record<string, string>> =>
+    j<Record<string, string>>(
+      await fetch(`/api/attempts/gc`, { method: "POST" }),
     ),
 };
 

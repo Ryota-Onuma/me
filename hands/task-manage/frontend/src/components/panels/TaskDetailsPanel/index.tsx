@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { hasActiveFormFocus } from "../../../lib/formFocus";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AttemptAPI } from "../../../api";
 import AttemptRow from "../../rows/AttemptRow";
 import { ExecAPI } from "../../../api";
 import { emitToast } from "../../../lib/toast";
 import PrCreateModal from "../../modals/PrCreateModal";
+import WorktreeModal from "../../modals/WorktreeModal";
 import type { Attempt, BranchStatus, Task } from "../../../types";
 import { useFocusTrap } from "../../../lib/useFocusTrap";
 
@@ -35,10 +35,16 @@ export default function TaskDetailsPanel({
   const [branchStatus, setBranchStatus] = useState<BranchStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusUpdatedAt, setStatusUpdatedAt] = useState<string | null>(null);
+  // 無限ローディング防止用のセーフティネット（UI側タイムアウト）
+  const statusLoadingTimerRef = useRef<number | null>(null);
+  // 作業ブランチ（sourceグループ）ごとのステータス（代表 attempt 単位）
+  const [groupStatuses, setGroupStatuses] = useState<Record<string, BranchStatus | null>>({}); // key: attemptId
 
   const latestAttemptId = attempts[0]?.id || null;
   const [prOpen, setPrOpen] = useState(false);
   const [prAttemptId, setPrAttemptId] = useState<string | null>(null);
+  const [wtOpen, setWtOpen] = useState(false);
+  const [wtAttempt, setWtAttempt] = useState<Attempt | null>(null);
   const panelRef = useRef<HTMLElement | null>(null);
   const firstActionRef = useRef<HTMLButtonElement | null>(null);
 
@@ -83,52 +89,123 @@ export default function TaskDetailsPanel({
     };
   }, [attemptsTaskId]);
 
+  // 旧グローバル status は廃止方向。latestAttemptId 用の即時取得はスキップ。
   useEffect(() => {
-    const updateBranchStatus = async (id: string) => {
-      try {
-        setStatusLoading(true);
-        const st = await AttemptAPI.status(id);
-        setBranchStatus(st);
-        setStatusUpdatedAt(new Date().toLocaleTimeString());
-      } catch {
-        setBranchStatus(null);
-      } finally {
+    if (!latestAttemptId) setBranchStatus(null);
+  }, [latestAttemptId]);
+
+  // statusLoading が一定時間以上続く場合に自動解除（UX保護）
+  useEffect(() => {
+    if (statusLoading) {
+      if (statusLoadingTimerRef.current) window.clearTimeout(statusLoadingTimerRef.current);
+      statusLoadingTimerRef.current = window.setTimeout(() => {
         setStatusLoading(false);
-      }
-    };
-
-    if (!latestAttemptId) {
-      setBranchStatus(null);
-      return;
+      }, 10000); // 10s safety
+    } else if (statusLoadingTimerRef.current) {
+      window.clearTimeout(statusLoadingTimerRef.current);
+      statusLoadingTimerRef.current = null;
     }
-    void updateBranchStatus(latestAttemptId);
-  }, [latestAttemptId]);
-
-  // ステータスポーリング（15秒）。フォームにフォーカス中は停止。
-  useEffect(() => {
-    if (!latestAttemptId) return;
-    let cancelled = false;
-    const tick = async () => {
-      try {
-        const st = await AttemptAPI.status(latestAttemptId);
-        if (!cancelled) {
-          setBranchStatus(st);
-          setStatusUpdatedAt(new Date().toLocaleTimeString());
-        }
-      } catch {
-        if (!cancelled) setBranchStatus(null);
-      }
-    };
-    const id = window.setInterval(() => {
-      if (!hasActiveFormFocus()) void tick();
-    }, 15000);
     return () => {
-      cancelled = true;
-      window.clearInterval(id);
+      if (statusLoadingTimerRef.current) window.clearTimeout(statusLoadingTimerRef.current);
+      statusLoadingTimerRef.current = null;
     };
-  }, [latestAttemptId]);
+  }, [statusLoading]);
+
+  // グループ代表 attempt のステータスをまとめて取得・更新
+  const headAttemptIds = useMemo(() => {
+    const visible = attempts.slice(0, visibleCount);
+    const byBase = new Map<string, Attempt[]>();
+    for (const at of visible) {
+      const base = at.base_branch || "(no-base)";
+      const arr = byBase.get(base) ?? [];
+      arr.push(at);
+      byBase.set(base, arr);
+    }
+    const map: Record<string, string> = {}; // key: `${base}__${src}` -> head attempt id
+    for (const [base, baseList] of byBase) {
+      const bySource = new Map<string, Attempt[]>();
+      for (const at of baseList) {
+        const src = at.branch || "(no-branch)";
+        const arr = bySource.get(src) ?? [];
+        arr.push(at);
+        bySource.set(src, arr);
+      }
+      for (const [src, list] of bySource) {
+        map[`${base}__${src}`] = list[0]?.id;
+      }
+    }
+    return map;
+  }, [attempts, visibleCount]);
+
+  const refreshGroupStatuses = useCallback(async (attemptIds: string[]) => {
+    setStatusLoading(true);
+    try {
+      await Promise.all(
+        attemptIds.map(async (id) => {
+          try {
+            const st = await AttemptAPI.status(id);
+            setGroupStatuses((prev) => ({ ...prev, [id]: st }));
+          } catch {
+            setGroupStatuses((prev) => ({ ...prev, [id]: null }));
+          }
+        }),
+      );
+      setStatusUpdatedAt(new Date().toLocaleTimeString());
+    } finally {
+      setStatusLoading(false);
+    }
+  }, []);
+
+  // 初期表示・可視件数変更時にグループの代表 attempt を更新
+  useEffect(() => {
+    const ids = Object.values(headAttemptIds).filter(Boolean);
+    if (ids.length === 0) return;
+    void refreshGroupStatuses(ids);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [headAttemptIds]);
 
   // 旧: テキスト生成は撤去。UIはステータスグリッド表示に変更。
+
+  // 折りたたみ状態（base と source）
+  const [collapsedBase, setCollapsedBase] = useState<Record<string, boolean>>({});
+  const [collapsedSource, setCollapsedSource] = useState<Record<string, boolean>>({});
+
+  // 永続化：localStorage に保存/復元（タスクID単位）
+  const lsKeys = {
+    base: attemptsTaskId ? `tm:attempts:collapsedBase:${attemptsTaskId}` : null,
+    source: attemptsTaskId ? `tm:attempts:collapsedSource:${attemptsTaskId}` : null,
+  } as const;
+
+  useEffect(() => {
+    if (!attemptsTaskId) return;
+    try {
+      const b = localStorage.getItem(`tm:attempts:collapsedBase:${attemptsTaskId}`);
+      const s = localStorage.getItem(`tm:attempts:collapsedSource:${attemptsTaskId}`);
+      setCollapsedBase(b ? (JSON.parse(b) as Record<string, boolean>) : {});
+      setCollapsedSource(s ? (JSON.parse(s) as Record<string, boolean>) : {});
+    } catch {
+      setCollapsedBase({});
+      setCollapsedSource({});
+    }
+  }, [attemptsTaskId]);
+
+  useEffect(() => {
+    if (!lsKeys.base) return;
+    try {
+      localStorage.setItem(lsKeys.base, JSON.stringify(collapsedBase));
+    } catch {
+      // ignore
+    }
+  }, [collapsedBase, lsKeys.base]);
+
+  useEffect(() => {
+    if (!lsKeys.source) return;
+    try {
+      localStorage.setItem(lsKeys.source, JSON.stringify(collapsedSource));
+    } catch {
+      // ignore
+    }
+  }, [collapsedSource, lsKeys.source]);
 
   // 表示件数の初期値を attempts 件数に合わせて調整
   useEffect(() => {
@@ -261,9 +338,9 @@ export default function TaskDetailsPanel({
             </button>
           </div>
           <div className="toolbar__group">
-            <button onClick={() => onCreateAttempt(task)} className="btnIcon" aria-label="ブランチ作成">
+            <button onClick={() => onCreateAttempt(task)} className="btnIcon" aria-label="作業ブランチ作成">
               <IconPlay />
-              <span>ブランチ作成</span>
+              <span>作業ブランチ作成</span>
             </button>
           </div>
         </div>
@@ -287,16 +364,8 @@ export default function TaskDetailsPanel({
                   <button
                     className="ghost"
                     onClick={async () => {
-                      if (latestAttemptId) {
-                        try {
-                          setStatusLoading(true);
-                          const st = await AttemptAPI.status(latestAttemptId);
-                          setBranchStatus(st);
-                          setStatusUpdatedAt(new Date().toLocaleTimeString());
-                        } finally {
-                          setStatusLoading(false);
-                        }
-                      }
+                      const ids = Object.values(headAttemptIds).filter(Boolean);
+                      await refreshGroupStatuses(ids);
                     }}
                     disabled={statusLoading}
                   >
@@ -312,131 +381,155 @@ export default function TaskDetailsPanel({
                 </div>
               )}
             </div>
-            {attempts.length > 0 && (
-              <div
-                className="statusGrid"
-                aria-busy={statusLoading}
-                aria-live="polite"
-              >
-                {/* ベース */}
-                <div className={"kv " + (statusLoading ? "kv--loading" : "") }>
-                  <div className="kv__key">ベース</div>
-                  <div className="kv__val">
-                    {statusLoading ? (
-                      <div className="skeleton skeleton-chip" style={{ width: 90 }} />
-                    ) : (
-                      <span className="chip">{branchStatus?.base_branch_name || "-"}</span>
-                    )}
-                  </div>
-                </div>
-                {/* ahead */}
-                <div className={"kv " + (statusLoading ? "kv--loading" : "") }>
-                  <div className="kv__key">ahead</div>
-                  <div className="kv__val">
-                    {statusLoading ? (
-                      <div className="skeleton skeleton-chip" style={{ width: 36 }} />
-                    ) : (
-                      <span className="chip chip--ok">{branchStatus?.commits_ahead ?? "-"}</span>
-                    )}
-                  </div>
-                </div>
-                {/* behind */}
-                <div className={"kv " + (statusLoading ? "kv--loading" : "") }>
-                  <div className="kv__key">behind</div>
-                  <div className="kv__val">
-                    {statusLoading ? (
-                      <div className="skeleton skeleton-chip" style={{ width: 36 }} />
-                    ) : (
-                      <span className="chip chip--warn">{branchStatus?.commits_behind ?? "-"}</span>
-                    )}
-                  </div>
-                </div>
-                {/* remote ahead */}
-                <div className={"kv " + (statusLoading ? "kv--loading" : "") }>
-                  <div className="kv__key">remote ahead</div>
-                  <div className="kv__val">
-                    {statusLoading ? (
-                      <div className="skeleton skeleton-chip" style={{ width: 50 }} />
-                    ) : (
-                      <span className="chip">{branchStatus?.remote_commits_ahead ?? "N/A"}</span>
-                    )}
-                  </div>
-                </div>
-                {/* remote behind */}
-                <div className={"kv " + (statusLoading ? "kv--loading" : "") }>
-                  <div className="kv__key">remote behind</div>
-                  <div className="kv__val">
-                    {statusLoading ? (
-                      <div className="skeleton skeleton-chip" style={{ width: 56 }} />
-                    ) : (
-                      <span className="chip">{branchStatus?.remote_commits_behind ?? "N/A"}</span>
-                    )}
-                  </div>
-                </div>
-                {/* 未コミット */}
-                <div className={"kv " + (statusLoading ? "kv--loading" : "") }>
-                  <div className="kv__key">未コミット</div>
-                  <div className="kv__val">
-                    {statusLoading ? (
-                      <div className="skeleton skeleton-chip" style={{ width: 60 }} />
-                    ) : (
-                      <span className={"chip " + (branchStatus?.has_uncommitted_changes ? "chip--warn" : "chip--muted")}>
-                        {branchStatus?.has_uncommitted_changes ? "あり" : "なし"}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* グローバルステータスは廃止。各 source グループに表示 */}
             {loading && <div className="muted">読み込み中...</div>}
             {error && <div className="danger-text">{error}</div>}
             {!loading && attempts.length === 0 && (
               <div className="muted">まだ作業ブランチがありません</div>
             )}
             <div className="attempts">
-              {attempts.slice(0, visibleCount).map((at) => (
-                <AttemptRow
-                  key={at.id}
-                  attempt={at}
-                  onOpenAttempt={onOpenAttempt}
-                  onContinue={async (attempt) => {
-                    try {
-                      // 実行中があれば接続、なければ最新設定を読み込み
-                      const running = await ExecAPI.listPaged({
-                        limit: 1,
-                        attempt_id: attempt.id,
-                        status: "running",
-                      });
-                      if (running.length > 0) {
-                        onReconnectAttempt(attempt, running[0].id);
-                        return;
-                      }
-                      const latest = await ExecAPI.listPaged({
-                        limit: 1,
-                        attempt_id: attempt.id,
-                      });
-                      if (latest.length > 0) {
-                        const p = latest[0];
-                        onResumeAttempt(attempt, {
-                          profile: p.profile,
-                          cwd: p.cwd,
-                          prompt: p.prompt,
-                        });
-                        return;
-                      }
-                      // 履歴がなければ、空の実行モーダルへ
-                      emitToast("履歴がないため、新規実行の設定を開きます", "info");
-                      onOpenAttempt(attempt);
-                    } catch (e: unknown) {
-                      const msg = e instanceof Error ? e.message : String(e);
-                      emitToast("続きの準備に失敗: " + msg, "error");
-                    }
-                  }}
-                  onPush={(id) => doPush(id)}
-                  onPR={(id) => doPR(id)}
-                  formatDate={toDateTime}
-                />
-              ))}
+              {(() => {
+                // 1) まず可視範囲を取得
+                const visible = attempts.slice(0, visibleCount);
+                // 2) base -> source の二段グループ
+                const byBase = new Map<string, Attempt[]>();
+                for (const at of visible) {
+                  const base = at.base_branch || "(no-base)";
+                  const arr = byBase.get(base) ?? [];
+                  arr.push(at);
+                  byBase.set(base, arr);
+                }
+
+                return Array.from(byBase.entries()).map(([base, baseList]) => {
+                  // source でさらにグループ化
+                  const bySource = new Map<string, Attempt[]>();
+                  for (const at of baseList) {
+                    const src = at.branch || "(no-branch)";
+                    const arr = bySource.get(src) ?? [];
+                    arr.push(at);
+                    bySource.set(src, arr);
+                  }
+                  const baseCollapsed = !!collapsedBase[base];
+                  return (
+                    <div className="attemptGroupBase" key={base}>
+                      <div className="attemptGroupBase__header">
+                        <button
+                          className="collapseBtn"
+                          aria-expanded={!baseCollapsed}
+                          onClick={() => setCollapsedBase((s) => ({ ...s, [base]: !s[base] }))}
+                        >
+                          <span className="triangle" aria-hidden>{baseCollapsed ? '▶' : '▼'}</span>
+                          <span className="label">base: <span className="attempt__branch">{base}</span></span>
+                        </button>
+                        <span className="muted">{baseList.length} ws</span>
+                      </div>
+
+                      {!baseCollapsed && (
+                        <div className="attemptGroupBase__body">
+                          {Array.from(bySource.entries()).map(([src, list]) => {
+                            const key = `${base}__${src}`;
+                            const srcCollapsed = !!collapsedSource[key];
+                            return (
+                              <div key={key} className="attemptGroup">
+                                <div className="attemptGroup__header">
+                                  <button
+                                    className="collapseBtn"
+                                    aria-expanded={!srcCollapsed}
+                                    onClick={() => setCollapsedSource((s) => ({ ...s, [key]: !s[key] }))}
+                                  >
+                                    <span className="triangle" aria-hidden>{srcCollapsed ? '▶' : '▼'}</span>
+                                    <span className="attemptGroup__title"><span className="attempt__branch">{src}</span></span>
+                                  </button>
+                                  <div className="attemptGroup__chips chips" style={{ gap: 6 }}>
+                                    {(() => {
+                                      const attemptId = headAttemptIds[key];
+                                      const st = attemptId ? groupStatuses[attemptId] : undefined;
+                                      if (!st) {
+                                        return (
+                                          <>
+                                            <span className="chip skeleton skeleton-chip" style={{ width: 80 }} />
+                                            <span className="chip skeleton skeleton-chip" style={{ width: 44 }} />
+                                            <span className="chip skeleton skeleton-chip" style={{ width: 48 }} />
+                                            <span className="chip skeleton skeleton-chip" style={{ width: 66 }} />
+                                            <span className="chip skeleton skeleton-chip" style={{ width: 74 }} />
+                                          </>
+                                        );
+                                      }
+                                      return (
+                                        <>
+                                          <span className="chip chip--ok" title="ローカルのahead（未Push）">ahead {st.commits_ahead ?? '-'}</span>
+                                          <span className="chip chip--warn" title="ローカルのbehind">behind {st.commits_behind ?? '-'}</span>
+                                          <span className="chip" title="リモートに対するahead">remote ahead {st.remote_commits_ahead ?? 'N/A'}</span>
+                                          <span className="chip" title="リモートに対するbehind">remote behind {st.remote_commits_behind ?? 'N/A'}</span>
+                                          <span className={"chip " + (st.has_uncommitted_changes ? "chip--warn" : "chip--muted")} title="未コミットの変更">
+                                            未コミット {st.has_uncommitted_changes ? 'あり' : 'なし'}
+                                          </span>
+                                        </>
+                                      );
+                                    })()}
+                                    {list.length > 1 && (
+                                      <span className="chip" title="このブランチのワークスペース数">ws {list.length}</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {!srcCollapsed && (
+                                  <div className="attempts">
+                                    {list.map((at) => (
+                                      <AttemptRow
+                                        key={at.id}
+                                        attempt={at}
+                                        onOpenAttempt={onOpenAttempt}
+                                        onContinue={async (attempt) => {
+                                          try {
+                                            // 実行中があれば接続、なければ最新設定を読み込み
+                                            const running = await ExecAPI.listPaged({
+                                              limit: 1,
+                                              attempt_id: attempt.id,
+                                              status: "running",
+                                            });
+                                            if (running.length > 0) {
+                                              onReconnectAttempt(attempt, running[0].id);
+                                              return;
+                                            }
+                                            const latest = await ExecAPI.listPaged({
+                                              limit: 1,
+                                              attempt_id: attempt.id,
+                                            });
+                                            if (latest.length > 0) {
+                                              const p = latest[0];
+                                              onResumeAttempt(attempt, {
+                                                profile: p.profile,
+                                                cwd: p.cwd,
+                                                prompt: p.prompt,
+                                              });
+                                              return;
+                                            }
+                                            // 履歴がなければ、空の実行モーダルへ
+                                            emitToast("履歴がないため、新規実行の設定を開きます", "info");
+                                            onOpenAttempt(attempt);
+                                          } catch (e: unknown) {
+                                            const msg = e instanceof Error ? e.message : String(e);
+                                            emitToast("続きの準備に失敗: " + msg, "error");
+                                          }
+                                        }}
+                                        onPush={(id) => doPush(id)}
+                                        onPR={(id) => doPR(id)}
+                                        onWorktree={(attempt) => { setWtAttempt(attempt); setWtOpen(true); }}
+                                        formatDate={toDateTime}
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
               {visibleCount < attempts.length && (
                 <div
                   ref={loadMoreRef}
@@ -478,6 +571,12 @@ export default function TaskDetailsPanel({
             emitToast("PR作成に失敗: " + msg, "error");
           }
         }}
+      />
+      <WorktreeModal
+        open={wtOpen}
+        attempt={wtAttempt}
+        onClose={() => setWtOpen(false)}
+        onUpdated={() => { /* no-op; could refresh status */ }}
       />
     </div>
   );

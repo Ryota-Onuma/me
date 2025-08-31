@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Modal from "../ui/Modal";
 import { emitToast } from "../../lib/toast";
-import { ReposAPI, SettingsAPI } from "../../api";
+import { AttemptAPI, ReposAPI, SettingsAPI } from "../../api";
 import type { ProfileDef, RepoBookmark } from "../../types";
 
 export default function SettingsModal({
@@ -22,6 +22,7 @@ export default function SettingsModal({
   const [addingRepo, setAddingRepo] = useState(false);
   const [savingRepo, setSavingRepo] = useState<Record<string, boolean>>({});
   const [deletingRepo, setDeletingRepo] = useState<Record<string, boolean>>({});
+  const [gcBusy, setGcBusy] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -124,6 +125,26 @@ export default function SettingsModal({
       emitToast("削除に失敗: " + msg, "error");
     } finally {
       setDeletingRepo((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const runGC = async () => {
+    if (gcBusy) return;
+    const ok = window.confirm("全リポジトリの不要な worktree を prune します。よろしいですか？");
+    if (!ok) return;
+    try {
+      setGcBusy(true);
+      const result = await AttemptAPI.gc();
+      const msg = Object.entries(result)
+        .map(([repo, out]) => `${repo}: ${out}`)
+        .join("\n");
+      emitToast("GC 完了", "success");
+      if (msg) console.log("GC result:\n" + msg);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      emitToast("GC 失敗: " + msg, "error");
+    } finally {
+      setGcBusy(false);
     }
   };
 
@@ -295,6 +316,18 @@ export default function SettingsModal({
                 </div>
               )}
             </div>
+
+            <fieldset style={{ marginTop: 16 }}>
+              <legend>メンテナンス</legend>
+              <div className="row" style={{ gap: 8 }}>
+                <button onClick={runGC} disabled={gcBusy} className={gcBusy ? "btnIcon" : undefined}>
+                  {gcBusy && <span className="spinner spinner--sm" aria-hidden="true" />}worktree を全て prune（GC）
+                </button>
+                <div className="muted" style={{ fontSize: 12 }}>
+                  全リポジトリに対して git worktree prune を実行します。
+                </div>
+              </div>
+            </fieldset>
           </>
         )}
       </div>

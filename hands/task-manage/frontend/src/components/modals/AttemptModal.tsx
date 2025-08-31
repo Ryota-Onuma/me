@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import Modal from "../ui/Modal";
-import { useNavigate } from "react-router-dom";
 import { emitToast } from "../../lib/toast";
-import { AttemptAPI, ExecAPI, ReposAPI } from "../../api";
-import type { Attempt, ProfileDef, RepoBookmark } from "../../types";
+import { API, AttemptAPI, ReposAPI } from "../../api";
+import type { Attempt, RepoBookmark } from "../../types";
 
 export default function AttemptModal({
   open,
@@ -16,9 +15,6 @@ export default function AttemptModal({
   onClose: () => void;
   onCreated: (attempt: Attempt) => void;
 }) {
-  const navigate = useNavigate();
-  const [profiles, setProfiles] = useState<ProfileDef[]>([]);
-  const [profile, setProfile] = useState<string>("");
   const [repoPath, setRepoPath] = useState("");
   const [base, setBase] = useState("main");
   const [repos, setRepos] = useState<RepoBookmark[]>([]);
@@ -26,13 +22,20 @@ export default function AttemptModal({
   const [submitting, setSubmitting] = useState(false);
   const [repoErr, setRepoErr] = useState(false);
   const [baseErr, setBaseErr] = useState(false);
+  const [branch, setBranch] = useState("");
+  const [branchErr, setBranchErr] = useState(false);
+
+  const slugify = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9\-_.\s/]+/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^[-.]+|[-.]+$/g, "");
 
   useEffect(() => {
     if (!open) return;
     (async () => {
-      const ps = await ExecAPI.listProfiles();
-      setProfiles(ps);
-      setProfile(ps[0]?.label || "");
       try {
         const rs = await ReposAPI.list();
         setRepos(rs);
@@ -46,10 +49,17 @@ export default function AttemptModal({
             const last = attempts[0];
             setRepoPath(last.repo_path || "");
             setBase(last.base_branch || "main");
-            setProfile(last.profile || ps[0]?.label || "");
           } else {
             setRepoPath("");
             setBase("main");
+          }
+          // ブランチ名の初期提案: タスクタイトルから生成
+          try {
+            const t = await API.getTask(taskId);
+            const baseName = slugify(t.title || "");
+            if (baseName) setBranch(`feature/${baseName}`);
+          } catch {
+            // 失敗時は未設定のまま
           }
         } catch (e) {
           // 取得に失敗してもフォームは手入力できるため通知のみ控えめに
@@ -83,13 +93,34 @@ export default function AttemptModal({
       setBaseErr(true);
       return;
     }
+    const br = branch.trim();
+    if (!br) {
+      emitToast("ブランチ名を入力してください", "error");
+      setBranchErr(true);
+      return;
+    }
+    // 簡易バリデーション（サーバ側でも検証）
+    if (
+      /[~^:?*\\]/.test(br) || br.includes("[") ||
+      br.startsWith("/") ||
+      br.endsWith("/") ||
+      br.includes("//") ||
+      br === "." ||
+      br === ".." ||
+      br.endsWith(".lock") ||
+      br.includes("@{")
+    ) {
+      emitToast("ブランチ名の形式が不正です", "error");
+      setBranchErr(true);
+      return;
+    }
     setSubmitting(true);
     try {
       const at = await AttemptAPI.create({
         task_id: taskId,
-        profile,
         repo_path: repoPath.trim(),
         base_branch: b,
+        branch: br,
       });
       onCreated(at);
       onClose();
@@ -110,21 +141,7 @@ export default function AttemptModal({
         <div style={{ fontSize: 12, color: "#8fa7cc", marginTop: 4, marginBottom: 8 }}>
           作業ブランチ＝このタスク向けの開発用ブランチ。ここで作成したブランチに、あとから実行（エージェント起動）を紐づけます。
         </div>
-        <label>
-          プロファイル
-          <select value={profile} onChange={(e) => setProfile(e.target.value)} disabled={submitting}>
-            {profiles.map((p) => (
-              <option key={p.label} value={p.label}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div>
-          <button className="ghost" onClick={() => navigate("/settings")}>
-            エージェントを作成/管理
-          </button>
-        </div>
+        
         <label>
           リポジトリ
           <div className="row" style={{ gap: 8, alignItems: "end", flexWrap: "wrap" }}>
@@ -204,6 +221,20 @@ export default function AttemptModal({
             disabled={submitting}
             placeholder="main / develop など"
             className={baseErr ? "input--error" : undefined}
+          />
+        </label>
+        <label>
+          ブランチ名（必須・手入力）
+          <input
+            type="text"
+            value={branch}
+            onChange={(e) => {
+              setBranch(e.target.value);
+              if (branchErr && e.target.value.trim()) setBranchErr(false);
+            }}
+            disabled={submitting}
+            placeholder="例: feature/fix-login-timeout"
+            className={branchErr ? "input--error" : undefined}
           />
         </label>
         <div className="row">

@@ -31,7 +31,6 @@ export default function TaskManagePage() {
   const [statusFilter, setStatusFilter] = useState<Set<Status>>(
     new Set(["todo", "doing", "done"]),
   );
-  // タグ機能は廃止
   const searchRef = useRef<HTMLInputElement>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   type ToastItem = {
@@ -112,7 +111,6 @@ export default function TaskManagePage() {
     [],
   );
 
-  // グローバルトーストイベントに反応
   useEffect(() => {
     const onToast = (e: Event) => {
       const ce = e as CustomEvent<{
@@ -137,7 +135,6 @@ export default function TaskManagePage() {
       window.removeEventListener("app:toast", onToast as EventListener);
   }, [showToast]);
 
-  // タグ機能は廃止
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -372,7 +369,6 @@ export default function TaskManagePage() {
         loading={loading}
       />
 
-      {/* ミニマルなツールバー */}
       <BoardToolbar
         statusFilter={statusFilter}
         onToggle={(s) =>
@@ -414,7 +410,6 @@ export default function TaskManagePage() {
       )}
       <footer className="footer" />
 
-      {/* タグ管理モーダルは廃止 */}
 
       <TaskAddModal
         open={showAdd}
@@ -442,7 +437,7 @@ export default function TaskManagePage() {
       <AgentModal
         open={showAgent}
         attemptId={currentAttempt?.id}
-        presetCwd={currentAttempt?.repo_path}
+        presetCwd={currentAttempt?.worktree_path}
         initialConnectExecId={agentConnectExecId}
         initialResume={agentResumePayload ? { profile: agentResumePayload.profile, cwd: agentResumePayload.cwd, prompt: agentResumePayload.prompt, attempt_id: currentAttempt?.id || undefined } : undefined}
         onClose={() => navigate("/", { replace: true })}
@@ -525,7 +520,6 @@ export default function TaskManagePage() {
         }}
       />
 
-      {/* Toast containers (stacked by position) */}
       {(["top-left", "top-right", "bottom-left", "bottom-right"] as const).map(
         (pos) => {
           const list = toasts.filter((t) => t.position === pos);

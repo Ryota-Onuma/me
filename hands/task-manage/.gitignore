@@ -1,5 +1,6 @@
 **/node_modules/
 **/.gocache/
+**/.gocache_local/
 /.backend.pipe
 /.frontend.pipe
 
@@ -13,6 +14,9 @@
 
 # Runtime data (empty dir kept for structure)
 /data/executions/
+
+# Git worktrees created by Attempts
+/worktrees/
 
 # Vite dev cache
 /frontend/.vite/

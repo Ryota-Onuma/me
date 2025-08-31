@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DiffModal from "../modals/DiffModal";
 import type { Attempt } from "../../types";
 
 export function AttemptRow({
@@ -7,6 +8,7 @@ export function AttemptRow({
   onContinue,
   onPush,
   onPR,
+  onWorktree,
   formatDate,
 }: {
   attempt: Attempt;
@@ -14,21 +16,30 @@ export function AttemptRow({
   onContinue?: (attempt: Attempt) => void;
   onPush: (id: string) => Promise<void>;
   onPR: (id: string) => Promise<void> | void;
+  onWorktree: (attempt: Attempt) => void;
   formatDate: (s: string) => string;
 }) {
   const [pushing, setPushing] = useState(false);
   const [creatingPR, setCreatingPR] = useState(false);
   const [continuing, setContinuing] = useState(false);
+  const [diffOpen, setDiffOpen] = useState(false);
   const busy = pushing || creatingPR || continuing;
+  const baseName = (p: string) => {
+    if (!p) return p;
+    const sep = p.includes("\\") && !p.includes("/") ? "\\" : "/";
+    const parts = p.split(sep).filter(Boolean);
+    return parts[parts.length - 1] || p;
+  };
 
   return (
     <div className="attempt">
       <div className="attempt__main">
         <div className="attempt__title">
-          {attempt.profile} ・ <span className="attempt__branch">{attempt.branch}</span>
+          <span className="attempt__branch">{attempt.branch}</span>{" "}
+          {attempt.locked ? <span title="locked" aria-label="locked">🔒</span> : null}
         </div>
         <div className="attempt__meta">
-          {formatDate(attempt.created_at)}
+          {formatDate(attempt.created_at)} ・ base: {attempt.base_branch} ・ ws: {baseName(attempt.worktree_path)}
           {attempt.pr_url ? (
             <>
               {" "}
@@ -91,7 +102,14 @@ export function AttemptRow({
           {creatingPR && <span className="spinner spinner--sm" aria-hidden="true" />} 
           {creatingPR ? "作成中..." : "PR作成"}
         </button>
+        <button className="ghost" disabled={busy} onClick={() => setDiffOpen(true)}>
+          Diff
+        </button>
+        <button className="ghost" onClick={() => onWorktree(attempt)} disabled={busy}>
+          Worktree
+        </button>
       </div>
+      <DiffModal open={diffOpen} attemptId={attempt.id} onClose={() => setDiffOpen(false)} />
     </div>
   );
 }

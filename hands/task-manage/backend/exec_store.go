@@ -181,6 +181,27 @@ func (s *execStore) list() []*ExecProcess {
 	return list
 }
 
+func (s *execStore) addMigrated(profile, prompt, cwd, attemptID string, when time.Time) *ExecProcess {
+    id := newID()
+    p := &ExecProcess{
+        ID: id,
+        Profile: profile,
+        Prompt: prompt,
+        Cwd: cwd,
+        Cmd: []string{},
+        Status: execComplete,
+        ExitCode: func() *int { v := 0; return &v }(),
+        StartedAt: when,
+        EndedAt: &when,
+        AttemptID: attemptID,
+    }
+    s.mu.Lock()
+    s.procs[id] = p
+    s.persistMetaLocked(p)
+    s.mu.Unlock()
+    return p
+}
+
 func (s *execStore) persistMetaLocked(p *ExecProcess) {
 	idx := make(map[string]*ExecProcess, len(s.procs))
 	for id, pp := range s.procs {

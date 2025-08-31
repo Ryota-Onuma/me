@@ -6,6 +6,9 @@ import (
     "net/http"
     "strconv"
     "strings"
+    "os"
+    "time"
+    "path/filepath"
 )
 
 func handleTasks(store *taskStore) http.HandlerFunc {
@@ -33,8 +36,7 @@ func handleTasks(store *taskStore) http.HandlerFunc {
 					list = filtered
 				}
 			}
-            // タグによるフィルタは廃止
-			if qq := strings.TrimSpace(q.Get("q")); qq != "" {
+            if qq := strings.TrimSpace(q.Get("q")); qq != "" {
 				L := strings.ToLower
 				key := L(qq)
 				filtered := make([]*Task, 0, len(list))
@@ -188,11 +190,11 @@ func handleTasksWithID(store *taskStore) http.HandlerFunc {
 }
 
 func handleAttempts(attempts *attemptStore) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			taskID := r.URL.Query().Get("task_id")
-			list := attempts.list(taskID)
+    return func(w http.ResponseWriter, r *http.Request) {
+        switch r.Method {
+        case http.MethodGet:
+            taskID := r.URL.Query().Get("task_id")
+            list := attempts.list(taskID)
 			// Optional pagination: limit/offset query params
 			q := r.URL.Query()
 			if limStr := q.Get("limit"); limStr != "" {
@@ -221,44 +223,60 @@ func handleAttempts(attempts *attemptStore) http.HandlerFunc {
 				}
 			}
 			writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: list})
-		case http.MethodPost:
-			var body struct {
-				TaskID     string `json:"task_id"`
-				Profile    string `json:"profile"`
-				RepoPath   string `json:"repo_path"`
-				BaseBranch string `json:"base_branch"`
-			}
-			if err := json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(&body); err != nil {
-				writeError(w, http.StatusBadRequest, "invalid JSON body")
-				return
-			}
-			if body.TaskID == "" || body.Profile == "" || body.RepoPath == "" || strings.TrimSpace(body.BaseBranch) == "" {
-				writeError(w, http.StatusBadRequest, "task_id, profile, repo_path, base_branch are required")
-				return
-			}
-			at, err := attempts.createAndInitGit(body.TaskID, body.Profile, body.RepoPath, body.BaseBranch)
-			if err != nil {
-				writeError(w, http.StatusBadRequest, err.Error())
-				return
-			}
-			writeJSON(w, http.StatusCreated, apiResponse{Success: true, Data: at})
-		default:
-			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
-		}
-	}
+        case http.MethodPost:
+            var body struct {
+                TaskID     string `json:"task_id"`
+                RepoPath   string `json:"repo_path"`
+                BaseBranch string `json:"base_branch"`
+                Branch     string `json:"branch"`
+            }
+            if err := json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(&body); err != nil {
+                writeError(w, http.StatusBadRequest, "invalid JSON body")
+                return
+            }
+            if body.TaskID == "" || body.RepoPath == "" || strings.TrimSpace(body.BaseBranch) == "" {
+                writeError(w, http.StatusBadRequest, "task_id, repo_path, base_branch are required")
+                return
+            }
+            // branch は任意。指定された場合は validate。
+            if strings.TrimSpace(body.Branch) != "" {
+                if err := validateGitBranchName(body.Branch); err != nil {
+                    writeError(w, http.StatusBadRequest, "invalid branch: "+err.Error())
+                    return
+                }
+            }
+            at, err := attempts.createAndInitGit(body.TaskID, body.RepoPath, body.BaseBranch, body.Branch)
+            if err != nil {
+                writeError(w, http.StatusBadRequest, err.Error())
+                return
+            }
+            writeJSON(w, http.StatusCreated, apiResponse{Success: true, Data: at})
+        default:
+            writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+        }
+    }
 }
 
-// タグ機能は廃止
+func handleAttemptsGC(attempts *attemptStore) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        if r.Method != http.MethodPost {
+            writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+            return
+        }
+        res := attempts.gc()
+        writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: res})
+    }
+}
 
 func handleAttemptsWithID(attempts *attemptStore) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		path := strings.TrimPrefix(r.URL.Path, "/api/attempts/")
-		parts := strings.Split(path, "/")
-		if len(parts) == 0 || parts[0] == "" {
-			writeError(w, http.StatusBadRequest, "missing attempt id")
-			return
-		}
-		id := parts[0]
+    return func(w http.ResponseWriter, r *http.Request) {
+        path := strings.TrimPrefix(r.URL.Path, "/api/attempts/")
+        parts := strings.Split(path, "/")
+        if len(parts) == 0 || parts[0] == "" {
+            writeError(w, http.StatusBadRequest, "missing attempt id")
+            return
+        }
+        id := parts[0]
 
 		if len(parts) >= 2 && parts[1] == "push" {
 			if r.Method != http.MethodPost {
@@ -288,7 +306,80 @@ func handleAttemptsWithID(attempts *attemptStore) http.HandlerFunc {
 			return
 		}
 
-		if len(parts) >= 2 && parts[1] == "pr" {
+		if len(parts) >= 2 && parts[1] == "diff" {
+			if r.Method != http.MethodGet {
+				writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+				return
+			}
+            q := r.URL.Query()
+            ctx := 3
+			if v := strings.TrimSpace(q.Get("context")); v != "" {
+				if n, err := strconv.Atoi(v); err == nil {
+					ctx = n
+				}
+			}
+            includeWT := false
+            if v := strings.TrimSpace(q.Get("worktree")); v == "1" || strings.EqualFold(v, "true") {
+                includeWT = true
+            }
+            renderer := strings.TrimSpace(q.Get("renderer"))
+            diffText, err := attempts.diff(id, ctx, includeWT, renderer)
+			if err != nil {
+				writeError(w, http.StatusBadRequest, err.Error())
+				return
+			}
+			writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: map[string]any{"text": diffText}})
+			return
+		}
+
+		if len(parts) >= 2 && parts[1] == "difit" {
+			if r.Method != http.MethodPost {
+				writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+				return
+			}
+			q := r.URL.Query()
+			useWorktree := false
+			if v := strings.TrimSpace(q.Get("worktree")); v == "1" || strings.EqualFold(v, "true") { useWorktree = true }
+			remote := strings.TrimSpace(q.Get("remote"))
+			noOpen := false
+			if v := strings.TrimSpace(q.Get("no_open")); v == "1" || strings.EqualFold(v, "true") { noOpen = true }
+
+			a, ok := attempts.get(id)
+			if !ok {
+				writeError(w, http.StatusNotFound, "attempt not found")
+				return
+			}
+			dir := a.WorktreePath
+			if dir == "" { dir = a.RepoPath }
+			baseRef := a.BaseBranch
+			if remote != "" { baseRef = remote + "/" + baseRef }
+			from := "HEAD"
+			if useWorktree { from = "." }
+
+			if remote != "" {
+				_, _ = runCmd(dir, "git", "fetch", "--all", "--prune")
+			}
+            bin := "difit"
+            if _, err := runCmd(dir, "which", bin); err != nil {
+                local := filepath.Join(dir, "node_modules", ".bin", "difit")
+                if _, statErr := os.Stat(local); statErr == nil {
+                    bin = local
+                } else {
+                    writeError(w, http.StatusBadRequest, "difit not installed; run `mise run install.difit` or `npm i -g difit` or add local node_modules/.bin/difit")
+                    return
+                }
+            }
+            args := []string{}
+            if noOpen { args = append(args, "--no-open") }
+            args = append(args, from, baseRef)
+            go func() { _, _ = runCmd(dir, bin, args...) }()
+			writeJSON(w, http.StatusAccepted, apiResponse{Success: true, Data: map[string]any{
+				"started": true, "cwd": dir, "from": from, "to": baseRef, "no_open": noOpen,
+			}})
+			return
+		}
+
+        if len(parts) >= 2 && parts[1] == "pr" {
 			if r.Method != http.MethodPost {
 				writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 				return
@@ -519,6 +610,39 @@ func handleProfiles(profMgr *profileManager) http.HandlerFunc {
 	}
 }
 
+func handleAdmin(execs *execStore, attempts *attemptStore) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        if r.URL.Path == "/api/admin/migrate_attempts" {
+            if r.Method != http.MethodPost {
+                writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+                return
+            }
+            f, err := os.Open(attempts.path)
+            if err != nil { writeError(w, http.StatusBadRequest, err.Error()); return }
+            defer f.Close()
+            var raw []map[string]any
+            if err := json.NewDecoder(io.LimitReader(f, 4<<20)).Decode(&raw); err != nil { writeError(w, http.StatusBadRequest, err.Error()); return }
+            migrated := 0
+            for _, m := range raw {
+                prof, _ := m["profile"].(string)
+                if strings.TrimSpace(prof) == "" { continue }
+                id, _ := m["id"].(string)
+                repoPath, _ := m["repo_path"].(string)
+                wt, _ := m["worktree_path"].(string)
+                createdAt := time.Now()
+                if s, ok := m["created_at"].(string); ok { if t, err := time.Parse(time.RFC3339, s); err == nil { createdAt = t } }
+                cwd := wt
+                if strings.TrimSpace(cwd) == "" { cwd = repoPath }
+                if strings.TrimSpace(cwd) == "" { continue }
+                execs.addMigrated(prof, "migrated from attempt.profile", cwd, id, createdAt)
+                migrated++
+            }
+            writeJSON(w, http.StatusOK, apiResponse{Success: true, Data: map[string]int{"migrated": migrated}})
+            return
+        }
+        writeError(w, http.StatusNotFound, "not found")
+    }
+}
 // --- Repo bookmarks ---
 
 func handleRepos(repos *repoStore) http.HandlerFunc {

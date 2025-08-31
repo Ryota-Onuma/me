@@ -1,4 +1,4 @@
-export type Status = "todo" | "doing" | "done";
+export type Status = "todo" | "doing" | "reviewing" | "done";
 
 export interface Task {
   id: string;
@@ -26,10 +26,11 @@ export interface ExecProcess {
 export interface Attempt {
   id: string;
   task_id: string;
-  profile: string;
   repo_path: string;
+  worktree_path: string;
   base_branch: string;
   branch: string;
+  locked?: boolean;
   pr_number?: number;
   pr_url?: string;
   pr_status?: string;

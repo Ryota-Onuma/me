@@ -44,8 +44,6 @@ func statusRank(s string) int {
 	}
 }
 
-// タグ機能は廃止（sanitizeTags 削除）
-
 func newID() string {
 	ts := time.Now().UTC().Format("20060102150405")
 	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -135,6 +133,42 @@ func flusher(w http.ResponseWriter) {
 }
 
 func sseLine(event, data string) string {
-	data = strings.ReplaceAll(data, "\n", "\\n")
-	return "event: " + event + "\n" + "data: " + data + "\n\n"
+    data = strings.ReplaceAll(data, "\n", "\\n")
+    return "event: " + event + "\n" + "data: " + data + "\n\n"
+}
+
+// validateGitBranchName は簡易なブランチ名バリデーションを行う。
+// 参考: `git check-ref-format --branch` の要件のサブセット
+func validateGitBranchName(name string) error {
+    n := strings.TrimSpace(name)
+    if n == "" {
+        return fmt.Errorf("empty")
+    }
+    // 禁止文字/パターンの簡易チェック
+    forbidden := []string{"..", "~", "^", ":", "?", "*", "[", "\\"}
+    for _, f := range forbidden {
+        if strings.Contains(n, f) {
+            return fmt.Errorf("contains forbidden char: %q", f)
+        }
+    }
+    if strings.HasPrefix(n, "/") || strings.HasSuffix(n, "/") || strings.Contains(n, "//") {
+        return fmt.Errorf("invalid slash placement")
+    }
+    if strings.HasSuffix(n, ".lock") {
+        return fmt.Errorf("must not end with .lock")
+    }
+    if strings.Contains(n, "@{") {
+        return fmt.Errorf("must not contain @{")
+    }
+    // 先頭/末尾のドットは禁止（実務上の安全策）
+    if strings.HasPrefix(n, ".") || strings.HasSuffix(n, ".") {
+        return fmt.Errorf("must not start or end with dot")
+    }
+    // 制御文字の禁止
+    for _, r := range n {
+        if r >= 0 && r < 0x20 || r == 0x7f {
+            return fmt.Errorf("contains control char")
+        }
+    }
+    return nil
 }

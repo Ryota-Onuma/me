@@ -142,6 +142,12 @@ button.ghost {
   box-shadow: 0 0 0 2px rgba(245,158,11,0.18);
   color: #fff2da;
 }
+.pill.active[data-status="reviewing"] {
+  background: rgba(139,92,246,0.20);
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139,92,246,0.18);
+  color: #f3f0ff;
+}
 .pill.active[data-status="done"] {
   background: rgba(16,185,129,0.20);
   border-color: #10b981;
@@ -152,10 +158,10 @@ button.ghost {
 .toolbar__meta { font-size: 12px; color: #93a9c8; }
 .board {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   padding: 16px;
-  max-width: 1280px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 .column {
@@ -206,6 +212,9 @@ button.ghost {
 }
 .status-dot.doing {
   background: #f59e0b;
+}
+.status-dot.reviewing {
+  background: #8b5cf6;
 }
 .status-dot.done {
   background: #10b981;
@@ -272,6 +281,11 @@ body.theme-violet {
   color: #93a9c8;
   text-align: center;
   padding: 12px;
+}
+@media (max-width: 1200px) {
+  .board {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 @media (max-width: 900px) {
   .board {
@@ -553,6 +567,21 @@ button.danger:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
+/* New concise status bar */
+.statsBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  background: #0b1220;
+  border: 1px solid #1f2e47;
+  border-radius: 10px;
+}
+.chip--base {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(58,141,255,0.12);
+}
 /* Skeleton / Loading */
 .statusMeta { font-size: 12px; color: #8fa7cc; }
 .skeleton {
@@ -606,7 +635,8 @@ button.danger:hover {
 }
 .attempt {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
   gap: 8px;
   padding: 10px 12px;
   border: 1px solid #1f2e47;
@@ -622,8 +652,32 @@ button.danger:hover {
   color: #93a9c8;
 }
 .attempt__main { display: grid; gap: 2px; }
-.attempt__actions { display: flex; align-items: center; gap: 6px; }
+.attempt__actions { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; flex-shrink: 0; }
 .attempt__branch { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+
+/* Attempt groups (作業ブランチごとのグルーピング) */
+.attemptGroup { display: grid; gap: 6px; }
+.attemptGroup__header { 
+  display: grid; 
+  grid-template-columns: 1fr auto; 
+  align-items: center; 
+  column-gap: 8px; 
+  row-gap: 4px; 
+  padding: 4px 2px; 
+  color: #93a9c8; 
+  font-size: 12px; 
+}
+.attemptGroup__title { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.attemptGroup__chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
+
+/* Base-level grouping */
+.attemptGroupBase { display: grid; gap: 8px; border: 1px dashed #1f2e47; border-radius: 10px; padding: 6px 8px; }
+.attemptGroupBase__header { display: flex; align-items: center; justify-content: space-between; color: #b3c7e6; font-size: 13px; padding: 2px; }
+.attemptGroupBase__body { display: grid; gap: 8px; }
+
+/* Collapse button (triangle + label) */
+.collapseBtn { background: transparent; border: 0; color: inherit; display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px; cursor: pointer; min-width: 0; }
+.collapseBtn .triangle { width: 1em; display: inline-block; }
 
 /* フォーカス可視化 */
 button:focus-visible,
@@ -708,3 +762,42 @@ a:focus-visible {
 .toolbar__group { display: flex; gap: 8px; align-items: center; }
 .btnIcon { display: inline-flex; align-items: center; gap: 6px; }
 .btnIcon svg { width: 18px; height: 18px; }
+/* --- Diff styles --- */
+.diff { 
+  background: #0a1020; 
+  color: #e5eef7; 
+  padding: 10px; 
+  border-radius: 6px; 
+  max-height: 60vh; 
+  overflow: auto; 
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; 
+  font-size: 12px; 
+  line-height: 1.55; 
+  white-space: pre; 
+}
+.diff--full { max-height: none; }
+.diffToolbar { 
+  position: sticky; top: 0; z-index: 1; 
+  display: flex; align-items: center; gap: 8px; 
+  background: #0f1621; border-bottom: 1px solid #1d2939; 
+  padding: 8px 12px; border-radius: 8px; 
+}
+.diffToolbar .inline { display: inline-flex; align-items: center; gap: 6px; }
+.diffToolbar .spacer { flex: 1; }
+.diff-line { white-space: pre; }
+.diff-line.h { color: #8fa7cc; }
+.diff-line.f { color: #b3c7e6; }
+.diff .h { color: #8fa7cc; }
+.diff .f { color: #b3c7e6; }
+/* added/removed lines */
+.diff { --add: rgba(56, 142, 60, 0.16); --del: rgba(198, 40, 40, 0.18); }
+.diff .add { background: var(--add); }
+.diff .del { background: var(--del); }
+/* Colorize added/removed lines with subtle backgrounds */
+pre.diff { --add: rgba(56, 142, 60, 0.18); --del: rgba(198, 40, 40, 0.22); }
+pre.diff > * {}
+pre.diff { }
+/* Plain text; rely on leading char */
+pre.diff { }
+/* This works because we won't wrap each line in spans; keep simple */
+pre.diff { }

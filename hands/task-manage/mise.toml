@@ -35,3 +35,7 @@ bash -lc 'set -e
   (cd frontend && npx -y prettier@3 --write "**/*.{ts,tsx,css,html}")
 '
 '''
+[tasks.install-difit]
+description = "difit (global) をインストール"
+dir = "frontend"
+run = "npm i -g difit@latest"

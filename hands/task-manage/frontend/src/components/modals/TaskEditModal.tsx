@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Modal from "../ui/Modal";
 import { emitToast } from "../../lib/toast";
-// タグ機能は廃止
 
 export default function TaskEditModal({
   open,
@@ -55,7 +54,6 @@ export default function TaskEditModal({
             disabled={busy}
           />
         </label>
-        {/* タグ編集は廃止 */}
         <div className="row" style={{ justifyContent: "flex-end" }}>
           <button
             onClick={async () => {

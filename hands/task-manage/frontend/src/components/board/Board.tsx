@@ -47,10 +47,11 @@ export interface BoardProps {
   onSelect: (task: Task) => void;
 }
 
-const statusOrder: Status[] = ["todo", "doing", "done"];
+const statusOrder: Status[] = ["todo", "doing", "reviewing", "done"];
 const statusLabel: Record<Status, string> = {
   todo: "未着手",
   doing: "進行中",
+  reviewing: "レビュー中",
   done: "完了",
 };
 
@@ -84,7 +85,7 @@ export default function Board({
   useEffect(() => void (onSelectRef.current = onSelect), [onSelect]);
 
   const byStatus = useMemo(() => {
-    const m: Record<Status, Task[]> = { todo: [], doing: [], done: [] };
+    const m: Record<Status, Task[]> = { todo: [], doing: [], reviewing: [], done: [] };
     for (const t of tasks) m[t.status].push(t);
     for (const k of statusOrder) m[k].sort((a, b) => a.order - b.order);
     return m;
