@@ -1,1 +1,1 @@
-@brain/skill/software-engineering/coding-points.md
+@~/brain/skill/software-engineering/coding-points.md
