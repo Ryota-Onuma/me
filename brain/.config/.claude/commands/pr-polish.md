@@ -1,47 +1,47 @@
 ---
-description: "PR情報を読み取り、テンプレートがあれば使用して英語のみのPR本文を生成し、英語タイトルを設定してPRを更新"
+description: "Read PR information, use template if available to generate English-only PR body and set English title to update PR"
 argument-hint: [pr-url]
 allowed-tools: Bash(gh:*), Bash(jq:*), Bash(sed:*), Bash(mktemp:*), Bash(cat:*), Bash(rm:*)
 ---
 
 # /pr-polish
 
-**引数:** `$1` = Pull Request URL (例: `https://github.com/OWNER/REPO/pull/123`)
+**Arguments:** `$1` = Pull Request URL (e.g., `https://github.com/OWNER/REPO/pull/123`)
 
-PR の変更内容とテンプレートを読み込み、**英語のみ**の本文と**英語タイトル**を生成して PR を更新します。
+Read PR changes and template, generate **English-only** body and **English title** to update the PR.
 
-## データ収集
+## Data Collection
 
-### PR 情報:
+### PR Information:
 
 `gh pr view "$1" --json number,title,body,baseRefName,headRefName,url`
 
-### 変更ファイル:
+### Changed Files:
 
 `gh pr diff "$1" --name-only`
 
-### 変更内容:
+### Change Content:
 
 `gh pr diff "$1"`
 
-## 要件
+## Requirements
 
-- **<PR タイトル>:** 英語のみ、具体的でアクション指向
-- **<PR 本文>:** **必ず英語のみで記述すること**、簡潔で正確、変更内容に基づく。`PULL_REQUEST_TEMPLATE.md` が見つかった場合は見出しと順序を維持
-- **Issue 参照:** 該当する場合は `Fixes #123` で自動リンク
+- **<PR Title>:** English only, specific and action-oriented
+- **<PR Body>:** **Must be written in English only**, concise and polished, bullet points without emojis, based on changes. If `PULL_REQUEST_TEMPLATE.md` is found, maintain headings and order
+- **Issue Reference:** Use `Fixes #123` for automatic linking when applicable
 
-### テンプレートなしの場合の<PR 本文>の構成
+### <PR Body> Structure When No Template
 
-1. **Summary** (English only)
-2. **Changes** (English only, bullet points per file)
-3. **Tests** (English only, procedures and expected results)
-4. **Risks** (English only)
+1. **Summary** (English only, concise single paragraph)
+2. **Changes** (English only, bullet points per file, no emojis)
+3. **Tests** (English only, bullet points for procedures and results)
+4. **Risks** (English only, bullet points if applicable)
 
-## 処理フロー
+## Processing Flow
 
-1. 上記のコマンドで PR 情報を収集
-2. PR テンプレートがある場合は取得 (`.github/pull_request_template.md` などをチェック)
-3. 変更内容を分析して英語のみの本文を生成
-4. 英語のタイトルを生成
-5. `gh pr edit "$1" --title "<PR タイトル>" --body "<PR 本文>"` で PR を更新
-6. 更新結果をプレビュー表示
+1. Collect PR information using the above commands
+2. Retrieve PR template if available (check `.github/pull_request_template.md` etc.)
+3. Analyze changes and generate English-only body
+4. Generate English title
+5. Update PR using `gh pr edit "$1" --title "<PR Title>" --body "<PR Body>"`
+6. Display preview of updated results
