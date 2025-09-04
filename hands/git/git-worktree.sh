@@ -5,6 +5,9 @@
 
 set -euo pipefail
 
+# ---- Script directory resolution for Git managed execution ----
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+
 # ---- Defaults (overridable by CLI flags or environment variables) ----
 remote="${GWS_REMOTE:-origin}"
 base="${GWS_BASE:-}"
@@ -32,7 +35,7 @@ Options:
   -h, --help          Show this help
 
 Env overrides:
-  GWS_GEN_CMD, GWS_REMOTE, GWS_BASE, GWS_BASE_DIR
+  GWS_GEN_CMD, GWS_GEN_CMD_PATH, GWS_REMOTE, GWS_BASE, GWS_BASE_DIR
 
 Notes:
   - The first non-empty line from the generator stdout is used as branch name.
@@ -102,8 +105,20 @@ if (( ! allow_dirty )); then
 fi
 
 # ---- Run generator to get branch name ----
-if ! branch="$("$gen_cmd" "${gen_args[@]}" | awk 'NF{print; exit}')" ; then
-  die "Generator failed: $gen_cmd"
+# Resolve generator command path:
+# 1. If GWS_GEN_CMD_PATH is set, use it as absolute path
+# 2. If gen_cmd is absolute path, use as-is
+# 3. Otherwise, resolve relative to script directory
+if [[ -n "${GWS_GEN_CMD_PATH:-}" ]]; then
+  resolved_gen_cmd="$GWS_GEN_CMD_PATH"
+elif [[ "$gen_cmd" != /* ]]; then
+  resolved_gen_cmd="$script_dir/$gen_cmd"
+else
+  resolved_gen_cmd="$gen_cmd"
+fi
+
+if ! branch="$("$resolved_gen_cmd" "${gen_args[@]}" | awk 'NF{print; exit}')" ; then
+  die "Generator failed: $resolved_gen_cmd"
 fi
 # Trim whitespace
 branch="${branch##[[:space:]]#}"; branch="${branch%%[[:space:]]#}"

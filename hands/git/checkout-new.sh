@@ -165,7 +165,10 @@ fi
 
 if git switch -c "$NEW" "$BASE_REF" 2>/dev/null; then :; else git checkout -b "$NEW" "$BASE_REF"; fi
 
-print -- "\n${c_green}Success!${c_reset}"
-print -- "Created and checked out: ${c_cyan}${NEW}${c_reset}"
-print -- "Base: $BASE_REF"
-print -- "Prefix used: $PREFIX"
+print -u2 -- "\n${c_green}Success!${c_reset}"
+print -u2 -- "Created and checked out: ${c_cyan}${NEW}${c_reset}"
+print -u2 -- "Base: $BASE_REF"
+print -u2 -- "Prefix used: $PREFIX"
+
+# Output branch name to stdout for git-worktree.sh compatibility
+print -- "$NEW"
