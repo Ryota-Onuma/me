@@ -17,7 +17,7 @@ echo "Fetching PRs requested for you (including your teams) in ${REPO}..."
 
 # Use gh to list open PRs in the repo where review is requested from you (teams included), excluding drafts
 PR_URLS="$(gh pr list --repo "${REPO}" \
-  --search 'is:open review-requested:@me -draft' \
+  --search 'is:open review-requested:@me' \
   --json url --jq '.[].url')"
 
 # Exit early if nothing was found
@@ -34,7 +34,7 @@ while IFS= read -r url; do
   count="$(GITHUB_USER="${GITHUB_USER}" gh api "repos/${REPO}/pulls/${number}/reviews" \
             --jq '[.[] | select(.user.login==env.GITHUB_USER and (.state=="APPROVED" or .state=="CHANGES_REQUESTED"))] | length')"
   if [[ "${count}" -eq 0 ]]; then
-    FILTERED_URLS+="${url}\n"
+    FILTERED_URLS+="${url}"$'\n'
   fi
 done <<< "${PR_URLS}"
 
