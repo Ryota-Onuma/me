@@ -1,32 +1,73 @@
 ---
-description: Report Integrator サブエージェントに委譲して、収集済みデータを日報へ統合するためのスラッシュコマンド。
+command: /compile-report
+description: Report Integrator サブエージェントに委譲して、収集済みデータを日報へ統合
 argument-hint: "[date] - YYYY-MM-DD (default: today)"
-allowed-tools: Task(*), Read(*)
+allowed-tools: [Task(*), Read(*)]
 ---
 
-# /compile-report
+# Compile Report Orchestration
 
-## Usage
+## 📋 Overview
 
-`/compile-report [YYYY-MM-DD]`
+```yaml
+pipeline:
+  name: compile-report
+  purpose: 収集済みデータを日報へ統合
+  delegation-target: report-integrator
+  execution-mode: orchestration-only
+```
 
-## Inputs
+## ⚙️ Configuration
 
-- `DATE`（省略可）: `YYYY-MM-DD`。未指定時は当日。
+```yaml
+inputs:
+  DATE:
+    type: string
+    format: YYYY-MM-DD
+    required: false
+    default: today
+```
 
-## What to do
+## 🔄 Orchestration Flow
 
-- Use `report-integrator` and perform tasks.
-  - Goal: 収集済み `github-work/summary.md` / `manual-draft.md` / `slack-work/summary.md`をそれぞれ要約したあと、対象日の日報へ統合
-  - Refer: `.claude/agents/report-integrator.md`
-  - Deliverables: `reports/YEAR/DATE/github-work/summary.md` / `reports/YEAR/DATE/manual-draft.md` / ` reports/YEAR/DATE/slack-work/summary.md` / `reports/YEAR/DATE/daily-report.md `
+```yaml
+workflow:
+  - step: delegate-to-agent
+    agent: report-integrator
+    reference: .claude/agents/report-integrator.md
+    
+    goals:
+      - action: summarize-and-integrate
+        sources:
+          - reports/YEAR/DATE/github-work/summary.md
+          - reports/YEAR/DATE/manual-draft.md
+          - reports/YEAR/DATE/slack-work/summary.md
+        target: reports/YEAR/DATE/daily-report.md
+    
+    deliverables:
+      structured: 
+        - reports/YEAR/DATE/github-work/summary.md
+        - reports/YEAR/DATE/manual-draft.md
+        - reports/YEAR/DATE/slack-work/summary.md
+      final:
+        - reports/YEAR/DATE/daily-report.md
+```
 
-## Orchestrator Responsibilities
+## 🎯 Orchestrator Responsibilities
 
-- Report Integrator に統合作業を一任し、進捗/結果を収集
-- 収集物が存在しない場合のハンドリング（スキップ/警告）を伝達
-- 最終成果物のパスを提示
+```yaml
+responsibilities:
+  - monitor: agent進捗とタスク完了状況
+  - handle: 収集物不存在時の適切なハンドリング（スキップ/警告）
+  - aggregate: エージェント結果の集約と報告
+  - report: 最終成果物パスの明示
+```
 
-## Notes
+## 📝 Execution Notes
 
-- 生成/ファイル編集はサブエージェント側で実行（本コマンドはオーケストレーションのみ）。
+```yaml
+constraints:
+  - execution: サブエージェント完全委譲
+  - scope: オーケストレーションのみ
+  - file-ops: サブエージェント側で実行
+```
