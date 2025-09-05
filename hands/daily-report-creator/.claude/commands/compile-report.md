@@ -42,8 +42,6 @@ workflow:
           - reports/YEAR/DATE/github-work/summary.md
           - reports/YEAR/DATE/manual-draft.md
           - reports/YEAR/DATE/slack-work/summary.md
-          - reports/YEAR/DATE/calendar-events/calendar-summary.md
-          - reports/YEAR/DATE/calendar-events/  # 個別イベントファイル群
         target: reports/YEAR/DATE/daily-report.md
     
     deliverables:
@@ -51,8 +49,6 @@ workflow:
         - reports/YEAR/DATE/github-work/summary.md
         - reports/YEAR/DATE/manual-draft.md
         - reports/YEAR/DATE/slack-work/summary.md
-        - reports/YEAR/DATE/calendar-events/calendar-summary.md
-        - reports/YEAR/DATE/calendar-events/event-*/  # 個別イベント詳細群
       final:
         - reports/YEAR/DATE/daily-report.md
 ```
