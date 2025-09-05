@@ -24,6 +24,7 @@ func init() {
 	rootCmd.AddCommand(integrateGithubCmd)
 	rootCmd.AddCommand(fetchSlackActivityCmd)
 	rootCmd.AddCommand(fetchGithubActivityCmd)
+	rootCmd.AddCommand(fetchCalendarEventsCmd)
 	rootCmd.AddCommand(orchestrateCmd)
 }
 

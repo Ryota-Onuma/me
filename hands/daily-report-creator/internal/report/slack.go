@@ -85,7 +85,7 @@ func (s *SlackCollector) CollectWorkForDate(dateStr string) error {
 	if err != nil {
 		loc = time.Local // Fallback to system local time
 	}
-	
+
 	targetDate, err := time.ParseInLocation("2006-01-02", dateStr, loc)
 	if err != nil {
 		return fmt.Errorf("invalid date format '%s', expected YYYY-MM-DD: %w", dateStr, err)
@@ -123,9 +123,9 @@ func (s *SlackCollector) collectWorkForTime(targetTime time.Time) error {
 	var activeChannels []SlackChannel
 	startOfDay := time.Date(targetTime.Year(), targetTime.Month(), targetTime.Day(), 0, 0, 0, 0, targetTime.Location())
 	endOfDay := startOfDay.Add(24 * time.Hour)
-	
-	fmt.Printf("Searching for messages between: %s and %s (JST)\n", 
-		startOfDay.Format("2006-01-02 15:04:05"), 
+
+	fmt.Printf("Searching for messages between: %s and %s (JST)\n",
+		startOfDay.Format("2006-01-02 15:04:05"),
 		endOfDay.Format("2006-01-02 15:04:05"))
 
 	for _, channel := range allChannels {
@@ -325,7 +325,7 @@ func (s *SlackCollector) getMessagesFromChannel(channelID string, startTime, end
 		// Only include actual messages (not system messages)
 		if msg.Type == "message" && msg.Text != "" {
 			messages = append(messages, msg)
-			
+
 			// Get thread replies if this is a parent message
 			if msg.ThreadTS != "" && msg.ThreadTS == msg.Timestamp {
 				threadReplies, err := s.getThreadReplies(channelID, msg.ThreadTS, startTime, endTime)
@@ -390,7 +390,7 @@ func (s *SlackCollector) getThreadReplies(channelID, threadTS string, startTime,
 func (s *SlackCollector) getParticipatedMessages(messages []SlackMessage, userID, channelName, channelID string) []SlackMessage {
 	var participatedMessages []SlackMessage
 	userParticipatedThreads := make(map[string]bool) // track threads where user participated
-	
+
 	// First pass: identify threads where user participated
 	for _, msg := range messages {
 		if msg.User == userID {
@@ -401,14 +401,14 @@ func (s *SlackCollector) getParticipatedMessages(messages []SlackMessage, userID
 			}
 		}
 	}
-	
+
 	// Second pass: collect all relevant messages
 	for _, msg := range messages {
 		msg.ChannelName = channelName
 		msg.Channel = channelID
-		
+
 		include := false
-		
+
 		// Include user's own messages
 		if msg.User == userID {
 			include = true
@@ -422,12 +422,12 @@ func (s *SlackCollector) getParticipatedMessages(messages []SlackMessage, userID
 				include = true
 			}
 		}
-		
+
 		if include {
 			participatedMessages = append(participatedMessages, msg)
 		}
 	}
-	
+
 	return participatedMessages
 }
 

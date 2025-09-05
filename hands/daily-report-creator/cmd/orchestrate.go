@@ -47,7 +47,7 @@ Example:
 
 		fmt.Printf("2️⃣  Slack Client Subagent:\n")
 		fmt.Printf("   Task: Collect Slack activity for %s\n", date)
-		fmt.Printf("   Method: Use Task tool with subagent_type: 'general-purpose'\n") 
+		fmt.Printf("   Method: Use Task tool with subagent_type: 'general-purpose'\n")
 		fmt.Printf("   Command: go run main.go fetch-slack-activity %s\n", date)
 		fmt.Printf("   Output: reports/%s/slack-work/\n\n", date[:4]+"/"+date)
 

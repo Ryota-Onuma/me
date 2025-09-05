@@ -59,6 +59,16 @@ workflow:
             - slack-summary.json
             - summary.md
             - messages/  # 個別メッセージファイル群
+            
+      - agent: calendar-client
+        reference: .claude/agents/calendar-client.md
+        goal: カレンダーイベント収集
+        deliverables:
+          directory: reports/YEAR/DATE/calendar-events/
+          files:
+            - events-summary.json
+            - calendar-summary.md
+            - event-*/  # 個別イベント詳細ファイル群
 ```
 
 ## 🎯 Orchestrator Responsibilities
@@ -66,7 +76,7 @@ workflow:
 ```yaml
 responsibilities:
   coordination:
-    - task: 2エージェント並列実行と完了待機
+    - task: 3エージェント並列実行と完了待機
     - task: 進捗状況の集約と監視
     - task: エージェント間の依存関係解決
     
@@ -97,6 +107,11 @@ deliverables:
     - reports/YEAR/DATE/slack-work/slack-summary.json
     - reports/YEAR/DATE/slack-work/summary.md
     - reports/YEAR/DATE/slack-work/messages/
+    
+  calendar-artifacts:
+    - reports/YEAR/DATE/calendar-events/events-summary.json
+    - reports/YEAR/DATE/calendar-events/calendar-summary.md
+    - reports/YEAR/DATE/calendar-events/event-*/
 ```
 
 ## 🔗 Related Agents
@@ -110,6 +125,10 @@ agents:
   slack-client:
     path: .claude/agents/slack-client.md
     purpose: コミュニケーション活動の抽出
+    
+  calendar-client:
+    path: .claude/agents/calendar-client.md
+    purpose: カレンダーイベント・会議情報の収集
 ```
 
 ## 📝 Execution Notes
