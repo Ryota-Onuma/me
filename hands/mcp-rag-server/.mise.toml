@@ -1,0 +1,287 @@
+[tools]
+[tasks."project:show"]
+description = "現在のPROJECTを表示"
+run = '''
+bash -c 'set -e; if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi; echo PROJECT=${PROJECT:-default}'
+'''
+
+[tasks."project:init"]
+description = "プロジェクト初期化（設定JSON+スキーマ作成）"
+run = '''
+bash -lc '
+set -e
+NAME_ARG=${NAME:+--name "$NAME"}
+# NAME が指定されていれば /app/data/source/<NAME> を既定に、未指定ならCLI側のデフォルトに任せる
+if [ -n "$NAME" ]; then
+  SRC_ARG="--source-dir /app/data/source/$NAME"
+else
+  SRC_ARG=""
+fi
+PROC_ARG="--processed-dir /app/data/processed"
+
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+if [ -r /dev/tty ]; then
+  docker compose exec mcp-server \
+    uv run python -m src.cli project init $NAME_ARG $SRC_ARG $PROC_ARG < /dev/tty
+else
+  docker compose exec -T mcp-server \
+    uv run python -m src.cli project init $NAME_ARG $SRC_ARG $PROC_ARG
+fi
+'
+'''
+
+[tasks."project:list"]
+description = "定義済みプロジェクト一覧"
+run = '''
+bash -lc '
+set -e
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+docker compose exec -T mcp-server \
+  uv run python -m src.cli project list
+'
+'''
+
+[tasks."project:choose"]
+description = "対話選択して名前を返す（他タスク用）"
+run = '''
+bash -lc '
+set -e
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+if [ -r /dev/tty ]; then
+  docker compose exec mcp-server \
+    uv run python -m src.cli project choose < /dev/tty
+else
+  # TTYがない場合もSTDINは転送して対話可能にする
+  docker compose exec -T mcp-server \
+    uv run python -m src.cli project choose
+fi
+'
+'''
+
+[tasks."project:profiles"]
+description = "MCP接続用プロファイル一覧（JSON出力）"
+run = '''
+bash -lc '
+set -e
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+docker compose exec -T mcp-server \
+  uv run python -m src.cli project profiles
+'
+'''
+
+[tasks."project:delete"]
+description = "プロジェクト削除（設定/スキーマ/ドキュメント）\n  使用方法: NAME=プロジェクト名 YES=1 mise run project:delete\n  オプション: DROP_DB=1, DELETE_PROCESSED=1, DELETE_SOURCE=1"
+run = '''
+bash -lc '
+set -e
+NAME_ARG=${NAME:+--name "$NAME"}
+FLAGS=
+[ -n "$DROP_DB" ] && FLAGS="$FLAGS --drop-db"
+[ -n "$DELETE_PROCESSED" ] && FLAGS="$FLAGS --delete-processed"
+[ -n "$DELETE_SOURCE" ] && FLAGS="$FLAGS --delete-source"
+[ -n "$YES" ] && FLAGS="$FLAGS --yes"
+# 非対話的実行のチェック
+if [ -z "$NAME" ] && [ ! -t 0 ]; then
+  echo "非対話的実行時は NAME 環境変数が必要です。" >&2
+  echo "使用例: NAME=プロジェクト名 YES=1 mise run project:delete" >&2
+  exit 1
+fi
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+if [ -r /dev/tty ]; then
+  docker compose exec mcp-server \
+    uv run python -m src.cli project delete $NAME_ARG $FLAGS < /dev/tty
+else
+  docker compose exec -T mcp-server \
+    uv run python -m src.cli project delete $NAME_ARG $FLAGS
+fi
+'
+'''
+
+[tasks."project:select"]
+description = "対話式にPROJECTを設定（.envを書き換え）"
+run = '''
+bash -lc '
+set -e
+# 対話選択でプロジェクト名を取得
+if [ -r /dev/tty ]; then
+  P=$(mise run -q project:choose < /dev/tty 2>/dev/tty)
+else
+  P=$(mise run -q project:choose)
+fi
+# .env を安全に更新
+touch .env
+if grep -q "^PROJECT=" .env; then
+  sed -i.bak "/^PROJECT=/d" .env && rm -f .env.bak
+fi
+echo "PROJECT=${P}" >> .env
+echo "PROJECTを ${P} に設定しました (.env)"
+'
+'''
+
+[tasks."rag:index"]
+description = "プロジェクト単位でドキュメントをインデックス化 (Docker優先)"
+run = '''
+bash -c '
+set -e
+# .envの読み込み
+if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi
+PROJECT=${PROJECT:-alpha}
+SIZE=${SIZE:-500}
+OVERLAP=${OVERLAP:-100}
+# 増分フラグ
+INC_FLAG=
+case "${INCREMENTAL:-false}" in true|1|yes|on) INC_FLAG="-i" ;; esac
+# プロジェクトごとのsourceディレクトリ（data/source/<project>) を既定にする
+DIR=${DIR:-/app/data/source/${PROJECT}}
+echo "📁 プロジェクト: $PROJECT でインデックス化を開始します..."
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+docker compose exec -T mcp-server \
+  uv run python -m src.cli --project "$PROJECT" index -d "$DIR" -s "$SIZE" -o "$OVERLAP" $INC_FLAG
+'
+'''
+
+[tasks."rag:index:select"]
+description = "対話選択でプロジェクト指定→インデックス化"
+run = '''
+bash -lc '
+set -e
+P=$(mise run -q project:choose < /dev/tty 2>/dev/tty)
+SIZE=${SIZE:-500}
+OVERLAP=${OVERLAP:-100}
+# 選択したプロジェクトのsourceディレクトリ（data/source/<project>）を既定にする
+DIR=${DIR:-/app/data/source/${P}}
+echo "📁 プロジェクト: $P でインデックス化を開始します..."
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+docker compose exec -T mcp-server \
+  uv run python -m src.cli --project "$P" index -d "$DIR" -s "$SIZE" -o "$OVERLAP" ${INCREMENTAL:+-i}
+'
+'''
+
+[tasks."rag:count"]
+description = "プロジェクト単位のドキュメント件数を表示 (Docker優先)"
+run = '''
+bash -c '
+set -e
+if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi
+PROJECT=${PROJECT:-alpha}
+echo "📊 プロジェクト: $PROJECT の件数を取得します..."
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+docker compose exec -T mcp-server \
+  uv run python -m src.cli --project "$PROJECT" count
+'
+'''
+
+[tasks."rag:clear"]
+description = "プロジェクト単位でインデックスをクリア (Docker優先)"
+run = '''
+bash -c '
+set -e
+if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi
+PROJECT=${PROJECT:-alpha}
+echo "🗑️ プロジェクト: $PROJECT のインデックスをクリアします..."
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+docker compose exec -T mcp-server \
+  uv run python -m src.cli --project "$PROJECT" clear
+'
+'''
+
+[tasks."rag:count:select"]
+description = "対話選択でプロジェクト指定→件数取得"
+run = '''
+bash -lc '
+set -e
+P=$(mise run -q project:choose < /dev/tty 2>/dev/tty)
+echo "📊 プロジェクト: $P の件数を取得します..."
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+docker compose exec -T mcp-server \
+  uv run python -m src.cli --project "$P" count
+'
+'''
+
+[tasks."rag:clear:select"]
+description = "対話選択でプロジェクト指定→インデックス削除"
+run = '''
+bash -lc '
+set -e
+P=$(mise run -q project:choose < /dev/tty 2>/dev/tty)
+echo "🗑️ プロジェクト: $P のインデックスをクリアします..."
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+docker compose exec -T mcp-server \
+  uv run python -m src.cli --project "$P" clear
+'
+'''
+
+[tasks."mcp:start"]
+description = "MCPサーバー起動（PROJECTをENVまたは引数で指定）"
+run = '''
+bash -lc '
+set -e
+NAME=${NAME:-mcp-rag-server}
+DESC=${DESC:-MCP RAG Server}
+PROJECT=${PROJECT:-alpha}
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+echo "🚀 プロジェクト: $PROJECT でMCPサーバーを起動します..."
+if [ -r /dev/tty ]; then
+  docker compose exec mcp-server uv run python -m src.main --name "$NAME" --description "$DESC" --project "$PROJECT" < /dev/tty
+else
+  docker compose exec -T mcp-server uv run python -m src.main --name "$NAME" --description "$DESC" --project "$PROJECT"
+fi
+'
+'''
+
+[tasks."mcp:start:select"]
+description = "対話選択でプロジェクト指定→MCP起動"
+run = '''
+bash -lc '
+set -e
+P=$(mise run -q project:choose)
+NAME=${NAME:-mcp-rag-server}
+DESC=${DESC:-MCP RAG Server}
+if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
+  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
+  exit 1
+fi
+echo "🚀 プロジェクト: $P でMCPサーバーを起動します..."
+if [ -r /dev/tty ]; then
+  docker compose exec mcp-server uv run python -m src.main --name "$NAME" --description "$DESC" --project "$P" < /dev/tty
+else
+  docker compose exec -T mcp-server uv run python -m src.main --name "$NAME" --description "$DESC" --project "$P"
+fi
+'
+'''

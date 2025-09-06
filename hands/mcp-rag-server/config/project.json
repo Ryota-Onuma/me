@@ -1,0 +1,56 @@
+{
+  "projects": {
+    "mcp-rag-server": {
+      "postgres": {
+        "host": "localhost",
+        "port": 5432,
+        "user": "postgres",
+        "password": "password",
+        "db": "ragdb",
+        "schema": "mcp-rag-server-db"
+      },
+      "paths": {
+        "source_dir": "/app/data/source/mcp-rag-server",
+        "processed_dir": "/app/data/processed"
+      },
+      "embedding": {
+        "model": "intfloat/multilingual-e5-large",
+        "prefix_query": "query: ",
+        "prefix_embedding": "passage: ",
+        "dim": 1024
+      },
+      "logging": {
+        "enable_file_logging": false
+      },
+      "env": {
+        "EXAMPLE_FLAG": "on"
+      }
+    },
+    "beta": {
+      "postgres": {
+        "host": "localhost",
+        "port": 5432,
+        "user": "postgres",
+        "password": "password",
+        "db": "ragdb",
+        "schema": "beta"
+      },
+      "paths": {
+        "source_dir": "/app/data/source/beta",
+        "processed_dir": "/app/data/processed"
+      },
+      "embedding": {
+        "model": "intfloat/multilingual-e5-large",
+        "prefix_query": "query: ",
+        "prefix_embedding": "passage: ",
+        "dim": 1024
+      },
+      "logging": {
+        "enable_file_logging": false
+      },
+      "env": {
+        "EXAMPLE_FLAG": "on"
+      }
+    }
+  }
+}

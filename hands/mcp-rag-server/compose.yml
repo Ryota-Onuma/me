@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: mcp-rag-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ragdb
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ragdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mcp-server:
+    build: .
+    container_name: mcp-rag-server
+    environment:
+      UV_LINK_MODE: copy
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ragdb
+      PROJECT: mcp-rag-server
+      SOURCE_DIR: /app/data/source
+      PROCESSED_DIR: /app/data/processed
+      EMBEDDING_MODEL: intfloat/multilingual-e5-large
+      EMBEDDING_DIM: 1024
+      EMBEDDING_PREFIX_QUERY: "query: "
+      EMBEDDING_PREFIX_EMBEDDING: "passage: "
+    volumes:
+      - ./src:/app/src
+      # processed はベースディレクトリを採用
+      - ./data/processed:/app/data/processed
+      # source はルートを一括マウントし、プロジェクトはサブディレクトリで管理
+      - ./data/source:/app/data/source
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - model_cache:/root/.cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  model_cache:
