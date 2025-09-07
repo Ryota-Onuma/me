@@ -65,7 +65,7 @@ const SchemaErrorDisplay: FC<{ errorLine: string }> = ({ errorLine }) => {
                     This conversation entry failed to parse correctly. This
                     might indicate a format change or parsing issue.{" "}
                     <a
-                      href="https://github.com/d-kimuson/claude-code-viewer/issues"
+                      href="https://github.com/d-kimuson/coding-agent-operator/issues"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 underline underline-offset-4"

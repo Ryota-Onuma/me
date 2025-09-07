@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Claude Code Viewer",
+  title: "CodingAgentOperator",
   description: "Web Viewer for Claude Code history",
 };
 

@@ -1,12 +1,12 @@
-# Claude Code Viewer
+# CodingAgentOperator
 
 A full-featured web-based Claude Code client that provides complete interactive functionality for managing Claude Code projects. Start new conversations, resume existing sessions, monitor running tasks in real-time, and browse your conversation history - all through a modern web interface.
 
-![demo](./docs/assets/claude-code-viewer-demo-min.gif)
+
 
 ## Overview
 
-Claude Code Viewer has evolved from a simple conversation viewer into a comprehensive web-based Claude Code client. It provides all essential Claude Code functionality through an intuitive web interface, including creating new sessions, resuming conversations, real-time task management, and live synchronization with your local Claude Code projects.
+CodingAgentOperator has evolved from a simple conversation viewer into a comprehensive web-based Claude Code client. It provides all essential Claude Code functionality through an intuitive web interface, including creating new sessions, resuming conversations, real-time task management, and live synchronization with your local Claude Code projects.
 
 The application leverages Server-Sent Events (SSE) for real-time bidirectional communication, automatically syncing with JSONL conversation files in `~/.claude/projects/` and providing instant updates as conversations progress.
 
@@ -38,35 +38,32 @@ The application leverages Server-Sent Events (SSE) for real-time bidirectional c
 
 ## Installation & Usage
 
-### Quick Start (CLI)
-
-Run directly from npm without installation:
+### With mise (recommended)
 
 ```bash
-PORT=3400 npx @kimuson/claude-code-viewer@latest
+# ツールをプロジェクト指定バージョンで用意
+mise install
+
+# 依存取得 / 開発起動
+mise run install
+mise run dev      # 開発: http://localhost:3400
+
+# 品質チェック
+mise run lint
+mise run typecheck
+mise run test
+mise run format:write
 ```
 
-Alternatively, install globally:
-
-```bash
-npm install -g @kimuson/claude-code-viewer
-claude-code-viewer
-```
-
-The application uses pnpm as the package manager (v10.8.1) and is published as version 0.1.0.
-
-The server will start on port 3400 (or the specified PORT). Open `http://localhost:3400` in your browser.
-
-### Alternative Installation
+### Clone and Run Locally
 
 Clone and run locally:
 
 ```bash
-git clone https://github.com/d-kimuson/claude-code-viewer.git
-cd claude-code-viewer
+git clone https://github.com/d-kimuson/coding-agent-operator.git
+cd coding-agent-operator
 pnpm i
-pnpm build
-pnpm start
+pnpm dev
 ```
 
 ## Data Source
@@ -104,10 +101,8 @@ The application reads Claude Code conversation files from:
 
 ### Port Configuration
 
-Set a custom port using the `PORT` environment variable:
-
 ```bash
-PORT=8080 npx @kimuson/claude-code-viewer@latest
+PORT=8080 coding-agent-operator
 ```
 
 ### Data Directory

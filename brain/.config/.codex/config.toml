@@ -2,3 +2,7 @@ model = "gpt-5"
 model_reasoning_effort = "high"
 preferred_auth_method = "chatgpt"
 trust_level = "trusted"
+
+[mcp_servers.serena]
+command = "uvx"
+args = ["--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server", "--context", "codex"]

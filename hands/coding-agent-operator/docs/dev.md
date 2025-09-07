@@ -1,6 +1,6 @@
 # Developer Documentation
 
-This document provides technical details for developers contributing to Claude Code Viewer.
+This document provides technical details for developers contributing to CodingAgentOperator.
 
 ## Architecture Overview
 
@@ -77,8 +77,8 @@ src/
 ### Installation
 
 ```bash
-git clone https://github.com/d-kimuson/claude-code-viewer.git
-cd claude-code-viewer
+git clone https://github.com/d-kimuson/coding-agent-operator.git
+cd coding-agent-operator
 pnpm install
 ```
 

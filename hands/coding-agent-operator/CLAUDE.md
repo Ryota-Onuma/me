@@ -115,11 +115,9 @@ The application reads Claude Code history from:
 - Heartbeat mechanism (30s intervals) for connection health monitoring
 - Proper cleanup and abort handling on client disconnection
 
-**CLI Installation**:
-- Can be installed via `PORT=3400 npx @kimuson/claude-code-viewer@latest`
-- Published as `@kimuson/claude-code-viewer` (v0.1.0) on npm
-- Standalone Next.js build with embedded dependencies
-- Binary entry point at `dist/index.js`
+**Local Development Only**:
+- Run dev server: `pnpm dev` (or `mise run dev`)
+- Port: `PORT=3400` by default (set via env)
 
 ### Development Notes
 

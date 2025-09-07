@@ -1,0 +1,36 @@
+[tools]
+node = "20.12.0"
+pnpm = "10.8.1"
+
+[tasks.install]
+run = "pnpm install"
+description = "依存関係をインストール"
+
+[tasks.dev]
+run = "pnpm dev"
+description = "開発サーバ起動 (PORT=3400)"
+env.PORT = "3400"
+
+[tasks.lint]
+run = "pnpm lint"
+description = "Biomeで整形/静的解析のチェック"
+
+[tasks.fix]
+run = "pnpm fix"
+description = "Biomeで整形/自動修正を適用"
+
+[tasks.typecheck]
+run = "pnpm typecheck"
+description = "TypeScript型検査 (noEmit)"
+
+[tasks.test]
+run = "pnpm test"
+description = "Vitestを実行"
+
+[tasks."test:watch"]
+run = "pnpm test:watch"
+description = "Vitestのウォッチ実行"
+
+[tasks."format:write"]
+run = "pnpm fix:biome-format"
+description = "Biomeフォーマットを書き込み適用"

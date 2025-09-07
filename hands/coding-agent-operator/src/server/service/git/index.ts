@@ -1,4 +1,4 @@
-// Git service utilities for claude-code-viewer
+// Git service utilities for CodingAgentOperator
 // Provides comprehensive Git operations including branch management, diff generation, and status checking
 
 export * from "./getBranches";
