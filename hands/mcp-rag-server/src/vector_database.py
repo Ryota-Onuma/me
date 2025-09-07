@@ -1,28 +1,23 @@
-"""
-ベクトルデータベースモジュール
-
-PostgreSQLとpgvectorを使用してベクトルの保存と検索を行います。
-"""
+"""PostgreSQL+pgvectorでベクトルを保存・検索するモジュール。"""
 
 import logging
 import psycopg2
+from psycopg2 import sql
 import json
 import os
 from typing import List, Dict, Any, Optional
 
-# JSON由来のENVまたはコード既定値から解決
+try:
+    from .security_utils import create_safe_logger_wrapper, safe_log_dict
+except Exception:
+    from security_utils import create_safe_logger_wrapper, safe_log_dict
+
 EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "1024"))
 
 
 def _get_project_from_env() -> str:
-    """環境変数からプロジェクト名を取得（必須）。"""
     project = os.getenv("PROJECT") or os.getenv("PROJECT_NAME")
-    if not project:
-        raise ValueError("PROJECT が未設定です。--project または環境変数 PROJECT を指定してください。")
-    return project
-
-
-from psycopg2 import sql
+    return project or "default"
 
 
 class VectorDatabase:
@@ -49,16 +44,13 @@ class VectorDatabase:
                 - password: パスワード
                 - database: データベース名
         """
-        # ロガーの設定
-        self.logger = logging.getLogger("vector_database")
-        self.logger.setLevel(logging.INFO)
+        base_logger = logging.getLogger("vector_database")
+        base_logger.setLevel(logging.INFO)
+        self.logger = create_safe_logger_wrapper(base_logger)
 
-        # 接続パラメータの保存
         self.connection_params = connection_params
         self.connection = None
-        # プロジェクト名（スコープ）
         self.project = project or _get_project_from_env()
-        # スキーマ名（ENV優先、なければプロジェクト名）
         self.schema = os.getenv("POSTGRES_SCHEMA") or self.project
 
     def connect(self) -> None:
@@ -69,8 +61,10 @@ class VectorDatabase:
             Exception: 接続に失敗した場合
         """
         try:
+            safe_params = safe_log_dict(self.connection_params)
+            self.logger.info("データベースに接続中: %s", safe_params)
+
             self.connection = psycopg2.connect(**self.connection_params)
-            # スキーマ作成とsearch_path設定
             self._prepare_schema()
             self.logger.info("データベースに接続しました")
         except Exception as e:
@@ -84,7 +78,6 @@ class VectorDatabase:
         cur = self.connection.cursor()
         try:
             cur.execute(sql.SQL("CREATE SCHEMA IF NOT EXISTS {};").format(sql.Identifier(self.schema)))
-            # search_path を設定（同セッション内）
             cur.execute(sql.SQL("SET search_path TO {}, public;").format(sql.Identifier(self.schema)))
             self.connection.commit()
         except Exception:
@@ -113,17 +106,10 @@ class VectorDatabase:
             Exception: 初期化に失敗した場合
         """
         try:
-            # 接続がない場合は接続
             if not self.connection:
                 self.connect()
-
-            # カーソルの作成
             cursor = self.connection.cursor()
-
-            # pgvectorエクステンションの有効化（DB単位）
-            cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-
-            # ドキュメントテーブルの作成（スキーマ+project列でスコープ）
+            self._ensure_pgvector(cursor)
             cursor.execute(
                 f"""
                 CREATE TABLE IF NOT EXISTS documents (
@@ -141,19 +127,13 @@ class VectorDatabase:
                 """
             )
 
-            # 既存環境からの移行サポート（idempotent）
-            # - project列の存在保証とNOT NULL化
             cursor.execute("ALTER TABLE documents ADD COLUMN IF NOT EXISTS project TEXT;")
             cursor.execute("UPDATE documents SET project = COALESCE(project, 'default') WHERE project IS NULL;")
             cursor.execute("ALTER TABLE documents ALTER COLUMN project SET NOT NULL;")
-            # - 過去のdocument_id単独ユニーク制約を無効化（存在すれば）
             cursor.execute("ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_document_id_key;")
-            # - (project, document_id)ユニークインデックスを作成（既存ならスキップ）
             cursor.execute(
                 "CREATE UNIQUE INDEX IF NOT EXISTS idx_documents_project_document_id ON documents(project, document_id);"
             )
-
-            # インデックスの作成
             cursor.execute(
                 """
                 CREATE INDEX IF NOT EXISTS idx_documents_document_id ON documents (document_id);
@@ -166,21 +146,74 @@ class VectorDatabase:
                 CREATE INDEX IF NOT EXISTS idx_documents_embedding ON documents USING ivfflat (embedding vector_cosine_ops);
             """)
 
-            # コミット
             self.connection.commit()
             self.logger.info("データベースを初期化しました")
 
         except Exception as e:
-            # ロールバック
             if self.connection:
                 self.connection.rollback()
             self.logger.error(f"データベースの初期化に失敗しました: {str(e)}")
             raise
 
         finally:
-            # カーソルを閉じる
             if "cursor" in locals() and cursor:
                 cursor.close()
+
+    def _ensure_pgvector(self, cursor) -> None:
+        """pgvector拡張が利用可能であることを保証する。
+
+        仕様:
+        - 未導入なら `public` スキーマに作成
+        - 既に存在していて `public` 以外のスキーマにある場合は可能なら移設
+          （失敗時は search_path にそのスキーマを追加して回避）
+        - 物理的に拡張がない場合は、明確な案内付きエラーを送出
+        """
+        try:
+            cursor.execute(
+                """
+                SELECT n.nspname
+                FROM pg_extension e
+                JOIN pg_namespace n ON n.oid = e.extnamespace
+                WHERE e.extname = 'vector'
+                """
+            )
+            row = cursor.fetchone()
+
+            if not row:
+                try:
+                    cursor.execute("CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;")
+                    self.connection.commit()
+                    return
+                except Exception as ce:
+                    if self.connection:
+                        self.connection.rollback()
+                    raise RuntimeError(
+                        (
+                            "pgvector拡張がDBに未インストールです。管理DBにpgvectorを導入し、"
+                            "その後 `CREATE EXTENSION vector;` を実行してください。\n"
+                            "例) Docker: image=pgvector/pgvector:pg16 を使用 / "
+                            "ローカル: パッケージ導入後に拡張作成"
+                        )
+                    ) from ce
+
+            ext_schema = row[0]
+            if ext_schema != "public":
+                try:
+                    cursor.execute("ALTER EXTENSION vector SET SCHEMA public;")
+                    self.connection.commit()
+                except Exception:
+                    if self.connection:
+                        self.connection.rollback()
+                    try:
+                        cursor.execute(
+                            sql.SQL("SET search_path TO {}, {}, public;").format(
+                                sql.Identifier(self.schema), sql.Identifier(ext_schema)
+                            )
+                        )
+                    except Exception:
+                        pass
+        except Exception:
+            raise
 
     def insert_document(
         self,
@@ -206,17 +239,10 @@ class VectorDatabase:
             Exception: 挿入に失敗した場合
         """
         try:
-            # 接続がない場合は接続
             if not self.connection:
                 self.connect()
-
-            # カーソルの作成
             cursor = self.connection.cursor()
-
-            # メタデータをJSON形式に変換
             metadata_json = json.dumps(metadata) if metadata else None
-
-            # ドキュメントの挿入
             cursor.execute(
                 """
                 INSERT INTO documents (project, document_id, content, file_path, chunk_index, embedding, metadata)
@@ -233,19 +259,16 @@ class VectorDatabase:
                 (self.project, document_id, content, file_path, chunk_index, embedding, metadata_json),
             )
 
-            # コミット
             self.connection.commit()
-            self.logger.debug(f"ドキュメント '{document_id}' を挿入しました")
+            self.logger.debug("ドキュメントを挿入しました: project=%s", self.project)
 
         except Exception as e:
-            # ロールバック
             if self.connection:
                 self.connection.rollback()
             self.logger.error(f"ドキュメントの挿入に失敗しました: {str(e)}")
             raise
 
         finally:
-            # カーソルを閉じる
             if "cursor" in locals() and cursor:
                 cursor.close()
 
@@ -378,8 +401,6 @@ class VectorDatabase:
             results = []
             for row in cursor.fetchall():
                 document_id, content, file_path, chunk_index, metadata_json, similarity = row
-
-                # メタデータをJSONからデコード
                 if metadata_json:
                     if isinstance(metadata_json, str):
                         try:
@@ -387,7 +408,6 @@ class VectorDatabase:
                         except json.JSONDecodeError:
                             metadata = {}
                     else:
-                        # 既に辞書型の場合はそのまま使用
                         metadata = metadata_json
                 else:
                     metadata = {}
@@ -411,7 +431,6 @@ class VectorDatabase:
             raise
 
         finally:
-            # カーソルを閉じる
             if "cursor" in locals() and cursor:
                 cursor.close()
 
@@ -429,20 +448,11 @@ class VectorDatabase:
             Exception: 削除に失敗した場合
         """
         try:
-            # 接続がない場合は接続
             if not self.connection:
                 self.connect()
-
-            # カーソルの作成
             cursor = self.connection.cursor()
-
-            # ドキュメントの削除
             cursor.execute("DELETE FROM documents WHERE document_id = %s;", (document_id,))
-
-            # 削除された行数を取得
             deleted_rows = cursor.rowcount
-
-            # コミット
             self.connection.commit()
 
             if deleted_rows > 0:
@@ -453,14 +463,12 @@ class VectorDatabase:
                 return False
 
         except Exception as e:
-            # ロールバック
             if self.connection:
                 self.connection.rollback()
             self.logger.error(f"ドキュメントの削除中にエラーが発生しました: {str(e)}")
             raise
 
         finally:
-            # カーソルを閉じる
             if "cursor" in locals() and cursor:
                 cursor.close()
 
@@ -478,34 +486,23 @@ class VectorDatabase:
             Exception: 削除に失敗した場合
         """
         try:
-            # 接続がない場合は接続
             if not self.connection:
                 self.connect()
-
-            # カーソルの作成
             cursor = self.connection.cursor()
-
-            # ドキュメントの削除
             cursor.execute("DELETE FROM documents WHERE file_path = %s;", (file_path,))
-
-            # 削除された行数を取得
             deleted_rows = cursor.rowcount
-
-            # コミット
             self.connection.commit()
 
             self.logger.info(f"ファイルパス '{file_path}' に関連する {deleted_rows} 個のドキュメントを削除しました")
             return deleted_rows
 
         except Exception as e:
-            # ロールバック
             if self.connection:
                 self.connection.rollback()
             self.logger.error(f"ドキュメントの削除中にエラーが発生しました: {str(e)}")
             raise
 
         finally:
-            # カーソルを閉じる
             if "cursor" in locals() and cursor:
                 cursor.close()
 
@@ -520,20 +517,11 @@ class VectorDatabase:
             削除されたドキュメントの数。テーブルをDROPするため、削除前の数を返します。
         """
         try:
-            # 接続がない場合は接続
             if not self.connection:
                 self.connect()
-
-            # 削除前のドキュメント数を取得
             count_before_delete = self.get_document_count()
-
-            # カーソルの作成
             cursor = self.connection.cursor()
-
-            # 指定プロジェクトのデータのみ削除
             cursor.execute("DELETE FROM documents WHERE project = %s;", (self.project,))
-
-            # コミット
             self.connection.commit()
 
             if count_before_delete > 0:
@@ -545,14 +533,12 @@ class VectorDatabase:
             return count_before_delete
 
         except Exception as e:
-            # ロールバック
             if self.connection:
                 self.connection.rollback()
             self.logger.error(f"データベースのクリア中にエラーが発生しました: {str(e)}")
             raise
 
         finally:
-            # カーソルを閉じる
             if "cursor" in locals() and cursor:
                 cursor.close()
 
@@ -567,14 +553,9 @@ class VectorDatabase:
             Exception: 取得に失敗した場合
         """
         try:
-            # 接続がない場合は接続
             if not self.connection:
                 self.connect()
-
-            # カーソルの作成
             cursor = self.connection.cursor()
-
-            # ドキュメント数を取得
             cursor.execute("SELECT COUNT(*) FROM documents WHERE project = %s;", (self.project,))
             count = cursor.fetchone()[0]
 
@@ -582,8 +563,7 @@ class VectorDatabase:
             return count
 
         except psycopg2.errors.UndefinedTable:
-            # テーブルが存在しない場合は0を返す
-            self.connection.rollback()  # エラー状態をリセット
+            self.connection.rollback()
             self.logger.info("documentsテーブルが存在しないため、ドキュメント数は0です")
             return 0
         except Exception as e:
@@ -606,14 +586,9 @@ class VectorDatabase:
             Exception: 取得に失敗した場合
         """
         try:
-            # 接続がない場合は接続
             if not self.connection:
                 self.connect()
-
-            # カーソルの作成
             cursor = self.connection.cursor()
-
-            # 前後のチャンクを取得
             min_index = max(0, chunk_index - context_size)
             max_index = chunk_index + context_size
 
@@ -639,12 +614,9 @@ class VectorDatabase:
                 (self.project, file_path, min_index, max_index, chunk_index),
             )
 
-            # 結果の取得
             results = []
             for row in cursor.fetchall():
                 document_id, content, file_path, chunk_index, metadata_json, similarity = row
-
-                # メタデータをJSONからデコード
                 if metadata_json:
                     if isinstance(metadata_json, str):
                         try:
@@ -652,7 +624,6 @@ class VectorDatabase:
                         except json.JSONDecodeError:
                             metadata = {}
                     else:
-                        # 既に辞書型の場合はそのまま使用
                         metadata = metadata_json
                 else:
                     metadata = {}
@@ -665,7 +636,7 @@ class VectorDatabase:
                         "chunk_index": chunk_index,
                         "metadata": metadata,
                         "similarity": similarity,
-                        "is_context": True,  # コンテキストチャンクであることを示すフラグ
+                        "is_context": True,
                     }
                 )
 
@@ -679,7 +650,6 @@ class VectorDatabase:
             raise
 
         finally:
-            # カーソルを閉じる
             if "cursor" in locals() and cursor:
                 cursor.close()
 
@@ -697,14 +667,9 @@ class VectorDatabase:
             Exception: 取得に失敗した場合
         """
         try:
-            # 接続がない場合は接続
             if not self.connection:
                 self.connect()
-
-            # カーソルの作成
             cursor = self.connection.cursor()
-
-            # ファイルパスに基づいてドキュメントを取得
             cursor.execute(
                 """
                 SELECT
@@ -724,12 +689,9 @@ class VectorDatabase:
                 (self.project, file_path),
             )
 
-            # 結果の取得
             results = []
             for row in cursor.fetchall():
                 document_id, content, file_path, chunk_index, metadata_json, similarity = row
-
-                # メタデータをJSONからデコード
                 if metadata_json:
                     if isinstance(metadata_json, str):
                         try:
@@ -737,7 +699,6 @@ class VectorDatabase:
                         except json.JSONDecodeError:
                             metadata = {}
                     else:
-                        # 既に辞書型の場合はそのまま使用
                         metadata = metadata_json
                 else:
                     metadata = {}
@@ -750,7 +711,7 @@ class VectorDatabase:
                         "chunk_index": chunk_index,
                         "metadata": metadata,
                         "similarity": similarity,
-                        "is_full_document": True,  # 全文ドキュメントであることを示すフラグ
+                        "is_full_document": True,
                     }
                 )
 
@@ -762,6 +723,5 @@ class VectorDatabase:
             raise
 
         finally:
-            # カーソルを閉じる
             if "cursor" in locals() and cursor:
                 cursor.close()

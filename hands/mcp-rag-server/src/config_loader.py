@@ -1,9 +1,4 @@
-"""
-JSONベースの設定ローダ
-
--.env と環境変数を補完する形で JSON 設定を読み込みます。
-- 既存コードへの影響を最小化するため、既定では既存の環境変数を上書きしません。
-"""
+"""JSON設定を読み込み、環境変数に反映するユーティリティ。"""
 
 from __future__ import annotations
 
@@ -28,14 +23,11 @@ def _expand_to_env(settings: Dict[str, Any]) -> Dict[str, str]:
     """
     out: Dict[str, str] = {}
 
-    # そのままenvに流用できるフラットキー
     for k, v in settings.items():
         if isinstance(v, (dict, list)):
             continue
-        # 値は文字列化して保存
         out[k] = str(v)
 
-    # 専用セクションのマッピング
     pg = settings.get("postgres", {})
     if isinstance(pg, dict):
         if "host" in pg:
@@ -46,8 +38,8 @@ def _expand_to_env(settings: Dict[str, Any]) -> Dict[str, str]:
             out.setdefault("POSTGRES_USER", str(pg["user"]))
         if "password" in pg:
             out.setdefault("POSTGRES_PASSWORD", str(pg["password"]))
-        # DBは固定運用とするためJSONからは設定しない
-        # スキーマはプロジェクト単位で許可
+        if "db" in pg:
+            out.setdefault("POSTGRES_DB", str(pg["db"]))
         if "schema" in pg:
             out.setdefault("POSTGRES_SCHEMA", str(pg["schema"]))
 
@@ -78,7 +70,6 @@ def _expand_to_env(settings: Dict[str, Any]) -> Dict[str, str]:
         for k, v in env.items():
             out.setdefault(k, str(v))
 
-    # プロジェクト名（存在すれば）
     project = settings.get("project") or settings.get("name")
     if project is not None:
         out.setdefault("PROJECT", str(project))
@@ -111,7 +102,6 @@ def _select_settings(data: Dict[str, Any], project: Optional[str]) -> Dict[str, 
         prof_settings = profiles.get(project)
         return dict(prof_settings) if isinstance(prof_settings, dict) else {}
 
-    # それ以外はフラットな設定とみなす
     return data
 
 
@@ -121,15 +111,13 @@ def _detect_config_path(project: Optional[str], explicit_path: Optional[str]) ->
         p = Path(explicit_path)
         return p if p.exists() else None
 
-    # 環境変数 CONFIG_PATH 優先
     env_path = os.getenv("CONFIG_PATH")
     if env_path:
         p = Path(env_path)
         if p.exists():
             return p
 
-    # 探索候補
-    candidates = []
+    candidates: list[Path] = []
     if project:
         candidates.append(Path("config") / f"{project}.json")
     candidates.extend(
@@ -138,6 +126,17 @@ def _detect_config_path(project: Optional[str], explicit_path: Optional[str]) ->
             Path("config.json"),
         ]
     )
+
+    app_root = Path("/app")
+    if app_root.exists():
+        if project:
+            candidates.append(app_root / "config" / f"{project}.json")
+        candidates.extend(
+            [
+                app_root / "config" / "project.json",
+                app_root / "config.json",
+            ]
+        )
 
     for c in candidates:
         if c.exists():
@@ -150,6 +149,7 @@ def load_project_config(
     config_path: Optional[str] = None,
     *,
     override_env: bool = False,
+    require_project_declaration: bool = False,
 ) -> Dict[str, str]:
     """
     JSON設定を読み込み、環境変数へ反映。
@@ -175,11 +175,24 @@ def load_project_config(
         # 壊れた設定は無視（安全側）
         return {}
 
-    selected = _select_settings(raw, project)
+    selected = _select_settings(raw if isinstance(raw, dict) else {}, project)
+
+    if require_project_declaration:
+        declared: Optional[str] = None
+        if selected and not any(k in raw for k in ("projects", "profiles")):
+            declared = str(selected.get("project") or selected.get("name") or "")
+            if not declared:
+                return {}
+            if project and declared != project:
+                return {}
+        if not selected:
+            return {}
+
     env_map = _expand_to_env(selected)
-
+    applied: Dict[str, str] = {}
     for k, v in env_map.items():
-        if override_env or os.getenv(k) is None:
+        if override_env or k not in os.environ or os.environ.get(k, "") == "":
             os.environ[k] = v
+            applied[k] = v
 
-    return env_map
+    return applied

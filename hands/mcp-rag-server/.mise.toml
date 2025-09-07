@@ -10,26 +10,104 @@ description = "プロジェクト初期化（設定JSON+スキーマ作成）"
 run = '''
 bash -lc '
 set -e
+# .envの読み込み
+if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi
+
+# DB起動/待機
+if [ -z "$(docker compose ps -q postgres 2>/dev/null)" ]; then
+  docker compose up -d postgres
+fi
+echo "⏳ Postgresの起動を待機..."
+ok=""
+for i in $(seq 1 30); do
+  if docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-ragdb}" >/dev/null 2>&1; then
+    ok=1; break
+  fi
+  sleep 1
+done
+[ -n "$ok" ] || { echo "Postgres が準備できていません" >&2; exit 1; }
+
 NAME_ARG=${NAME:+--name "$NAME"}
-# NAME が指定されていれば /app/data/source/<NAME> を既定に、未指定ならCLI側のデフォルトに任せる
 if [ -n "$NAME" ]; then
   SRC_ARG="--source-dir /app/data/source/$NAME"
+  PROC_ARG="--processed-dir /app/data/processed/$NAME"
 else
   SRC_ARG=""
+  PROC_ARG=""
 fi
-PROC_ARG="--processed-dir /app/data/processed"
 
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
-if [ -r /dev/tty ]; then
-  docker compose exec mcp-server \
-    uv run python -m src.cli project init $NAME_ARG $SRC_ARG $PROC_ARG < /dev/tty
-else
-  docker compose exec -T mcp-server \
-    uv run python -m src.cli project init $NAME_ARG $SRC_ARG $PROC_ARG
-fi
+# 対話タスクのためTTY付き run を使用
+docker compose run --rm mcp-server \
+  uv run python -m src.cli project init $NAME_ARG $SRC_ARG $PROC_ARG
+' 
+'''
+
+# --- Convenience aliases -----------------------------------------------------
+
+[tasks."rag:inc"]
+description = "増分インデックスを実行（.envのPROJECT既定、-d等で上書き可）"
+run = '''
+bash -c '
+set -e
+# .envの読み込み
+if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi
+PROJECT=${PROJECT:-alpha}
+SIZE=${SIZE:-500}
+OVERLAP=${OVERLAP:-100}
+DIR=${DIR:-/app/data/source/${PROJECT}}
+echo "🔁 (incremental) プロジェクト: $PROJECT をインデックス化..."
+# DB起動/待機
+if [ -z "$(docker compose ps -q postgres 2>/dev/null)" ]; then docker compose up -d postgres; fi
+ok=""; for i in $(seq 1 30); do
+  if docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-ragdb}" >/dev/null 2>&1; then ok=1; break; fi; sleep 1; done
+[ -n "$ok" ] || { echo "Postgres が準備できていません" >&2; exit 1; }
+
+docker compose run --rm -T mcp-server \
+  uv run python -m src.cli --project "$PROJECT" index -d "$DIR" -s "$SIZE" -o "$OVERLAP" -i
+'
+'''
+
+[tasks."rag:inc:select"]
+description = "プロジェクトを対話選択して増分インデックス"
+run = '''
+bash -lc '
+set -e
+P=$(mise run -q project:choose)
+SIZE=${SIZE:-500}
+OVERLAP=${OVERLAP:-100}
+DIR=${DIR:-/app/data/source/${P}}
+echo "🔁 (incremental) プロジェクト: $P をインデックス化..."
+# DB起動/待機
+if [ -z "$(docker compose ps -q postgres 2>/dev/null)" ]; then docker compose up -d postgres; fi
+ok=""; for i in $(seq 1 30); do
+  if docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-ragdb}" >/dev/null 2>&1; then ok=1; break; fi; sleep 1; done
+[ -n "$ok" ] || { echo "Postgres が準備できていません" >&2; exit 1; }
+
+docker compose run --rm -T mcp-server \
+  uv run python -m src.cli --project "$P" index -d "$DIR" -s "$SIZE" -o "$OVERLAP" -i
+'
+'''
+
+[tasks."rag:full"]
+description = "フルインデックス（全再作成）を実行"
+run = '''
+bash -c '
+set -e
+# .envの読み込み
+if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi
+PROJECT=${PROJECT:-alpha}
+SIZE=${SIZE:-500}
+OVERLAP=${OVERLAP:-100}
+DIR=${DIR:-/app/data/source/${PROJECT}}
+echo "🔄 (full) プロジェクト: $PROJECT をフルインデックス化..."
+# DB起動/待機
+if [ -z "$(docker compose ps -q postgres 2>/dev/null)" ]; then docker compose up -d postgres; fi
+ok=""; for i in $(seq 1 30); do
+  if docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-ragdb}" >/dev/null 2>&1; then ok=1; break; fi; sleep 1; done
+[ -n "$ok" ] || { echo "Postgres が準備できていません" >&2; exit 1; }
+
+docker compose run --rm -T mcp-server \
+  uv run python -m src.cli --project "$PROJECT" index -d "$DIR" -s "$SIZE" -o "$OVERLAP"
 '
 '''
 
@@ -38,11 +116,8 @@ description = "定義済みプロジェクト一覧"
 run = '''
 bash -lc '
 set -e
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
-docker compose exec -T mcp-server \
+# run統一
+docker compose run --rm -T mcp-server \
   uv run python -m src.cli project list
 '
 '''
@@ -52,18 +127,9 @@ description = "対話選択して名前を返す（他タスク用）"
 run = '''
 bash -lc '
 set -e
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
-if [ -r /dev/tty ]; then
-  docker compose exec mcp-server \
-    uv run python -m src.cli project choose < /dev/tty
-else
-  # TTYがない場合もSTDINは転送して対話可能にする
-  docker compose exec -T mcp-server \
-    uv run python -m src.cli project choose
-fi
+# 対話タスクは run（TTY有効）
+docker compose run --rm mcp-server \
+  uv run python -m src.cli project choose
 '
 '''
 
@@ -72,11 +138,7 @@ description = "MCP接続用プロファイル一覧（JSON出力）"
 run = '''
 bash -lc '
 set -e
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
-docker compose exec -T mcp-server \
+docker compose run --rm -T mcp-server \
   uv run python -m src.cli project profiles
 '
 '''
@@ -98,17 +160,15 @@ if [ -z "$NAME" ] && [ ! -t 0 ]; then
   echo "使用例: NAME=プロジェクト名 YES=1 mise run project:delete" >&2
   exit 1
 fi
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
-if [ -r /dev/tty ]; then
-  docker compose exec mcp-server \
-    uv run python -m src.cli project delete $NAME_ARG $FLAGS < /dev/tty
-else
-  docker compose exec -T mcp-server \
-    uv run python -m src.cli project delete $NAME_ARG $FLAGS
-fi
+# DB起動/待機
+if [ -z "$(docker compose ps -q postgres 2>/dev/null)" ]; then docker compose up -d postgres; fi
+ok=""; for i in $(seq 1 30); do
+  if docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-ragdb}" >/dev/null 2>&1; then ok=1; break; fi; sleep 1; done
+[ -n "$ok" ] || { echo "Postgres が準備できていません" >&2; exit 1; }
+
+# 対話タスクは run
+docker compose run --rm mcp-server \
+  uv run python -m src.cli project delete $NAME_ARG $FLAGS
 '
 '''
 
@@ -118,11 +178,7 @@ run = '''
 bash -lc '
 set -e
 # 対話選択でプロジェクト名を取得
-if [ -r /dev/tty ]; then
-  P=$(mise run -q project:choose < /dev/tty 2>/dev/tty)
-else
-  P=$(mise run -q project:choose)
-fi
+P=$(mise run -q project:choose)
 # .env を安全に更新
 touch .env
 if grep -q "^PROJECT=" .env; then
@@ -149,11 +205,12 @@ case "${INCREMENTAL:-false}" in true|1|yes|on) INC_FLAG="-i" ;; esac
 # プロジェクトごとのsourceディレクトリ（data/source/<project>) を既定にする
 DIR=${DIR:-/app/data/source/${PROJECT}}
 echo "📁 プロジェクト: $PROJECT でインデックス化を開始します..."
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
-docker compose exec -T mcp-server \
+if [ -z "$(docker compose ps -q postgres 2>/dev/null)" ]; then docker compose up -d postgres; fi
+ok=""; for i in $(seq 1 30); do
+  if docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-ragdb}" >/dev/null 2>&1; then ok=1; break; fi; sleep 1; done
+[ -n "$ok" ] || { echo "Postgres が準備できていません" >&2; exit 1; }
+
+docker compose run --rm -T mcp-server \
   uv run python -m src.cli --project "$PROJECT" index -d "$DIR" -s "$SIZE" -o "$OVERLAP" $INC_FLAG
 '
 '''
@@ -163,17 +220,18 @@ description = "対話選択でプロジェクト指定→インデックス化"
 run = '''
 bash -lc '
 set -e
-P=$(mise run -q project:choose < /dev/tty 2>/dev/tty)
+P=$(mise run -q project:choose)
 SIZE=${SIZE:-500}
 OVERLAP=${OVERLAP:-100}
 # 選択したプロジェクトのsourceディレクトリ（data/source/<project>）を既定にする
 DIR=${DIR:-/app/data/source/${P}}
 echo "📁 プロジェクト: $P でインデックス化を開始します..."
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
-docker compose exec -T mcp-server \
+if [ -z "$(docker compose ps -q postgres 2>/dev/null)" ]; then docker compose up -d postgres; fi
+ok=""; for i in $(seq 1 30); do
+  if docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-ragdb}" >/dev/null 2>&1; then ok=1; break; fi; sleep 1; done
+[ -n "$ok" ] || { echo "Postgres が準備できていません" >&2; exit 1; }
+
+docker compose run --rm -T mcp-server \
   uv run python -m src.cli --project "$P" index -d "$DIR" -s "$SIZE" -o "$OVERLAP" ${INCREMENTAL:+-i}
 '
 '''
@@ -186,11 +244,12 @@ set -e
 if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi
 PROJECT=${PROJECT:-alpha}
 echo "📊 プロジェクト: $PROJECT の件数を取得します..."
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
-docker compose exec -T mcp-server \
+if [ -z "$(docker compose ps -q postgres 2>/dev/null)" ]; then docker compose up -d postgres; fi
+ok=""; for i in $(seq 1 30); do
+  if docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-ragdb}" >/dev/null 2>&1; then ok=1; break; fi; sleep 1; done
+[ -n "$ok" ] || { echo "Postgres が準備できていません" >&2; exit 1; }
+
+docker compose run --rm -T mcp-server \
   uv run python -m src.cli --project "$PROJECT" count
 '
 '''
@@ -203,11 +262,12 @@ set -e
 if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi
 PROJECT=${PROJECT:-alpha}
 echo "🗑️ プロジェクト: $PROJECT のインデックスをクリアします..."
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
-docker compose exec -T mcp-server \
+if [ -z "$(docker compose ps -q postgres 2>/dev/null)" ]; then docker compose up -d postgres; fi
+ok=""; for i in $(seq 1 30); do
+  if docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-ragdb}" >/dev/null 2>&1; then ok=1; break; fi; sleep 1; done
+[ -n "$ok" ] || { echo "Postgres が準備できていません" >&2; exit 1; }
+
+docker compose run --rm -T mcp-server \
   uv run python -m src.cli --project "$PROJECT" clear
 '
 '''
@@ -217,13 +277,14 @@ description = "対話選択でプロジェクト指定→件数取得"
 run = '''
 bash -lc '
 set -e
-P=$(mise run -q project:choose < /dev/tty 2>/dev/tty)
+P=$(mise run -q project:choose)
 echo "📊 プロジェクト: $P の件数を取得します..."
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
-docker compose exec -T mcp-server \
+if [ -z "$(docker compose ps -q postgres 2>/dev/null)" ]; then docker compose up -d postgres; fi
+ok=""; for i in $(seq 1 30); do
+  if docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-ragdb}" >/dev/null 2>&1; then ok=1; break; fi; sleep 1; done
+[ -n "$ok" ] || { echo "Postgres が準備できていません" >&2; exit 1; }
+
+docker compose run --rm -T mcp-server \
   uv run python -m src.cli --project "$P" count
 '
 '''
@@ -233,13 +294,14 @@ description = "対話選択でプロジェクト指定→インデックス削�
 run = '''
 bash -lc '
 set -e
-P=$(mise run -q project:choose < /dev/tty 2>/dev/tty)
+P=$(mise run -q project:choose)
 echo "🗑️ プロジェクト: $P のインデックスをクリアします..."
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
-docker compose exec -T mcp-server \
+if [ -z "$(docker compose ps -q postgres 2>/dev/null)" ]; then docker compose up -d postgres; fi
+ok=""; for i in $(seq 1 30); do
+  if docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-ragdb}" >/dev/null 2>&1; then ok=1; break; fi; sleep 1; done
+[ -n "$ok" ] || { echo "Postgres が準備できていません" >&2; exit 1; }
+
+docker compose run --rm -T mcp-server \
   uv run python -m src.cli --project "$P" clear
 '
 '''
@@ -252,16 +314,9 @@ set -e
 NAME=${NAME:-mcp-rag-server}
 DESC=${DESC:-MCP RAG Server}
 PROJECT=${PROJECT:-alpha}
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
 echo "🚀 プロジェクト: $PROJECT でMCPサーバーを起動します..."
-if [ -r /dev/tty ]; then
-  docker compose exec mcp-server uv run python -m src.main --name "$NAME" --description "$DESC" --project "$PROJECT" < /dev/tty
-else
-  docker compose exec -T mcp-server uv run python -m src.main --name "$NAME" --description "$DESC" --project "$PROJECT"
-fi
+# run 運用（TTYで前面起動）
+docker compose run --rm mcp-server uv run python -m src.main --name "$NAME" --description "$DESC" --project "$PROJECT"
 '
 '''
 
@@ -273,15 +328,7 @@ set -e
 P=$(mise run -q project:choose)
 NAME=${NAME:-mcp-rag-server}
 DESC=${DESC:-MCP RAG Server}
-if [ -z "$(docker compose ps -q mcp-server 2>/dev/null)" ]; then
-  echo "mcp-server サービスが起動していません。docker compose up -d を実行してください。" >&2
-  exit 1
-fi
 echo "🚀 プロジェクト: $P でMCPサーバーを起動します..."
-if [ -r /dev/tty ]; then
-  docker compose exec mcp-server uv run python -m src.main --name "$NAME" --description "$DESC" --project "$P" < /dev/tty
-else
-  docker compose exec -T mcp-server uv run python -m src.main --name "$NAME" --description "$DESC" --project "$P"
-fi
+docker compose run --rm mcp-server uv run python -m src.main --name "$NAME" --description "$DESC" --project "$P"
 '
 '''

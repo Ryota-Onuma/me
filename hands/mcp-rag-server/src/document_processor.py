@@ -11,8 +11,11 @@ from pathlib import Path
 from typing import List, Dict, Any
 import hashlib
 import time
+import re
 
 import markitdown
+
+from .security_utils import create_safe_logger_wrapper
 
 
 class DocumentProcessor:
@@ -36,9 +39,90 @@ class DocumentProcessor:
         """
         DocumentProcessorのコンストラクタ
         """
-        # ロガーの設定
-        self.logger = logging.getLogger("document_processor")
-        self.logger.setLevel(logging.INFO)
+        # ロガーの設定（セキュアラッパー付き）
+        base_logger = logging.getLogger("document_processor")
+        base_logger.setLevel(logging.INFO)
+        self.logger = create_safe_logger_wrapper(base_logger)
+
+        # セキュリティ設定
+        self.MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
+        self.ALLOWED_EXTENSIONS = {".txt", ".md", ".markdown", ".ppt", ".pptx", ".doc", ".docx", ".pdf"}
+
+    def _validate_file_path(self, file_path: str) -> str:
+        """
+        ファイルパスの安全性を検証し、正規化されたパスを返します。
+
+        Args:
+            file_path: 検証するファイルパス
+
+        Returns:
+            正規化されたファイルパス
+
+        Raises:
+            ValueError: 危険なファイルパスの場合
+            FileNotFoundError: ファイルが存在しない場合
+        """
+        try:
+            # パスの正規化
+            normalized_path = os.path.abspath(os.path.normpath(file_path))
+
+            # 実際のファイルパス（シンボリックリンクを解決）
+            real_path = os.path.realpath(normalized_path)
+
+            # パストラバーサル攻撃のチェック
+            if ".." in file_path or file_path.startswith("/") and not file_path.startswith("/app/"):
+                # Dockerコンテナ内以外の絶対パスは危険
+                if not (normalized_path.startswith("/app/") or not os.path.isabs(normalized_path)):
+                    raise ValueError(f"危険なファイルパス: {file_path}")
+
+            # ファイルの存在確認
+            if not os.path.exists(real_path):
+                raise FileNotFoundError(f"ファイルが見つかりません: {file_path}")
+
+            # ファイルサイズチェック
+            file_size = os.path.getsize(real_path)
+            if file_size > self.MAX_FILE_SIZE:
+                raise ValueError(f"ファイルサイズが制限を超えています: {file_size} bytes > {self.MAX_FILE_SIZE} bytes")
+
+            # 拡張子チェック
+            ext = Path(real_path).suffix.lower()
+            if ext not in self.ALLOWED_EXTENSIONS:
+                raise ValueError(f"サポートされていないファイル形式: {ext}")
+
+            return real_path
+
+        except Exception as e:
+            self.logger.error(f"ファイルパス検証エラー: {str(e)}")
+            raise
+
+    def _sanitize_content(self, content: str) -> str:
+        """
+        テキストコンテンツをサニタイズします。
+
+        Args:
+            content: サニタイズするコンテンツ
+
+        Returns:
+            サニタイズされたコンテンツ
+        """
+        if not content:
+            return ""
+
+        # NUL文字と制御文字を削除（改行とタブは保持）
+        sanitized = re.sub(r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]", "", content)
+
+        # 異常に長い行を分割（10000文字以上）
+        lines = sanitized.split("\n")
+        processed_lines = []
+        for line in lines:
+            if len(line) > 10000:
+                # 長い行を分割
+                for i in range(0, len(line), 10000):
+                    processed_lines.append(line[i : i + 10000])
+            else:
+                processed_lines.append(line)
+
+        return "\n".join(processed_lines)
 
     def read_file(self, file_path: str) -> str:
         """
@@ -53,34 +137,38 @@ class DocumentProcessor:
         Raises:
             FileNotFoundError: ファイルが見つからない場合
             IOError: ファイルの読み込みに失敗した場合
+            ValueError: 危険なファイルパスの場合
         """
         try:
+            # ファイルパスの検証と正規化
+            validated_path = self._validate_file_path(file_path)
+
             # ファイル拡張子を取得
-            ext = Path(file_path).suffix.lower()
+            ext = Path(validated_path).suffix.lower()
 
             # テキストファイル（マークダウン含む）の場合
             if ext in self.SUPPORTED_EXTENSIONS["text"]:
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(validated_path, "r", encoding="utf-8") as f:
                     content = f.read()
-                    # NUL文字を削除
-                    content = content.replace("\x00", "")
-                self.logger.info(f"テキストファイル '{file_path}' を読み込みました")
+                    # コンテンツをサニタイズ
+                    content = self._sanitize_content(content)
+                self.logger.info("テキストファイルを読み込みました")
                 return content
 
             # パワーポイント、Word、PDFの場合はmarkitdownを使用して変換
             elif ext in self.SUPPORTED_EXTENSIONS["office"] or ext in self.SUPPORTED_EXTENSIONS["pdf"]:
-                return self.convert_to_markdown(file_path)
+                return self.convert_to_markdown(validated_path)
 
             # サポートしていない拡張子の場合
             else:
-                self.logger.warning(f"サポートしていないファイル形式です: {file_path}")
+                self.logger.warning("サポートしていないファイル形式です")
                 return ""
 
-        except FileNotFoundError:
-            self.logger.error(f"ファイル '{file_path}' が見つかりません")
+        except (FileNotFoundError, ValueError) as e:
+            self.logger.error(f"ファイル読み込みエラー: {str(e)}")
             raise
         except IOError as e:
-            self.logger.error(f"ファイル '{file_path}' の読み込みに失敗しました: {str(e)}")
+            self.logger.error(f"ファイルの読み込みに失敗しました: {str(e)}")
             raise
 
     def convert_to_markdown(self, file_path: str) -> str:
@@ -88,7 +176,7 @@ class DocumentProcessor:
         パワーポイント、Word、PDFなどのファイルをマークダウンに変換します。
 
         Args:
-            file_path: ファイルのパス
+            file_path: ファイルのパス（既に検証済み）
 
         Returns:
             マークダウンに変換された内容
@@ -97,18 +185,18 @@ class DocumentProcessor:
             Exception: 変換に失敗した場合
         """
         try:
-            # ファイルURIを作成
-            file_uri = f"file://{os.path.abspath(file_path)}"
+            # ファイルURIを作成（検証済みパスを使用）
+            file_uri = f"file://{file_path}"
 
             # markitdownを使用して変換
             markdown_content = markitdown.MarkItDown().convert_uri(file_uri).markdown
-            # NUL文字を削除
-            markdown_content = markdown_content.replace("\x00", "")
+            # コンテンツをサニタイズ
+            markdown_content = self._sanitize_content(markdown_content)
 
-            self.logger.info(f"ファイル '{file_path}' をマークダウンに変換しました")
+            self.logger.info("ファイルをマークダウンに変換しました")
             return markdown_content
         except Exception as e:
-            self.logger.error(f"ファイル '{file_path}' のマークダウン変換に失敗しました: {str(e)}")
+            self.logger.error(f"ファイルのマークダウン変換に失敗しました: {str(e)}")
             raise
 
     def split_into_chunks(self, text: str, chunk_size: int = 500, overlap: int = 100) -> List[str]:

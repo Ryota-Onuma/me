@@ -30,8 +30,16 @@ class TestVectorDatabase(unittest.TestCase):
             db = VectorDatabase(connection_params={"dbname": "test_db"})
             db.initialize_database()
 
-            # CREATE TABLEのSQL文を取得
-            create_table_sql = mock_cursor.execute.call_args_list[1][0][0]
+            # CREATE TABLE文を特定（順序に依存しない）
+            calls = getattr(mock_cursor, "execute").call_args_list
+            create_table_sql = next(
+                (
+                    c.args[0]
+                    for c in calls
+                    if isinstance(c.args[0], str) and "CREATE TABLE IF NOT EXISTS documents" in c.args[0]
+                ),
+                "",
+            )
 
             # SQL内に正しいベクトル次元が含まれているか確認
             self.assertEqual(EMBEDDING_DIM, 512)
@@ -56,8 +64,16 @@ class TestVectorDatabase(unittest.TestCase):
                 db = VectorDatabase(connection_params={"dbname": "test_db"})
                 db.initialize_database()
 
-                # CREATE TABLEのSQL文を取得
-                create_table_sql = mock_cursor.execute.call_args_list[1][0][0]
+                # CREATE TABLE文を特定（順序に依存しない）
+                calls = getattr(mock_cursor, "execute").call_args_list
+                create_table_sql = next(
+                    (
+                        c.args[0]
+                        for c in calls
+                        if isinstance(c.args[0], str) and "CREATE TABLE IF NOT EXISTS documents" in c.args[0]
+                    ),
+                    "",
+                )
 
                 # デフォルトの次元(1024)が使われているか確認
                 self.assertEqual(EMBEDDING_DIM, 1024)

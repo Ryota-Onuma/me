@@ -21,7 +21,6 @@ def main():
 
     コマンドライン引数を解析し、MCPサーバーを起動します。
     """
-    # Docker限定実行
     try:
         if not os.path.exists("/.dockerenv"):
             print(
@@ -34,7 +33,6 @@ def main():
         print("実行環境を確認できませんでした。Dockerコンテナ内で起動してください。", file=sys.stderr)
         sys.exit(2)
 
-    # コマンドライン引数の解析
     parser = argparse.ArgumentParser(
         description="MCP RAG Server - Model Context Protocol (MCP)に準拠したRAG機能を持つPythonサーバー"
     )
@@ -50,47 +48,67 @@ def main():
     )
     args = parser.parse_args()
 
-    # 選択されたプロジェクトを環境変数へ反映（未指定なら終了）
     if args.project:
         os.environ["PROJECT"] = args.project
     else:
         print("エラー: PROJECT が未設定です。--project または環境変数 PROJECT を指定してください。", file=sys.stderr)
         sys.exit(2)
 
-    # JSON設定の読み込み
-    # Composeなど外部ENVを優先し、不足分だけJSONで補完（override_env=False）
-    loaded = load_project_config(project=os.environ.get("PROJECT"), override_env=False)
+    loaded = load_project_config(
+        project=os.environ.get("PROJECT"),
+        override_env=True,  # JSONをSSoTとして既存ENVを上書き
+        require_project_declaration=True,
+    )
     if not loaded:
-        print("設定ファイルが見つかりません。config/project.json を用意してください。", file=sys.stderr)
+        print(
+            (
+                "設定の読み込みに失敗しました。\n"
+                "単一情報源(SSoT)を徹底するため、config/project.json に以下のいずれかの形で"
+                "プロジェクト定義を明示してください。\n"
+                '- フラット形式: { "project": "<name>", ... } で、<name> は PROJECT と一致\n'
+                '- マルチ形式: { "projects": { "<name>": { ... } } } のキーに <name> を含む\n'
+            ),
+            file=sys.stderr,
+        )
         sys.exit(1)
 
-    # ディレクトリの作成
     enable_file_logging = os.environ.get("ENABLE_FILE_LOGGING", "false").lower() == "true"
     if enable_file_logging:
         os.makedirs("logs", exist_ok=True)
 
     os.makedirs(os.environ.get("SOURCE_DIR", "data/source"), exist_ok=True)
-    # プロジェクト別の処理済みディレクトリを作成
-    processed_base = os.environ.get("PROCESSED_DIR", "data/processed")
-    os.makedirs(os.path.join(processed_base, os.environ.get("PROJECT")), exist_ok=True)
+    processed_dir = os.environ.get("PROCESSED_DIR", "data/processed")
+    os.makedirs(processed_dir, exist_ok=True)
 
-    # ロギングの設定
     handlers = [logging.StreamHandler(sys.stderr)]
     if enable_file_logging:
-        handlers.append(logging.FileHandler(os.path.join("logs", "mcp_rag_server.log"), encoding="utf-8"))
+        try:
+            handlers.append(logging.FileHandler(os.path.join("logs", "mcp_rag_server.log"), encoding="utf-8"))
+        except Exception as e:
+            print(f"警告: ログファイルを開けませんでした（{e}）。標準エラー出力のみで継続します。", file=sys.stderr)
+    try:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            handlers=handlers,
+        )
+    except Exception as e:
+        print(f"警告: ロギング初期化に失敗しました（{e}）。簡易設定で継続します。", file=sys.stderr)
+        try:
+            logging.basicConfig(level=logging.INFO, stream=sys.stderr, format="%(levelname)s: %(message)s")
+        except Exception:
+            pass
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=handlers,
-    )
+    try:
+        logging.getLogger("pdfminer").setLevel(logging.ERROR)
+    except Exception:
+        pass
+
     logger = logging.getLogger("main")
 
     try:
-        # MCPサーバーの作成
         server = MCPServer()
 
-        # RAGサービスの作成と登録（設定読み込み後に遅延インポート）
         from .rag_tools import register_rag_tools, create_rag_service_from_env
 
         logger.info("RAGサービスを初期化しています...")
@@ -98,7 +116,6 @@ def main():
         register_rag_tools(server, rag_service)
         logger.info("RAGツールを登録しました")
 
-        # 追加のツールモジュールがある場合は読み込む
         if args.module:
             try:
                 module = importlib.import_module(args.module)
@@ -110,7 +127,6 @@ def main():
             except ImportError as e:
                 print(f"警告: モジュール '{args.module}' の読み込みに失敗しました: {str(e)}", file=sys.stderr)
 
-        # MCPサーバーの起動
         server.start(args.name, args.version, args.description)
 
     except KeyboardInterrupt:

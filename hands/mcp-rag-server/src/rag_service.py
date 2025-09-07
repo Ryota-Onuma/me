@@ -95,9 +95,6 @@ class RAGService:
         if processed_dir is None:
             processed_dir = "data/processed"
 
-        # プロジェクトごとの処理済みディレクトリに分離
-        processed_dir = os.path.join(processed_dir, self.project)
-
         try:
             # ディレクトリ内のファイルを処理
             if incremental:

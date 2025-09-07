@@ -36,15 +36,14 @@ class EmbeddingGenerator:
         logger: ロガー
     """
 
-    def __init__(self, model_name: str = None):
+    def __init__(self, model_name: str | None = None):
         """
         EmbeddingGeneratorのコンストラクタ
 
         Args:
             model_name: 使用するモデル名（.env優先）
         """
-        # .envから設定を取得
-        self.model_name = os.getenv("EMBEDDING_MODEL", "intfloat/multilingual-e5-large")
+        self.model_name = model_name or os.getenv("EMBEDDING_MODEL", "intfloat/multilingual-e5-large")
         self.prefix_query = os.getenv("EMBEDDING_PREFIX_QUERY", "")
         self.prefix_embedding = os.getenv("EMBEDDING_PREFIX_EMBEDDING", "")
 

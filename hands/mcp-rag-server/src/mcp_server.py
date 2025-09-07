@@ -1,9 +1,4 @@
-"""
-MCPサーバーモジュール
-
-Model Context Protocol (MCP)に準拠したサーバーを提供します。
-JSON-RPC over stdioを使用してクライアントからのリクエストを処理します。
-"""
+"""MCPサーバー（JSON-RPC over stdio）。"""
 
 import os
 import sys
@@ -11,6 +6,8 @@ import json
 import logging
 from typing import Dict, Any, List, Callable
 from pathlib import Path
+
+from .security_utils import create_safe_logger_wrapper
 
 
 class MCPServer:
@@ -31,25 +28,22 @@ class MCPServer:
         self.tools = {}
         self.tool_handlers = {}
 
-        # ロガーの設定
-        self.logger = logging.getLogger("mcp_server")
-        self.logger.setLevel(logging.INFO)
+        base_logger = logging.getLogger("mcp_server")
+        base_logger.setLevel(logging.INFO)
+        self.logger = create_safe_logger_wrapper(base_logger)
 
-        # ファイルログの設定（環境変数で制御）
         enable_file_logging = os.environ.get("ENABLE_FILE_LOGGING", "false").lower() == "true"
         if enable_file_logging:
-            # ファイルハンドラの設定
-            log_dir = Path("logs")
-            log_dir.mkdir(exist_ok=True)
-            file_handler = logging.FileHandler(log_dir / "mcp_server.log")
-            file_handler.setLevel(logging.INFO)
-
-            # フォーマッタの設定
-            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-            file_handler.setFormatter(formatter)
-
-            # ハンドラの追加
-            self.logger.addHandler(file_handler)
+            try:
+                log_dir = Path("logs")
+                log_dir.mkdir(exist_ok=True)
+                file_handler = logging.FileHandler(log_dir / "mcp_server.log")
+                file_handler.setLevel(logging.INFO)
+                formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+                file_handler.setFormatter(formatter)
+                self.logger.addHandler(file_handler)
+            except Exception as e:
+                print(f"警告: mcp_serverのファイルロギング初期化に失敗しました（{e}）。", file=sys.stderr)
 
     def register_tool(self, name: str, description: str, input_schema: Dict[str, Any], handler: Callable):
         """
@@ -80,7 +74,6 @@ class MCPServer:
         """
         self.logger.info(f"MCPサーバー '{server_name}' を起動しました")
 
-        # サーバー情報を出力
         self._send_response(
             {
                 "jsonrpc": "2.0",
@@ -95,7 +88,6 @@ class MCPServer:
             }
         )
 
-        # ツール情報を出力
         self._send_response(
             {
                 "jsonrpc": "2.0",
@@ -106,28 +98,22 @@ class MCPServer:
             }
         )
 
-        # リクエストをリッスン
         while True:
             try:
-                # 標準入力からリクエストを読み込む
                 request_line = sys.stdin.readline()
                 if not request_line:
                     break
-
-                # リクエストをパース
                 request = json.loads(request_line)
                 self.logger.info(f"リクエストを受信しました: {request}")
-
-                # リクエストを処理
                 self._handle_request(request)
 
-            except json.JSONDecodeError:
-                self.logger.error("JSONのパースに失敗しました")
+            except json.JSONDecodeError as e:
+                self.logger.error(f"JSONのパースに失敗しました: {str(e)}")
                 self._send_error(-32700, "Parse error", None)
 
             except Exception as e:
                 self.logger.error(f"エラーが発生しました: {str(e)}")
-                self._send_error(-32603, f"Internal error: {str(e)}", None)
+                self._send_error(-32603, "Internal error", None)
 
     def _handle_request(self, request: Dict[str, Any]):
         """
@@ -136,7 +122,6 @@ class MCPServer:
         Args:
             request: JSONリクエスト
         """
-        # リクエストのバリデーション
         if "jsonrpc" not in request or request["jsonrpc"] != "2.0":
             self._send_error(-32600, "Invalid Request", request.get("id"))
             return
@@ -145,12 +130,10 @@ class MCPServer:
             self._send_error(-32600, "Method not specified", request.get("id"))
             return
 
-        # メソッドの取得
         method = request["method"]
         params = request.get("params", {})
         request_id = request.get("id")
 
-        # メソッドの処理
         if method == "initialize":
             self._handle_initialize(params, request_id)
         elif method == "tools/list":
@@ -164,15 +147,15 @@ class MCPServer:
         elif method == "resources/templates/list":
             self._handle_resources_templates_list(request_id)
         else:
-            # 登録されたツールを直接呼び出す
             if method in self.tool_handlers:
                 try:
                     result = self.tool_handlers[method](params)
                     self._send_result(result, request_id)
                 except Exception as e:
-                    self._send_error(-32603, f"Tool execution error: {str(e)}", request_id)
+                    self.logger.error(f"ツール実行エラー: {method} - {str(e)}")
+                    self._send_error(-32603, "Tool execution error", request_id)
             else:
-                self._send_error(-32601, f"Method not found: {method}", request_id)
+                self._send_error(-32601, "Method not found", request_id)
 
     def _handle_initialize(self, params: Dict[str, Any], request_id: Any):
         """
@@ -182,13 +165,11 @@ class MCPServer:
             params: リクエストパラメータ
             request_id: リクエストID
         """
-        # クライアント情報を取得（オプション）
         client_name = params.get("client_name", "unknown")
         client_version = params.get("client_version", "unknown")
 
         self.logger.info(f"クライアント '{client_name} {client_version}' が接続しました")
 
-        # サーバーの機能を返す
         response = {
             "protocolVersion": "2024-11-05",
             "serverInfo": {"name": "mcp-server-python", "version": "0.1.0", "description": "Python MCP Server"},
@@ -198,7 +179,6 @@ class MCPServer:
 
         self._send_result(response, request_id)
 
-        # ツール情報を送信
         self._send_response(
             {
                 "jsonrpc": "2.0",
@@ -262,7 +242,6 @@ class MCPServer:
             params: リクエストパラメータ
             request_id: リクエストID
         """
-        # パラメータのバリデーション
         if "name" not in params:
             self._send_error(-32602, "Invalid params: name is required", request_id)
             return
@@ -274,21 +253,21 @@ class MCPServer:
         tool_name = params["name"]
         arguments = params["arguments"]
 
-        # ツールの処理
         if tool_name in self.tool_handlers:
             try:
                 result = self.tool_handlers[tool_name](arguments)
                 if isinstance(result, dict) and "content" in result:
                     self._send_result(result, request_id)
                 else:
-                    # 結果をコンテンツ形式に変換
                     content = [{"type": "text", "text": str(result)}]
                     self._send_result({"content": content}, request_id)
             except Exception as e:
                 self.logger.error(f"ツール '{tool_name}' の実行中にエラーが発生しました: {str(e)}")
                 self._send_result(
                     {
-                        "content": [{"type": "text", "text": f"ツールの実行中にエラーが発生しました: {str(e)}"}],
+                        "content": [
+                            {"type": "text", "text": f"ツールの実行中にエラーが発生しました: {str(e)}"}
+                        ],
                         "isError": True,
                     },
                     request_id,
@@ -318,8 +297,6 @@ class MCPServer:
             request_id: リクエストID
         """
         self.logger.info("クライアントの初期化が完了しました")
-        # 通知なのでレスポンスは不要
-        # ただし、エラーが発生した場合はエラーレスポンスを返す必要がある
         if request_id is not None:
             self._send_result({}, request_id)
 

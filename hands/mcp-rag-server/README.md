@@ -52,30 +52,34 @@ mkdir -p data/source
 # ドキュメントファイル（PDF, DOCX, MD等）を data/source/ にコピー
 ```
 
-### 3. Docker Compose でサービスを起動
+### 3. データベース(Postgres)を起動
 
 ```bash
-# バックグラウンドでサービスを起動
-docker-compose up -d
+# Postgresのみ起動（CLI/MCPは都度 run --rm で起動）
+docker compose up -d postgres
 
 # ログを確認
-docker-compose logs -f mcp-server
+docker compose logs -f postgres
 ```
 
 ### 4. ドキュメントのインデックス作成
 
 ```bash
 # ドキュメントを初期インデックス
-docker compose exec mcp-server uv run python -m src.cli --project alpha index
+docker compose run --rm -T mcp-server \
+  uv run python -m src.cli --project alpha index
 
 # 差分インデックス（追加/更新されたファイルのみ）
-docker compose exec mcp-server uv run python -m src.cli --project alpha index --incremental
+docker compose run --rm -T mcp-server \
+  uv run python -m src.cli --project alpha index --incremental
 
 # インデックスされたドキュメント数の確認
-docker compose exec mcp-server uv run python -m src.cli --project alpha count
+docker compose run --rm -T mcp-server \
+  uv run python -m src.cli --project alpha count
 
 # インデックスのクリア
-docker compose exec mcp-server uv run python -m src.cli --project alpha clear
+docker compose run --rm -T mcp-server \
+  uv run python -m src.cli --project alpha clear
 ```
 
 ## MCP クライアントからの接続
@@ -89,25 +93,9 @@ MCP RAG Server に Claude Code から接続するには、以下の設定をClau
   "mcpServers": {
     "mcp-rag-server": {
       "command": "docker",
-      "args": [
-        "compose",
-        "exec",
-        "-T",
-        "mcp-server",
-        "uv",
-        "run",
-        "python",
-        "-m",
-        "src.main",
-        "--project",
-        "alpha"
-      ],
+      "args": ["compose", "run", "--rm", "-T", "mcp-server"],
       "env": {
-        "POSTGRES_HOST": "postgres",
-        "POSTGRES_PORT": "5432", 
-        "POSTGRES_USER": "postgres",
-        "POSTGRES_PASSWORD": "password",
-        "POSTGRES_DB": "ragdb"
+        "PROJECT": "alpha"
       }
     }
   }
@@ -119,7 +107,8 @@ MCP RAG Server に Claude Code から接続するには、以下の設定をClau
 他のMCPクライアントでも、上記と同様の設定で接続できます。基本的には：
 
 1. `command`: `docker`
-2. `args`: `["compose", "exec", "-T", "mcp-server", "uv", "run", "python", "-m", "src.main", "--project", "alpha"]`
+2. `args`: `["compose", "run", "--rm", "-T", "mcp-server"]`
+3. `env`: `{ "PROJECT": "alpha" }`
 
 ## カスタマイズ
 
@@ -152,8 +141,8 @@ environment:
 エンベディングモデルを変更した場合は、ベクトル次元が変わる可能性があるため、既存のインデックスをクリアして再作成してください：
 
 ```bash
-docker compose exec mcp-server uv run python -m src.cli --project alpha clear
-docker compose exec mcp-server uv run python -m src.cli --project alpha index
+docker compose run --rm -T mcp-server uv run python -m src.cli --project alpha clear
+docker compose run --rm -T mcp-server uv run python -m src.cli --project alpha index
 ```
 
 ### ポート設定の変更
@@ -171,15 +160,14 @@ postgres:
 ### サービスが起動しない場合
 
 ```bash
-# サービスのステータス確認
-docker-compose ps
+# サービスのステータス確認（主にDB）
+docker compose ps
 
 # ログの確認
-docker-compose logs postgres
-docker-compose logs mcp-server
+docker compose logs postgres
 
-# サービスの再起動
-docker-compose restart
+# DBサービスの再起動
+docker compose restart postgres
 ```
 
 ### データベース接続エラーの場合
@@ -195,24 +183,21 @@ docker compose exec postgres psql -U postgres -d ragdb
 ### インデックス作成エラーの場合
 
 ```bash
-# コンテナ内でログを確認
-docker compose exec mcp-server cat logs/mcp_rag_server.log
-
-# インデックスのクリア
-docker compose exec mcp-server uv run python -m src.cli --project alpha clear
+# インデックスのクリア（再実行）
+docker compose run --rm -T mcp-server uv run python -m src.cli --project alpha clear
 ```
 
 ## サービスの停止
 
 ```bash
-# サービスを停止（コンテナは残る）
-docker-compose stop
+# DBサービスを停止（コンテナは残る）
+docker compose stop postgres
 
-# サービスを停止してコンテナを削除
-docker-compose down
+# すべて停止してコンテナを削除
+docker compose down
 
 # ボリュームも含めて完全に削除
-docker-compose down -v
+docker compose down -v
 ```
 
 ## 利用可能なツール

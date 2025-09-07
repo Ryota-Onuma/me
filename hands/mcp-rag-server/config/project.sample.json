@@ -3,7 +3,7 @@
     "mcp-rag-server": {
       "postgres": {
         "host": "localhost",
-      "port": 25432,
+        "port": 25432,
         "user": "postgres",
         "password": "password",
         "db": "ragdb",
@@ -11,7 +11,7 @@
       },
       "paths": {
         "source_dir": "/app/data/source/mcp-rag-server",
-        "processed_dir": "/app/data/processed"
+        "processed_dir": "/app/data/processed/mcp-rag-server"
       },
       "embedding": {
         "model": "intfloat/multilingual-e5-large",
@@ -29,7 +29,7 @@
     "beta": {
       "postgres": {
         "host": "localhost",
-      "port": 25432,
+        "port": 25432,
         "user": "postgres",
         "password": "password",
         "db": "ragdb",
@@ -37,7 +37,7 @@
       },
       "paths": {
         "source_dir": "/app/data/source/beta",
-        "processed_dir": "/app/data/processed"
+        "processed_dir": "/app/data/processed/beta"
       },
       "embedding": {
         "model": "intfloat/multilingual-e5-large",

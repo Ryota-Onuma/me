@@ -1,20 +1,11 @@
 {
   "mcpServers": {
     "mcp-rag-server": {
-      "transport": "stdio",
       "command": "docker",
-      "args": [
-        "exec",
-        "-i",
-        "mcp-rag-server",
-        "uv",
-        "run",
-        "python",
-        "-m",
-        "src.main",
-        "--project",
-        "mcp-rag-server"
-      ]
+      "args": ["compose", "run", "--rm", "-T", "mcp-server"],
+      "env": {
+        "PROJECT": "beta"
+      }
     }
   }
 }

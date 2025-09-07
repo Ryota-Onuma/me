@@ -1,49 +1,66 @@
+x-db-env: &db_env
+  POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+  POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+  POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+  POSTGRES_DB: ${POSTGRES_DB:-ragdb}
+
+x-mcp-common: &mcp_common_env
+  UV_LINK_MODE: ${UV_LINK_MODE:-copy}
+  PROJECT: ${PROJECT:-mcp-rag-server}
+  SOURCE_DIR: ${SOURCE_DIR:-/app/data/source}
+  PROCESSED_DIR: ${PROCESSED_DIR:-/app/data/processed}
+  ENABLE_FILE_LOGGING: ${ENABLE_FILE_LOGGING:-false}
+  HF_HOME: ${HF_HOME:-/opt/models}
+
+x-embedding-env: &embedding_env
+  EMBEDDING_MODEL: ${EMBEDDING_MODEL:-intfloat/multilingual-e5-large}
+  EMBEDDING_DIM: ${EMBEDDING_DIM:-1024}
+  EMBEDDING_PREFIX_QUERY: "${EMBEDDING_PREFIX_QUERY:-query: }"
+  EMBEDDING_PREFIX_EMBEDDING: "${EMBEDDING_PREFIX_EMBEDDING:-passage: }"
+
+x-mcp-volumes: &mcp_volumes
+  - ./src:/app/src
+  - ./data/processed:/app/data/processed
+  - ./data/source:/app/data/source
+  - ./config:/app/config
+  - ./logs:/app/logs
+
+x-pg-health: &pg_health
+  test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-ragdb}"]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+
 services:
   postgres:
     image: pgvector/pgvector:pg16
     container_name: mcp-rag-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: ragdb
+      <<: *db_env
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
     ports:
-      - "25432:5432"
+      - "${PG_LOCAL_PORT:-25432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./data/init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ragdb"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    healthcheck: *pg_health
 
   mcp-server:
-    build: .
+    build:
+      context: .
+      args:
+        EMBEDDING_MODEL: ${EMBEDDING_MODEL:-intfloat/multilingual-e5-large}
     container_name: mcp-rag-server
     environment:
-      UV_LINK_MODE: copy
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: ragdb
-      PROJECT: mcp-rag-server
-      SOURCE_DIR: /app/data/source
-      PROCESSED_DIR: /app/data/processed
-      EMBEDDING_MODEL: intfloat/multilingual-e5-large
-      EMBEDDING_DIM: 1024
-      EMBEDDING_PREFIX_QUERY: "query: "
-      EMBEDDING_PREFIX_EMBEDDING: "passage: "
-    volumes:
-      - ./src:/app/src
-      # processed はベースディレクトリを採用
-      - ./data/processed:/app/data/processed
-      # source はルートを一括マウントし、プロジェクトはサブディレクトリで管理
-      - ./data/source:/app/data/source
-      - ./config:/app/config
-      - ./logs:/app/logs
-      - model_cache:/root/.cache
+      <<:
+        - *mcp_common_env
+        - *db_env
+        - *embedding_env
+      HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-1}
+      TRANSFORMERS_OFFLINE: ${TRANSFORMERS_OFFLINE:-1}
+      HF_HUB_DISABLE_TELEMETRY: ${HF_HUB_DISABLE_TELEMETRY:-1}
+    volumes: *mcp_volumes
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,4 +70,3 @@ services:
 
 volumes:
   postgres_data:
-  model_cache:

@@ -41,9 +41,12 @@ def _ensure_docker_only() -> None:
 
 def _config_paths() -> List[Path]:
     candidates: List[Path] = []
-    # 既定の集中管理ファイル
     candidates.append(Path("config") / "project.json")
     candidates.append(Path("config.json"))
+    app_root = Path("/app")
+    if app_root.exists():
+        candidates.append(app_root / "config" / "project.json")
+        candidates.append(app_root / "config.json")
     return candidates
 
 
@@ -60,15 +63,56 @@ def _load_projects_from_json() -> List[str]:
     return []
 
 
-def _ensure_config_loaded(project: Optional[str] = None, *, override_env: bool = True):
-    """JSON読込→ENV反映。
+def _json_paths_for(project: Optional[str]) -> dict:
+    """configのpaths（source_dir/processed_dir）を取得。"""
+    data = _read_full_config()
+    if not isinstance(data, dict):
+        return {}
+    paths: dict = {}
+    if isinstance(data.get("projects"), dict) and project and project in data["projects"]:
+        p = data["projects"][project]
+        if isinstance(p, dict) and isinstance(p.get("paths"), dict):
+            paths = dict(p["paths"])
+    elif isinstance(data.get("paths"), dict):
+        paths = dict(data["paths"])  # フラット構成
+    return paths
 
-    デフォルトは JSON を真実とみなし、既存ENVを上書き（override_env=True）。
-    Compose等の外部ENVを優先したい場合は False を指定。
-    """
-    loaded = load_project_config(project=os.environ.get("PROJECT", project), override_env=override_env)
-    if not loaded:
+
+def _ensure_config_loaded(project: Optional[str] = None, *, override_env: bool = True):
+    """設定の存在を確認し、必要に応じてENVに反映。"""
+    target = os.environ.get("PROJECT") or os.environ.get("PROJECT_NAME") or project
+
+    cfg_path = None
+    for p in _config_paths():
+        if p.exists():
+            cfg_path = p
+            break
+    if not cfg_path:
         print("設定ファイルが見つかりません。config/project.json を用意してください。")
+        sys.exit(1)
+
+    data = _read_full_config()
+    if not isinstance(data, dict):
+        print("設定ファイルの読み込みに失敗しました。config/project.json を確認してください。")
+        sys.exit(1)
+
+    if isinstance(data.get("projects"), dict) or isinstance(data.get("profiles"), dict):
+        if not target:
+            print("エラー: PROJECT が未設定です。--project または環境変数 PROJECT を指定してください。")
+            sys.exit(2)
+        has_proj = False
+        if isinstance(data.get("projects"), dict) and target in data["projects"]:
+            has_proj = True
+        if isinstance(data.get("profiles"), dict) and target in data["profiles"]:
+            has_proj = True
+        if not has_proj:
+            print(f"プロジェクト '{target}' の設定が見つかりません。config を確認してください。")
+            sys.exit(1)
+
+    try:
+        load_project_config(project=target, override_env=override_env)
+    except Exception:
+        print("設定ファイルの読み込みに失敗しました。config/project.json を確認してください。")
         sys.exit(1)
 
 
@@ -107,7 +151,8 @@ def project_init_interactive(
     name = project or _prompt("- プロジェクト名 [alpha]: ", "alpha")
     default_src = f"/app/data/source/{name}"
     src = source_dir or _prompt(f"- SOURCE_DIR [{default_src}]: ", default_src)
-    proc = processed_dir or _prompt("- PROCESSED_DIR [data/processed]: ", "data/processed")
+    default_proc = f"/app/data/processed/{name}"
+    proc = processed_dir or _prompt(f"- PROCESSED_DIR [{default_proc}]: ", default_proc)
     # スキーマ名（デフォルトはプロジェクト名をそのまま使用）
     schema = _prompt(f"- スキーマ名 [{name}]: ", name)
 
@@ -327,8 +372,7 @@ def _project_delete(
     paths = proj.get("paths") or {}
     pg = proj.get("postgres") or {}
 
-    proc_base = paths.get("processed_dir", "data/processed")
-    processed_project_dir = str(Path(proc_base) / target)
+    processed_project_dir = str(paths.get("processed_dir", "data/processed"))
     source_dir = paths.get("source_dir", "data/source")
     # スキーマ名（設定になければプロジェクト名）
     schema_name = str(pg.get("schema") or target)
@@ -400,19 +444,39 @@ def setup_logging():
 
     # 必要な場合のみログディレクトリを作成
     if enable_file_logging:
-        os.makedirs("logs", exist_ok=True)
+        try:
+            os.makedirs("logs", exist_ok=True)
+        except Exception:
+            # ディレクトリ作成に失敗しても後段でハンドラ追加をスキップ
+            enable_file_logging = False
 
     # ハンドラーの設定
     handlers = [logging.StreamHandler(sys.stdout)]
     if enable_file_logging:
-        handlers.append(logging.FileHandler(os.path.join("logs", "mcp_rag_cli.log"), encoding="utf-8"))
+        try:
+            handlers.append(logging.FileHandler(os.path.join("logs", "mcp_rag_cli.log"), encoding="utf-8"))
+        except Exception as e:
+            print(f"警告: CLIログファイルを開けませんでした（{e}）。標準出力のみで継続します。")
 
-    # ロギングの設定
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=handlers,
-    )
+    # ロギングの設定（失敗しても継続）
+    try:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            handlers=handlers,
+        )
+    except Exception as e:
+        print(f"警告: ロギング初期化に失敗しました（{e}）。簡易設定で継続します。")
+        try:
+            logging.basicConfig(level=logging.INFO, stream=sys.stdout, format="%(levelname)s: %(message)s")
+        except Exception:
+            pass
+
+    # pdfminerの冗長ログを抑制
+    try:
+        logging.getLogger("pdfminer").setLevel(logging.ERROR)
+    except Exception:
+        pass
     return logging.getLogger("cli")
 
 
@@ -430,20 +494,21 @@ def clear_index():
     # クリア処理では JSON の paths.processed_dir を明示優先で採用する
     resolved = load_project_config(project=project, override_env=False)
 
-    # RAGサービスの作成（設定適用後に遅延インポート）
     from .rag_tools import create_rag_service_from_env
 
     rag_service = create_rag_service_from_env()
 
-    # 処理済みディレクトリのパス（優先度: JSON > ENV > 既定）
-    processed_dir = resolved.get("PROCESSED_DIR") or os.environ.get("PROCESSED_DIR", "data/processed")
-    # プロジェクト別ディレクトリ
+    json_paths = _json_paths_for(os.environ.get("PROJECT"))
+    processed_dir = (
+        (str(json_paths.get("processed_dir")) if json_paths.get("processed_dir") else None)
+        or resolved.get("PROCESSED_DIR")
+        or os.environ.get("PROCESSED_DIR", "data/processed")
+    )
     project = os.environ.get("PROJECT")
     if not project:
         logger.error("PROJECT が未設定です。--project または環境変数 PROJECT を指定してください。")
         print("エラー: PROJECT が未設定です。--project または環境変数 PROJECT を指定してください。")
         sys.exit(2)
-    processed_dir = os.path.join(processed_dir, project)
 
     # ファイルレジストリの削除
     registry_path = Path(processed_dir) / "file_registry.json"
@@ -797,13 +862,11 @@ def main():
         _require_project()
         clear_index()
     elif args.command == "index":
-        # PROJECT確定と設定読込（外部ENV優先で補完）
         proj = _require_project()
-        # 設定を読み込み、ENVは上書きしない（戻り値から明示的に参照する）
-        resolved = load_project_config(project=proj, override_env=False)
-
-        # ディレクトリ解決: 引数 > JSON設定(paths.source_dir) > 環境変数 > 既定
-        directory = args.directory or resolved.get("SOURCE_DIR") or os.environ.get("SOURCE_DIR") or "./data/source"
+        load_project_config(project=proj, override_env=False)
+        json_paths = _json_paths_for(proj)
+        json_source = str(json_paths.get("source_dir")) if json_paths.get("source_dir") else None
+        directory = args.directory or json_source or os.environ.get("SOURCE_DIR") or "./data/source"
 
         index_documents(directory, args.chunk_size, args.chunk_overlap, args.incremental)
     elif args.command == "count":
@@ -832,9 +895,6 @@ def main():
             )
         else:
             project_parser.print_help()
-    else:
-        parser.print_help()
-        sys.exit(1)
 
 
 if __name__ == "__main__":
