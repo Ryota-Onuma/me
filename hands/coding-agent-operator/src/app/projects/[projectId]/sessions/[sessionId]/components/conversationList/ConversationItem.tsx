@@ -60,21 +60,36 @@ export const ConversationItem: FC<{
   }
 
   if (conversation.type === "user") {
-    const userConversationJsx =
-      typeof conversation.message.content === "string" ? (
+    const content = conversation.message.content;
+    const userConversationJsx = (() => {
+      if (typeof content === "string") {
+        return (
+          <UserConversationContent
+            content={content}
+            id={`message-${conversation.uuid}`}
+          />
+        );
+      }
+      if (Array.isArray(content)) {
+        return (
+          <ul className="w-full" id={`message-${conversation.uuid}`}>
+            {content.map((c) => (
+              <li
+                key={typeof c === "string" ? c : JSON.stringify(c).slice(0, 50)}
+              >
+                <UserConversationContent content={c} />
+              </li>
+            ))}
+          </ul>
+        );
+      }
+      return (
         <UserConversationContent
-          content={conversation.message.content}
+          content={content}
           id={`message-${conversation.uuid}`}
         />
-      ) : (
-        <ul className="w-full" id={`message-${conversation.uuid}`}>
-          {conversation.message.content.map((content) => (
-            <li key={content.toString()}>
-              <UserConversationContent content={content} />
-            </li>
-          ))}
-        </ul>
       );
+    })();
 
     return conversation.isMeta === true ? (
       // 展開可能にしてデフォで非展開

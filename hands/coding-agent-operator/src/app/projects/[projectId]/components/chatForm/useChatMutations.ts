@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import type { UserMessageInputPayload } from "@/lib/api/types";
 import { honoClient } from "../../../../../lib/api/client";
 
 export const useNewChatMutation = (
@@ -9,13 +10,13 @@ export const useNewChatMutation = (
   const router = useRouter();
 
   return useMutation({
-    mutationFn: async (options: { message: string }) => {
+    mutationFn: async (options: { input: UserMessageInputPayload }) => {
       const response = await honoClient.api.projects[":projectId"][
         "new-session"
       ].$post(
         {
           param: { projectId },
-          json: { message: options.message },
+          json: { input: options.input },
         },
         {
           init: {
@@ -43,13 +44,13 @@ export const useResumeChatMutation = (projectId: string, sessionId: string) => {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: async (options: { message: string }) => {
+    mutationFn: async (options: { input: UserMessageInputPayload }) => {
       const response = await honoClient.api.projects[":projectId"].sessions[
         ":sessionId"
       ].resume.$post(
         {
           param: { projectId, sessionId },
-          json: { resumeMessage: options.message },
+          json: { input: options.input },
         },
         {
           init: {

@@ -33,18 +33,21 @@ const getFirstCommand = (
       continue;
     }
 
-    const firstUserText =
-      conversation === null
-        ? null
-        : typeof conversation.message.content === "string"
-          ? conversation.message.content
-          : (() => {
-              const firstContent = conversation.message.content.at(0);
-              if (firstContent === undefined) return null;
-              if (typeof firstContent === "string") return firstContent;
-              if (firstContent.type === "text") return firstContent.text;
-              return null;
-            })();
+    const firstUserText = (() => {
+      if (conversation === null) return null;
+      const content = conversation.message.content as unknown;
+      if (typeof content === "string") return content;
+      if (Array.isArray(content)) {
+        const firstContent = content[0] as any;
+        if (!firstContent) return null;
+        if (typeof firstContent === "string") return firstContent;
+        if (firstContent.type === "text") return firstContent.text as string;
+        return null;
+      }
+      const single = content as any;
+      if (single?.type === "text") return single.text as string;
+      return null;
+    })();
 
     if (firstUserText === null) {
       continue;

@@ -2,6 +2,17 @@ import type { SDKMessage, SDKUserMessage } from "@anthropic-ai/claude-code";
 
 export type OnMessage = (message: SDKMessage) => void | Promise<void>;
 
+// 画像/テキストを含むユーザー入力（フロント/APIと整合）
+export type UserMessageInput =
+  | string
+  | {
+      text?: string;
+      images?: {
+        data: string;
+        mimeType: "image/png" | "image/jpeg" | "image/webp";
+      }[];
+    };
+
 export type MessageGenerator = () => AsyncGenerator<
   SDKUserMessage,
   void,
@@ -29,39 +40,79 @@ const createPromise = <T>() => {
 };
 
 export const createMessageGenerator = (
-  firstMessage: string,
+  firstMessage: UserMessageInput,
 ): {
   generateMessages: MessageGenerator;
-  setNextMessage: (message: string) => void;
+  setNextMessage: (message: UserMessageInput) => void;
   setFirstMessagePromise: () => void;
   resolveFirstMessage: () => void;
   awaitFirstMessage: () => Promise<void>;
 } => {
-  let sendMessagePromise = createPromise<string>();
+  let sendMessagePromise = createPromise<UserMessageInput>();
   let receivedFirstMessagePromise = createPromise<undefined>();
 
-  const createMessage = (message: string): SDKUserMessage => {
-    return {
-      type: "user",
-      message: {
-        role: "user",
-        content: message,
-      },
-    } as SDKUserMessage;
+  const toSdkMessages = (input: UserMessageInput): SDKUserMessage[] => {
+    if (typeof input === "string") {
+      return [
+        {
+          type: "user",
+          message: { role: "user", content: input },
+        } as SDKUserMessage,
+      ];
+    }
+
+    const blocks: unknown[] = [];
+    for (const img of input.images ?? []) {
+      blocks.push({
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: img.mimeType,
+          data: img.data,
+        },
+      });
+    }
+    if (input.text && input.text.trim() !== "") {
+      blocks.push({ type: "text", text: input.text });
+    }
+
+    if (blocks.length === 0) {
+      return [];
+    }
+
+    type TextBlock = { type: "text"; text: string };
+    type ImageBlock = {
+      type: "image";
+      source: { type: "base64"; media_type: string; data: string };
+    };
+    return [
+      {
+        type: "user",
+        message: {
+          role: "user",
+          content: blocks as Array<TextBlock | ImageBlock>,
+        },
+      } as SDKUserMessage,
+    ];
   };
 
   async function* generateMessages(): ReturnType<MessageGenerator> {
-    yield createMessage(firstMessage);
+    const queue: SDKUserMessage[] = [...toSdkMessages(firstMessage)];
 
     while (true) {
-      const message = await sendMessagePromise.promise;
-      sendMessagePromise = createPromise<string>();
-
-      yield createMessage(message);
+      if (queue.length === 0) {
+        const input = await sendMessagePromise.promise;
+        sendMessagePromise = createPromise<UserMessageInput>();
+        queue.push(...toSdkMessages(input));
+      }
+      const next = queue.shift();
+      if (next) {
+        yield next;
+      }
     }
   }
 
-  const setNextMessage = (message: string) => {
+  const setNextMessage = (message: UserMessageInput) => {
     sendMessagePromise.resolve(message);
   };
 

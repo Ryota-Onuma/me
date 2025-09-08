@@ -31,7 +31,9 @@ const getConversationKey = (conversation: Conversation) => {
     return `summary_${conversation.leafUuid}`;
   }
 
-  throw new Error(`Unknown conversation type: ${conversation}`);
+  throw new Error(
+    `Unknown conversation type: ${(conversation as { type?: string })?.type}`,
+  );
 };
 
 const SchemaErrorDisplay: FC<{ errorLine: string }> = ({ errorLine }) => {
@@ -144,7 +146,7 @@ export const ConversationList: FC<ConversationListProps> = ({
                 ? "justify-start"
                 : "justify-end"
             }`}
-            key={getConversationKey(conversation)}
+            key={`li_${getConversationKey(conversation)}`}
           >
             <div className="w-full max-w-3xl lg:max-w-4xl sm:w-[90%] md:w-[85%]">
               {elm}

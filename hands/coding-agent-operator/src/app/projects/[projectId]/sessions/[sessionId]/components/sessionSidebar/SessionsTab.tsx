@@ -1,9 +1,12 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { MessageSquareIcon, PlusIcon } from "lucide-react";
+import { MessageSquareIcon, PlusIcon, TrashIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { FC } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,6 +21,58 @@ export const SessionsTab: FC<{
   projectId: string;
 }> = ({ sessions, currentSessionId, projectId }) => {
   const aliveTasks = useAtomValue(aliveTasksAtom);
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(
+    null,
+  );
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  const handleDeleteSession = async (
+    sessionId: string,
+    e: React.MouseEvent,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!confirm("このセッションを削除しますか？この操作は元に戻せません。")) {
+      return;
+    }
+
+    setDeletingSessionId(sessionId);
+
+    try {
+      const response = await fetch(
+        `/api/projects/${projectId}/sessions/${sessionId}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete session");
+      }
+
+      // Invalidate project query to refresh sessions list
+      await queryClient.invalidateQueries({
+        queryKey: ["projects", projectId],
+      });
+
+      // If deleted current session, navigate to project page
+      if (sessionId === currentSessionId) {
+        router.push(`/projects/${projectId}`);
+      }
+    } catch (error) {
+      console.error("Error deleting session:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "セッションの削除に失敗しました。",
+      );
+    } finally {
+      setDeletingSessionId(null);
+    }
+  };
 
   // Sort sessions: Running > Paused > Others, then by lastModifiedAt (newest first)
   const sortedSessions = [...sessions].sort((a, b) => {
@@ -87,54 +142,75 @@ export const SessionsTab: FC<{
           const isPaused = aliveTask?.status === "paused";
 
           return (
-            <Link
+            <div
               key={session.id}
-              href={`/projects/${projectId}/sessions/${encodeURIComponent(
-                session.id,
-              )}`}
               className={cn(
-                "block rounded-lg p-2.5 transition-all duration-200 hover:bg-blue-50/60 hover:border-blue-300/60 hover:shadow-sm border border-sidebar-border/40 bg-sidebar/30",
+                "group relative rounded-lg p-2.5 transition-all duration-200 hover:bg-blue-50/60 hover:border-blue-300/60 hover:shadow-sm border border-sidebar-border/40 bg-sidebar/30",
                 isActive &&
                   "bg-blue-100 border-blue-400 shadow-md ring-1 ring-blue-200/50 hover:bg-blue-100 hover:border-blue-400",
               )}
             >
-              <div className="space-y-1.5">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-sm font-medium line-clamp-2 leading-tight text-sidebar-foreground flex-1">
-                    {title}
-                  </h3>
-                  {(isRunning || isPaused) && (
-                    <Badge
-                      variant={isRunning ? "default" : "secondary"}
-                      className={cn(
-                        "text-xs",
-                        isRunning && "bg-green-500 text-white",
-                        isPaused && "bg-yellow-500 text-white",
+              <Link
+                href={`/projects/${projectId}/sessions/${encodeURIComponent(
+                  session.id,
+                )}`}
+                className="block"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-sm font-medium line-clamp-2 leading-tight text-sidebar-foreground flex-1">
+                      {title}
+                    </h3>
+                    <div className="flex items-center gap-1">
+                      {(isRunning || isPaused) && (
+                        <Badge
+                          variant={isRunning ? "default" : "secondary"}
+                          className={cn(
+                            "text-xs",
+                            isRunning && "bg-green-500 text-white",
+                            isPaused && "bg-yellow-500 text-white",
+                          )}
+                        >
+                          {isRunning ? "Running" : "Paused"}
+                        </Badge>
                       )}
-                    >
-                      {isRunning ? "Running" : "Paused"}
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-xs text-sidebar-foreground/70">
-                    <MessageSquareIcon className="w-3 h-3" />
-                    <span>{session.meta.messageCount}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={cn(
+                          "opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50",
+                          deletingSessionId === session.id && "opacity-100",
+                        )}
+                        disabled={deletingSessionId === session.id}
+                        onClick={(e) => handleDeleteSession(session.id, e)}
+                      >
+                        {deletingSessionId === session.id ? (
+                          <div className="w-3 h-3 border border-red-500 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <TrashIcon className="w-3 h-3" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                  {session.meta.lastModifiedAt && (
-                    <span className="text-xs text-sidebar-foreground/60">
-                      {new Date(session.meta.lastModifiedAt).toLocaleDateString(
-                        "en-US",
-                        {
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-xs text-sidebar-foreground/70">
+                      <MessageSquareIcon className="w-3 h-3" />
+                      <span>{session.meta.messageCount}</span>
+                    </div>
+                    {session.meta.lastModifiedAt && (
+                      <span className="text-xs text-sidebar-foreground/60">
+                        {new Date(
+                          session.meta.lastModifiedAt,
+                        ).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
-                        },
-                      )}
-                    </span>
-                  )}
+                        })}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
           );
         })}
       </div>

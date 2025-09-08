@@ -6,27 +6,15 @@ export const useSession = (projectId: string, sessionId: string) => {
 
   const toolResultMap = useMemo(() => {
     const entries = query.data.session.conversations.flatMap((conversation) => {
-      if (conversation.type !== "user") {
-        return [];
-      }
-
-      if (typeof conversation.message.content === "string") {
-        return [];
-      }
-
-      return conversation.message.content.flatMap((message) => {
-        if (typeof message === "string") {
-          return [];
-        }
-
-        if (message.type !== "tool_result") {
-          return [];
-        }
-
-        return [[message.tool_use_id, message] as const];
-      });
+      if (conversation.type !== "user") return [] as Array<[string, any]>;
+      const c = conversation.message.content as unknown;
+      const list = Array.isArray(c) ? c : typeof c === "string" ? [] : [c];
+      return list.flatMap((message: any) =>
+        message && message.type === "tool_result"
+          ? ([[message.tool_use_id, message] as const] as const)
+          : [],
+      );
     });
-
     return new Map(entries);
   }, [query.data.session.conversations]);
 

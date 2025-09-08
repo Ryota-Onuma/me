@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { parseJsonl } from "../parseJsonl";
 import { decodeProjectId } from "../project/id";
@@ -28,4 +28,21 @@ export const getSession = async (
   return {
     session: sessionDetail,
   };
+};
+export const deleteSession = async (
+  projectId: string,
+  sessionId: string,
+): Promise<{ success: boolean }> => {
+  const projectPath = decodeProjectId(projectId);
+  const sessionPath = resolve(projectPath, `${sessionId}.jsonl`);
+
+  try {
+    await unlink(sessionPath);
+    return { success: true };
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      throw new Error(`Session ${sessionId} not found`);
+    }
+    throw error;
+  }
 };

@@ -1,14 +1,23 @@
-import { AlertCircleIcon, LoaderIcon, SendIcon } from "lucide-react";
+import {
+  AlertCircleIcon,
+  Image as ImageIcon,
+  LoaderIcon,
+  SendIcon,
+  XIcon,
+} from "lucide-react";
+import NextImage from "next/image";
 import { type FC, useCallback, useId, useRef, useState } from "react";
+import type { UserMessageInputPayload } from "@/lib/api/types";
 import { Button } from "../../../../../components/ui/button";
 import { Textarea } from "../../../../../components/ui/textarea";
 import type { CommandCompletionRef } from "./CommandCompletion";
+import { CommandsMenu } from "./CommandsMenu";
 import type { FileCompletionRef } from "./FileCompletion";
 import { InlineCompletion } from "./InlineCompletion";
 
 export interface ChatInputProps {
   projectId: string;
-  onSubmit: (message: string) => Promise<void>;
+  onSubmit: (input: UserMessageInputPayload) => Promise<void>;
   isPending: boolean;
   error?: Error | null;
   placeholder: string;
@@ -32,6 +41,16 @@ export const ChatInput: FC<ChatInputProps> = ({
   buttonSize = "lg",
 }) => {
   const [message, setMessage] = useState("");
+  const [droppedImages, setDroppedImages] = useState<
+    {
+      id: string;
+      name: string;
+      dataUrl: string;
+      base64: string;
+      mimeType: "image/png" | "image/jpeg" | "image/webp";
+    }[]
+  >([]);
+  const [localErrors, setLocalErrors] = useState<string[]>([]);
   const [cursorPosition, setCursorPosition] = useState<{
     relative: { top: number; left: number };
     absolute: { top: number; left: number };
@@ -44,9 +63,23 @@ export const ChatInput: FC<ChatInputProps> = ({
   const helpId = useId();
 
   const handleSubmit = async () => {
-    if (!message.trim()) return;
-    await onSubmit(message.trim());
+    const text = message.trim();
+    if (!text && droppedImages.length === 0) return;
+
+    const input: UserMessageInputPayload = {
+      text: text || undefined,
+      images:
+        droppedImages.length > 0
+          ? droppedImages.map((img) => ({
+              data: img.base64,
+              mimeType: img.mimeType,
+            }))
+          : undefined,
+    };
+
+    await onSubmit(input);
     setMessage("");
+    setDroppedImages([]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -62,6 +95,78 @@ export const ChatInput: FC<ChatInputProps> = ({
       e.preventDefault();
       handleSubmit();
     }
+  };
+
+  const ALLOWED_MIME: ReadonlyArray<"image/png" | "image/jpeg" | "image/webp"> =
+    ["image/png", "image/jpeg", "image/webp"];
+  const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
+
+  const handleFiles = async (files: File[]) => {
+    const errors: string[] = [];
+    const valid = files.filter((f) => {
+      if (!ALLOWED_MIME.includes(f.type as (typeof ALLOWED_MIME)[number])) {
+        errors.push(`${f.name}: 未対応形式 (${f.type || "unknown"})`);
+        return false;
+      }
+      if (f.size > MAX_IMAGE_BYTES) {
+        errors.push(
+          `${f.name}: サイズ超過 (${(f.size / (1024 * 1024)).toFixed(1)}MB)`,
+        );
+        return false;
+      }
+      return true;
+    });
+
+    if (valid.length === 0) {
+      if (errors.length > 0) setLocalErrors(errors);
+      return;
+    }
+
+    const toDataUrl = (file: File) =>
+      new Promise<{ dataUrl: string; base64: string }>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = String(reader.result);
+          const base64 = dataUrl.split(",")[1] || "";
+          resolve({ dataUrl, base64 });
+        };
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+      });
+
+    const results = await Promise.all(valid.map((f) => toDataUrl(f)));
+    const newItems: {
+      id: string;
+      name: string;
+      dataUrl: string;
+      base64: string;
+      mimeType: (typeof ALLOWED_MIME)[number];
+    }[] = [];
+    for (const [i, f] of valid.entries()) {
+      const r = results[i];
+      if (!r) continue;
+      newItems.push({
+        id: `${f.name}-${f.size}-${i}-${Date.now()}`,
+        name: f.name,
+        dataUrl: r.dataUrl,
+        base64: r.base64,
+        mimeType: f.type as (typeof ALLOWED_MIME)[number],
+      });
+    }
+    setDroppedImages((prev) => [...prev, ...newItems]);
+
+    if (errors.length > 0) setLocalErrors(errors);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = Array.from(e.dataTransfer.files);
+    await handleFiles(files);
+  };
+
+  const removeImage = (id: string) => {
+    setDroppedImages((prev) => prev.filter((img) => img.id !== id));
   };
 
   const getCursorPosition = useCallback(() => {
@@ -133,12 +238,33 @@ export const ChatInput: FC<ChatInputProps> = ({
     textareaRef.current?.focus();
   };
 
+  const runCommandNow = async (cmdText: string) => {
+    if (isPending || disabled) return;
+    await onSubmit({ text: cmdText });
+  };
+
   return (
-    <div className={containerClassName}>
-      {error && (
+    <section
+      className={containerClassName}
+      onDragOver={(e) => {
+        // 画像ドロップのために必要
+        e.preventDefault();
+      }}
+      onDrop={handleDrop}
+      aria-label="Message input area"
+    >
+      {(error || localErrors.length > 0) && (
         <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md mb-4">
           <AlertCircleIcon className="w-4 h-4" />
-          <span>Failed to send message. Please try again.</span>
+          <span>
+            {error ? "Failed to send message. Please try again." : null}
+            {localErrors.length > 0 ? (
+              <>
+                {error ? " " : null}
+                {localErrors.join(" / ")}
+              </>
+            ) : null}
+          </span>
         </div>
       )}
 
@@ -147,6 +273,13 @@ export const ChatInput: FC<ChatInputProps> = ({
           <Textarea
             ref={textareaRef}
             value={message}
+            onPaste={async (e) => {
+              const files = Array.from(e.clipboardData?.files ?? []);
+              if (files.length > 0) {
+                e.preventDefault();
+                await handleFiles(files);
+              }
+            }}
             onChange={(e) => {
               if (
                 e.target.value.endsWith("@") ||
@@ -159,6 +292,7 @@ export const ChatInput: FC<ChatInputProps> = ({
               }
 
               setMessage(e.target.value);
+              if (localErrors.length > 0) setLocalErrors([]);
             }}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
@@ -172,6 +306,33 @@ export const ChatInput: FC<ChatInputProps> = ({
             role="combobox"
             aria-autocomplete="list"
           />
+          {droppedImages.length > 0 && (
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {droppedImages.map((img) => (
+                <li
+                  key={img.id}
+                  className="relative w-24 h-24 border rounded overflow-hidden bg-background list-none"
+                >
+                  <NextImage
+                    src={img.dataUrl}
+                    alt={img.name}
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(img.id)}
+                    className="absolute top-1 right-1 inline-flex items-center justify-center w-6 h-6 rounded-full bg-black/60 text-white"
+                    aria-label={`Remove ${img.name}`}
+                    title="Remove"
+                  >
+                    <XIcon className="w-3 h-3" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           <InlineCompletion
             projectId={projectId}
             message={message}
@@ -186,29 +347,44 @@ export const ChatInput: FC<ChatInputProps> = ({
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground" id={helpId}>
             {message.length}/4000 characters " • Use arrow keys to navigate
-            completions"
+            completions • PNG/JPEG/WebP ≤ 5MB • Drag & drop or paste"
           </span>
 
-          <Button
-            onClick={handleSubmit}
-            disabled={!message.trim() || isPending || disabled}
-            size={buttonSize}
-            className="gap-2"
-          >
-            {isPending ? (
-              <>
-                <LoaderIcon className="w-4 h-4 animate-spin" />
-                Sending... This may take a while.
-              </>
-            ) : (
-              <>
-                <SendIcon className="w-4 h-4" />
-                {buttonText}
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <CommandsMenu
+              projectId={projectId}
+              onInsert={handleCommandSelect}
+              onRun={runCommandNow}
+            />
+            <Button
+              onClick={handleSubmit}
+              disabled={
+                (message.trim() === "" && droppedImages.length === 0) ||
+                isPending ||
+                disabled
+              }
+              size={buttonSize}
+              className="gap-2"
+            >
+              {isPending ? (
+                <>
+                  <LoaderIcon className="w-4 h-4 animate-spin" />
+                  Sending... This may take a while.
+                </>
+              ) : (
+                <>
+                  {droppedImages.length > 0 ? (
+                    <ImageIcon className="w-4 h-4" />
+                  ) : (
+                    <SendIcon className="w-4 h-4" />
+                  )}
+                  {buttonText}
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };

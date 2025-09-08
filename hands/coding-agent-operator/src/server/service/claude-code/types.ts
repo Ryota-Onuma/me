@@ -1,4 +1,8 @@
-import type { MessageGenerator, OnMessage } from "./createMessageGenerator";
+import type {
+  MessageGenerator,
+  OnMessage,
+  UserMessageInput,
+} from "./createMessageGenerator";
 
 type BaseClaudeCodeTask = {
   id: string;
@@ -6,7 +10,7 @@ type BaseClaudeCodeTask = {
   baseSessionId?: string | undefined; // undefined = new session
   cwd: string;
   generateMessages: MessageGenerator;
-  setNextMessage: (message: string) => void;
+  setNextMessage: (message: UserMessageInput) => void;
   resolveFirstMessage: () => void;
   setFirstMessagePromise: () => void;
   awaitFirstMessage: () => Promise<void>;

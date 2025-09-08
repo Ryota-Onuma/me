@@ -18,7 +18,7 @@ import { getDiff } from "../service/git/getDiff";
 import { getMcpList } from "../service/mcp/getMcpList";
 import { getProject } from "../service/project/getProject";
 import { getProjects } from "../service/project/getProjects";
-import { getSession } from "../service/session/getSession";
+import { deleteSession, getSession } from "../service/session/getSession";
 import { getSessions } from "../service/session/getSessions";
 import type { HonoAppType } from "./app";
 import { configMiddleware } from "./middleware/config.middleware";
@@ -137,6 +137,34 @@ export const routes = (app: HonoAppType) => {
         const { projectId, sessionId } = c.req.param();
         const { session } = await getSession(projectId, sessionId);
         return c.json({ session });
+      })
+
+      .delete("/projects/:projectId/sessions/:sessionId", async (c) => {
+        const { projectId, sessionId } = c.req.param();
+
+        try {
+          const { success } = await deleteSession(projectId, sessionId);
+
+          if (success) {
+            const eventBus = getEventBus();
+            eventBus.emit("session_changed", {
+              type: "session_changed",
+              data: {
+                projectId,
+                sessionId,
+                fileEventType: "rename",
+              },
+            });
+          }
+
+          return c.json({ success });
+        } catch (error) {
+          console.error("Delete session error:", error);
+          if (error instanceof Error) {
+            return c.json({ error: error.message }, 404);
+          }
+          return c.json({ error: "Failed to delete session" }, 500);
+        }
       })
 
       .get(
@@ -290,12 +318,22 @@ export const routes = (app: HonoAppType) => {
         zValidator(
           "json",
           z.object({
-            message: z.string(),
+            input: z.object({
+              text: z.string().optional(),
+              images: z
+                .array(
+                  z.object({
+                    data: z.string(),
+                    mimeType: z.enum(["image/png", "image/jpeg", "image/webp"]),
+                  }),
+                )
+                .optional(),
+            }),
           }),
         ),
         async (c) => {
           const { projectId } = c.req.param();
-          const { message } = c.req.valid("json");
+          const { input } = c.req.valid("json");
           const { project } = await getProject(projectId);
 
           if (project.meta.projectPath === null) {
@@ -307,7 +345,7 @@ export const routes = (app: HonoAppType) => {
               projectId,
               cwd: project.meta.projectPath,
             },
-            message,
+            input,
           );
 
           return c.json({
@@ -323,12 +361,22 @@ export const routes = (app: HonoAppType) => {
         zValidator(
           "json",
           z.object({
-            resumeMessage: z.string(),
+            input: z.object({
+              text: z.string().optional(),
+              images: z
+                .array(
+                  z.object({
+                    data: z.string(),
+                    mimeType: z.enum(["image/png", "image/jpeg", "image/webp"]),
+                  }),
+                )
+                .optional(),
+            }),
           }),
         ),
         async (c) => {
           const { projectId, sessionId } = c.req.param();
-          const { resumeMessage } = c.req.valid("json");
+          const { input } = c.req.valid("json");
           const { project } = await getProject(projectId);
 
           if (project.meta.projectPath === null) {
@@ -341,7 +389,7 @@ export const routes = (app: HonoAppType) => {
               sessionId,
               cwd: project.meta.projectPath,
             },
-            resumeMessage,
+            input,
           );
 
           return c.json({

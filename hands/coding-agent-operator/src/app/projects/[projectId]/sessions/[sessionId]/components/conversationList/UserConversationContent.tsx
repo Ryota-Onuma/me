@@ -1,4 +1,4 @@
-import { AlertCircle, Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 import type { FC } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,20 @@ export const UserConversationContent: FC<{
   }
 
   if (content.type === "image") {
-    if (content.source.type === "base64") {
+    // Handle both formats: { source: {...} } and { data: "..." }
+    const imageData =
+      "source" in content
+        ? content.source.data
+        : "data" in content
+          ? content.data
+          : null;
+    const mediaType =
+      "source" in content ? content.source.media_type : "image/png"; // default for legacy format
+
+    if (
+      imageData &&
+      ("source" in content ? content.source.type === "base64" : true)
+    ) {
       return (
         <Card
           className="border-purple-200 bg-purple-50/50 dark:border-purple-800 dark:bg-purple-950/20"
@@ -39,7 +52,7 @@ export const UserConversationContent: FC<{
                 variant="outline"
                 className="border-purple-300 text-purple-700 dark:border-purple-700 dark:text-purple-300"
               >
-                {content.source.media_type}
+                {mediaType}
               </Badge>
             </div>
             <CardDescription className="text-xs">
@@ -49,41 +62,35 @@ export const UserConversationContent: FC<{
           <CardContent>
             <div className="rounded-lg border overflow-hidden bg-background">
               <Image
-                src={`data:${content.source.media_type};base64,${content.source.data}`}
+                src={`data:${mediaType};base64,${imageData}`}
                 alt="User uploaded content"
+                width={500}
+                height={300}
                 className="max-w-full h-auto max-h-96 object-contain"
+                style={{ width: "auto", height: "auto" }}
               />
             </div>
           </CardContent>
         </Card>
       );
     }
-
-    return (
-      <Card
-        className="border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20"
-        id={id}
-      >
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-            <CardTitle className="text-sm font-medium">
-              Unsupported Media
-            </CardTitle>
-            <Badge variant="destructive">Error</Badge>
-          </div>
-          <CardDescription className="text-xs">
-            Media type not supported for display
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
   }
 
-  if (content.type === "tool_result") {
-    // ツール結果は Assistant の呼び出し側に添えるので
-    return null;
-  }
-
-  return null;
+  return (
+    <Card
+      className="border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20"
+      id={id}
+    >
+      <CardHeader>
+        <CardTitle className="text-sm text-red-600 dark:text-red-400">
+          Unsupported content type
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <pre className="text-xs text-muted-foreground overflow-auto">
+          {JSON.stringify(content, null, 2)}
+        </pre>
+      </CardContent>
+    </Card>
+  );
 };

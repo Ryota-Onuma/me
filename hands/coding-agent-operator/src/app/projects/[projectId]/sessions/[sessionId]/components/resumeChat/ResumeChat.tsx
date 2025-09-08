@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import type { UserMessageInputPayload } from "@/lib/api/types";
 import {
   ChatInput,
   useResumeChatMutation,
@@ -12,8 +13,8 @@ export const ResumeChat: FC<{
 }> = ({ projectId, sessionId, isPausedTask, isRunningTask }) => {
   const resumeChat = useResumeChatMutation(projectId, sessionId);
 
-  const handleSubmit = async (message: string) => {
-    await resumeChat.mutateAsync({ message });
+  const handleSubmit = async (input: UserMessageInputPayload) => {
+    await resumeChat.mutateAsync({ input });
   };
 
   const getButtonText = () => {

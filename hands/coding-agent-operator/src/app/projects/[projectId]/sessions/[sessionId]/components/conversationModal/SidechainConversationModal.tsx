@@ -36,18 +36,22 @@ const sidechainTitle = (conversations: Conversation[]): string => {
     return defaultTitle;
   }
 
-  const textContent =
-    typeof firstConversation.message.content === "string"
-      ? firstConversation.message.content
-      : (() => {
-          const firstContent = firstConversation.message.content.at(0);
-          if (firstContent === undefined) return null;
-
-          if (typeof firstContent === "string") return firstContent;
-          if (firstContent.type === "text") return firstContent.text;
-
-          return null;
-        })();
+  const textContent = (() => {
+    const c = firstConversation.message.content;
+    if (typeof c === "string") return c;
+    if (Array.isArray(c)) {
+      const firstContent = c[0];
+      if (firstContent === undefined) return null;
+      if (typeof firstContent === "string") return firstContent;
+      if ((firstContent as any).type === "text")
+        return (firstContent as any).text;
+      return null;
+    }
+    const single = c as any;
+    if (typeof single === "string") return single;
+    if (single?.type === "text") return single.text as string;
+    return null;
+  })();
 
   return textContent ?? defaultTitle;
 };

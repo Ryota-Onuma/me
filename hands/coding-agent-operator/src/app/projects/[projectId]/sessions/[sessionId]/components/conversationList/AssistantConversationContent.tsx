@@ -116,27 +116,31 @@ export const AssistantConversationContent: FC<{
                     </pre>
                   ) : (
                     toolResult.content.map((item) => {
-                      if (item.type === "image") {
+                      if ((item as any).type === "image") {
+                        const img = item as any;
                         return (
                           <Image
-                            key={item.source.data}
-                            src={`data:${item.source.media_type};base64,${item.source.data}`}
+                            key={img.source.data}
+                            src={`data:${img.source.media_type};base64,${img.source.data}`}
                             alt="Tool Result"
+                            width={500}
+                            height={300}
+                            className="max-w-full h-auto max-h-96 object-contain"
+                            style={{ width: "auto", height: "auto" }}
                           />
                         );
                       }
-                      if (item.type === "text") {
+                      if ((item as any).type === "text") {
                         return (
                           <pre
-                            key={item.text}
+                            key={(item as any).text}
                             className="text-xs overflow-x-auto whitespace-pre-wrap break-words"
                           >
-                            {item.text}
+                            {(item as any).text}
                           </pre>
                         );
                       }
-                      item satisfies never;
-                      throw new Error("Unexpected tool result content type");
+                      return null;
                     })
                   )}
                 </div>

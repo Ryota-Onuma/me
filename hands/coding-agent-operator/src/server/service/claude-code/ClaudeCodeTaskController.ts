@@ -3,7 +3,10 @@ import { query } from "@anthropic-ai/claude-code";
 import prexit from "prexit";
 import { ulid } from "ulid";
 import { type EventBus, getEventBus } from "../events/EventBus";
-import { createMessageGenerator } from "./createMessageGenerator";
+import {
+  createMessageGenerator,
+  type UserMessageInput,
+} from "./createMessageGenerator";
 import type {
   AliveClaudeCodeTask,
   ClaudeCodeTask,
@@ -41,20 +44,23 @@ export class ClaudeCodeTaskController {
       projectId: string;
       sessionId?: string;
     },
-    message: string,
+    input: UserMessageInput,
   ): Promise<AliveClaudeCodeTask> {
     const existingTask = this.aliveTasks.find(
       (task) => task.sessionId === currentSession.sessionId,
     );
 
     if (existingTask) {
-      return await this.continueTask(existingTask, message);
+      return await this.continueTask(existingTask, input);
     } else {
-      return await this.startTask(currentSession, message);
+      return await this.startTask(currentSession, input);
     }
   }
 
-  private async continueTask(task: AliveClaudeCodeTask, message: string) {
+  private async continueTask(
+    task: AliveClaudeCodeTask,
+    message: UserMessageInput,
+  ) {
     task.setNextMessage(message);
     await task.awaitFirstMessage();
     return task;
@@ -66,7 +72,7 @@ export class ClaudeCodeTaskController {
       projectId: string;
       sessionId?: string;
     },
-    message: string,
+    message: UserMessageInput,
   ) {
     const {
       generateMessages,
