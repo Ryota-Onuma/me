@@ -144,7 +144,7 @@ export const ProjectPageContent = ({ projectId }: { projectId: string }) => {
               {sessions.map((session) => (
                 <Card
                   key={session.id}
-                  className="hover:shadow-md transition-shadow"
+                  className="hover:shadow-md transition-shadow overflow-hidden"
                 >
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -154,7 +154,7 @@ export const ProjectPageContent = ({ projectId }: { projectId: string }) => {
                           : session.id}
                       </span>
                     </CardTitle>
-                    <CardDescription className="font-mono text-xs">
+                    <CardDescription className="font-mono text-xs break-all overflow-hidden text-ellipsis min-w-0 max-w-full">
                       {session.id}
                     </CardDescription>
                   </CardHeader>
@@ -170,7 +170,7 @@ export const ProjectPageContent = ({ projectId }: { projectId: string }) => {
                           ).toLocaleDateString()
                         : ""}
                     </p>
-                    <p className="text-xs text-muted-foreground font-mono">
+                    <p className="text-xs text-muted-foreground font-mono break-all overflow-hidden text-ellipsis min-w-0 max-w-full">
                       {session.jsonlFilePath}
                     </p>
                   </CardContent>

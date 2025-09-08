@@ -7,6 +7,6 @@ export const InputImageContentSchema = z.object({
     data: z.string(),
     media_type: z.enum(["image/png", "image/jpeg", "image/webp"]),
   }),
-});;
+});
 
 export type InputImageContent = z.infer<typeof InputImageContentSchema>;
