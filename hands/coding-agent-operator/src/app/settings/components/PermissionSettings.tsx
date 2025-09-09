@@ -3,14 +3,6 @@
 import type { PermissionMode } from "@anthropic-ai/claude-code";
 import { AlertTriangle, CheckCircle, Settings, Shield } from "lucide-react";
 import { useId } from "react";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -79,261 +71,207 @@ export function PermissionSettings() {
 
   if (!settings) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Permission Settings
-          </CardTitle>
-          <CardDescription>Loading permission settings...</CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="space-y-1">
+        <h2 className="text-xl font-semibold flex items-center gap-2">
+          <Shield className="h-5 w-5" />
+          Permission Settings
+        </h2>
+        <p className="text-sm text-muted-foreground">Loading permission settings...</p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Permission Settings
-          </CardTitle>
-          <CardDescription>
-            Control how Claude Code handles permission requests
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          {/* 現在の有効モード表示 */}
-          <div className="p-6 border-2 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
-            <div className="text-center space-y-3">
-              <div className="text-sm text-muted-foreground font-medium">
-                Currently Active Mode
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-xl font-semibold flex items-center gap-2 mb-2">
+          <Shield className="h-5 w-5" />
+          Permission Settings
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Control how Claude Code handles permission requests
+        </p>
+      </div>
+
+      {/* Current Active Mode */}
+      <div className="border rounded-lg p-6">
+        <div className="text-center space-y-4">
+          <p className="text-sm text-muted-foreground font-medium">
+            Currently Active Mode
+          </p>
+          <div className="flex items-center justify-center gap-4">
+            <div className="p-3 rounded-lg bg-muted">
+              {effectiveOption?.icon}
+            </div>
+            <div className="text-left">
+              <div className="text-lg font-semibold">
+                {effectiveOption?.label}
               </div>
-              <div className="flex items-center justify-center gap-3">
-                <div className="p-3 rounded-full bg-background shadow-sm">
-                  {effectiveOption?.icon}
-                </div>
-                <div className="space-y-1">
-                  <div className="text-2xl font-bold text-foreground">
-                    {effectiveOption?.label}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {effectiveOption?.description}
-                  </div>
-                </div>
+              <div className="text-sm text-muted-foreground">
+                {effectiveOption?.description}
               </div>
-              {settings.globalBypass && (
-                <div className="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium text-orange-700 bg-orange-100 border border-orange-300 rounded-full dark:text-orange-300 dark:bg-orange-900/30 dark:border-orange-700">
-                  <AlertTriangle className="h-3 w-3" />
-                  Global Override Active
-                </div>
-              )}
             </div>
           </div>
-
-          {/* グローバルバイパス設定 */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              <h3 className="text-lg font-semibold">Quick Override</h3>
+          {settings.globalBypass && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-800 bg-orange-100 rounded-full dark:text-orange-200 dark:bg-orange-900/30">
+              <AlertTriangle className="h-3 w-3" />
+              Override Active
             </div>
-            <div className="p-4 border rounded-lg space-y-4">
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id={globalBypassId}
-                  checked={settings.globalBypass}
-                  onCheckedChange={(checked) => setGlobalBypass(!!checked)}
-                  disabled={isLoading}
-                  className="mt-1"
-                />
-                <div className="flex-1 space-y-2">
-                  <label
-                    htmlFor={globalBypassId}
-                    className="text-sm font-medium leading-none cursor-pointer hover:underline"
-                  >
-                    Always bypass all permissions (Dangerous)
-                  </label>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    When enabled, this overrides any setting below and
-                    automatically approves <strong>ALL</strong> Claude Code
-                    actions without asking. This includes file modifications,
-                    command execution, and network requests.
+          )}
+        </div>
+      </div>
+
+      {/* Quick Override Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-orange-500" />
+          <h3 className="font-semibold">Quick Override</h3>
+        </div>
+        
+        <div className="border rounded-lg p-5">
+          <div className="flex items-start gap-4">
+            <Checkbox
+              id={globalBypassId}
+              checked={settings.globalBypass}
+              onCheckedChange={(checked) => setGlobalBypass(!!checked)}
+              disabled={isLoading}
+              className="mt-0.5 cursor-pointer"
+            />
+            <div className="flex-1 space-y-2">
+              <label
+                htmlFor={globalBypassId}
+                className="text-sm font-medium cursor-pointer hover:text-foreground transition-colors"
+              >
+                Always bypass all permissions (Dangerous)
+              </label>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Automatically approves all Claude Code actions without asking. 
+                Use only in trusted environments.
+              </p>
+            </div>
+          </div>
+          
+          {settings.globalBypass && (
+            <div className="mt-4 p-4 text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg dark:text-red-200 dark:bg-red-950/30 dark:border-red-800">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="font-semibold mb-1">Security Warning</div>
+                  <div>
+                    All actions will be automatically approved without confirmation.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Default Permission Mode */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Settings className="h-4 w-4 text-blue-500" />
+          <h3 className="font-semibold">Default Permission Mode</h3>
+          {settings.globalBypass && (
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">
+              Overridden
+            </span>
+          )}
+        </div>
+        
+        <div className="border rounded-lg p-5 space-y-4">
+          <p className="text-sm text-muted-foreground text-left">
+            Choose how Claude Code should handle permission requests when not overridden.
+          </p>
+          
+          <Select
+            value={settings.defaultMode}
+            onValueChange={(value) => setPermissionMode(value as PermissionMode)}
+            disabled={isLoading || settings.globalBypass}
+          >
+            <SelectTrigger className={`cursor-pointer ${settings.globalBypass ? "opacity-50 cursor-not-allowed" : ""}`}>
+              <SelectValue>
+                <div className="flex items-center gap-3">
+                  {currentOption?.icon}
+                  <span className="font-medium">{currentOption?.label}</span>
+                </div>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {PERMISSION_MODE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value} className="cursor-pointer">
+                  <div className="flex items-center gap-3 py-1">
+                    <div className="flex-shrink-0">{option.icon}</div>
+                    <div className="text-left">
+                      <div className="font-medium text-sm">{option.label}</div>
+                      <div className="text-xs text-muted-foreground">{option.description}</div>
+                    </div>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {settings.globalBypass && (
+            <p className="text-xs text-muted-foreground text-left">
+              This setting is disabled while "Always bypass all permissions" is enabled.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Permission Modes Guide */}
+      <div className="space-y-4">
+        <h3 className="font-semibold flex items-center gap-2">
+          <Shield className="h-4 w-4" />
+          Permission Modes Guide
+        </h3>
+        
+        <div className="space-y-3">
+          {PERMISSION_MODE_OPTIONS.map((option) => (
+            <div key={option.value} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-default">
+              <div className="flex items-start gap-4">
+                <div className="p-2 rounded-md bg-muted">
+                  {option.icon}
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h4 className="font-semibold">{option.label}</h4>
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md font-mono">
+                      {option.value}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {option.description}
                   </p>
                 </div>
               </div>
-              {settings.globalBypass && (
-                <div className="flex items-start gap-3 p-4 text-sm text-red-800 bg-red-50 border border-red-200 rounded-md dark:text-red-200 dark:bg-red-950/30 dark:border-red-800">
-                  <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                  <div className="space-y-1">
-                    <div className="font-semibold">⚠️ Security Warning</div>
-                    <div>
-                      Claude Code will automatically approve ALL actions without
-                      confirmation. Use this only in trusted environments where
-                      you understand the risks.
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-
-          {/* デフォルトモード設定 */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Settings className="h-5 w-5 text-blue-500" />
-              <h3 className="text-lg font-semibold">Default Permission Mode</h3>
-              {settings.globalBypass && (
-                <Badge variant="outline" className="text-xs bg-muted">
-                  Overridden by Quick Override
-                </Badge>
-              )}
-            </div>
-            <div className="p-4 border rounded-lg space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Choose how Claude Code should handle permission requests when
-                not overridden.
-              </p>
-              <Select
-                value={settings.defaultMode}
-                onValueChange={(value) =>
-                  setPermissionMode(value as PermissionMode)
-                }
-                disabled={isLoading || settings.globalBypass}
-              >
-                <SelectTrigger
-                  className={`${settings.globalBypass ? "opacity-50" : ""}`}
-                >
-                  <SelectValue>
-                    <div className="flex items-center gap-2">
-                      {currentOption?.icon}
-                      <span className="font-medium">
-                        {currentOption?.label}
-                      </span>
-                    </div>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {PERMISSION_MODE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center gap-3 py-1">
-                        <div className="flex-shrink-0">{option.icon}</div>
-                        <div className="flex flex-col text-left">
-                          <span className="font-medium text-sm">
-                            {option.label}
-                          </span>
-                          <span className="text-xs text-muted-foreground leading-tight">
-                            {option.description}
-                          </span>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {settings.globalBypass && (
-                <div className="text-xs text-muted-foreground italic">
-                  This setting is currently disabled because "Always bypass all
-                  permissions" is enabled above.
-                </div>
-              )}
-            </div>
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md dark:text-red-300 dark:bg-red-950/30 dark:border-red-800">
-              <AlertTriangle className="h-4 w-4" />
-              Failed to update settings: {error.message}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 説明カード */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Permission Modes Guide
-          </CardTitle>
-          <CardDescription>
-            Understanding how each mode affects Claude Code's behavior
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid gap-4">
-            {PERMISSION_MODE_OPTIONS.map((option) => (
-              <div
-                key={option.value}
-                className="group hover:bg-muted/30 transition-colors p-4 border-2 rounded-xl"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-background shadow-sm group-hover:shadow-md transition-shadow">
-                    {option.icon}
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-3">
-                      <h4 className="text-lg font-semibold">{option.label}</h4>
-                      <Badge
-                        variant={option.variant}
-                        className="text-xs font-medium"
-                      >
-                        {option.value}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {option.description}
-                    </p>
-                    {/* より詳しい説明を追加 */}
-                    <div className="text-xs text-muted-foreground/70 space-y-1">
-                      {option.value === "default" && (
-                        <div>
-                          • Best for beginners or when working with sensitive
-                          files
-                        </div>
-                      )}
-                      {option.value === "acceptEdits" && (
-                        <div>
-                          • Good balance between productivity and safety
-                        </div>
-                      )}
-                      {option.value === "bypassPermissions" && (
-                        <div>
-                          • Use only in trusted environments or for repetitive
-                          tasks
-                        </div>
-                      )}
-                      {option.value === "plan" && (
-                        <div>
-                          • Perfect for reviewing what Claude would do before
-                          execution
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+          ))}
+        </div>
+        
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950/20 dark:border-blue-800">
+          <div className="flex items-start gap-3">
+            <Shield className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-left">
+              <div className="font-semibold text-blue-800 dark:text-blue-200 text-sm mb-1">
+                💡 Tip
               </div>
-            ))}
-          </div>
-
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950/20 dark:border-blue-800">
-            <div className="flex items-start gap-2">
-              <Shield className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div className="space-y-2">
-                <div className="font-semibold text-blue-800 dark:text-blue-200">
-                  💡 Pro Tip
-                </div>
-                <div className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
-                  Start with <strong>Default</strong> mode to understand what
-                  Claude is doing, then switch to <strong>Accept Edits</strong>{" "}
-                  for better productivity. Use <strong>Plan</strong> mode when
-                  you want to review complex changes before execution.
-                </div>
+              <div className="text-sm text-blue-700 dark:text-blue-300">
+                Start with <strong>Default</strong> mode to understand Claude's actions, 
+                then switch to <strong>Accept Edits</strong> for faster workflows.
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-3 p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg dark:text-red-300 dark:bg-red-950/30 dark:border-red-800">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+          <span>Failed to update settings: {error.message}</span>
+        </div>
+      )}
     </div>
   );
 }

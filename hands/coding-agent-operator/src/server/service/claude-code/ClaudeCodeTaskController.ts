@@ -282,30 +282,30 @@ export class ClaudeCodeTaskController {
   ): string {
     switch (toolName) {
       case "Edit":
-        return `Edit file ${toolInput.file_path || "unknown file"}`;
+        return `Edit file ${toolInput['file_path'] || "unknown file"}`;
 
       case "Write":
-        return `Write to file ${toolInput.file_path || "unknown file"}`;
+        return `Write to file ${toolInput['file_path'] || "unknown file"}`;
 
       case "Read":
-        return `Read file ${toolInput.file_path || "unknown file"}`;
+        return `Read file ${toolInput['file_path'] || "unknown file"}`;
 
       case "Bash": {
-        const command = toolInput.command as string;
+        const command = toolInput['command'] as string;
         return `Execute shell command: ${command ? command.substring(0, 100) : "unknown command"}${command && command.length > 100 ? "..." : ""}`;
       }
 
       case "Glob":
-        return `Search for files matching pattern: ${toolInput.pattern || "unknown pattern"}`;
+        return `Search for files matching pattern: ${toolInput['pattern'] || "unknown pattern"}`;
 
       case "Grep":
-        return `Search for pattern "${toolInput.pattern || "unknown"}" in files`;
+        return `Search for pattern "${toolInput['pattern'] || "unknown"}" in files`;
 
       case "WebFetch":
-        return `Fetch content from URL: ${toolInput.url || "unknown URL"}`;
+        return `Fetch content from URL: ${toolInput['url'] || "unknown URL"}`;
 
       case "Task":
-        return `Launch task: ${toolInput.description || "unknown task"}`;
+        return `Launch task: ${toolInput['description'] || "unknown task"}`;
 
       default:
         return `Use tool ${toolName}`;
