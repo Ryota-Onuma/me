@@ -1,10 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { PlayIcon, TerminalIcon } from "lucide-react";
+import { TerminalIcon } from "lucide-react";
 import { useState } from "react";
 import { honoClient } from "@/lib/api/client";
-import { Button } from "../../../../../components/ui/button";
 import {
   Select,
   SelectContent,
@@ -18,10 +17,9 @@ import {
 type Props = {
   projectId: string;
   onInsert: (commandText: string) => void;
-  onRun?: (commandText: string) => void;
 };
 
-export function CommandsMenu({ projectId, onInsert, onRun }: Props) {
+export function CommandsMenu({ projectId, onInsert }: Props) {
   const [current, setCurrent] = useState<string>("");
 
   const { data } = useQuery({
@@ -43,11 +41,6 @@ export function CommandsMenu({ projectId, onInsert, onRun }: Props) {
   const insert = (cmd: string) => {
     setCurrent(cmd);
     onInsert(`/${cmd} `);
-  };
-
-  const run = () => {
-    if (!current || !onRun) return;
-    onRun(`/${current}`);
   };
 
   const defaults = data?.defaultCommands ?? [];
@@ -102,19 +95,6 @@ export function CommandsMenu({ projectId, onInsert, onRun }: Props) {
           )}
         </SelectContent>
       </Select>
-      {onRun && (
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={run}
-          disabled={!current}
-          className="gap-1"
-          aria-label="Run command"
-          title="Run command"
-        >
-          <PlayIcon className="w-4 h-4" /> Run
-        </Button>
-      )}
     </div>
   );
 }

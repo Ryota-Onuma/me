@@ -238,11 +238,6 @@ export const ChatInput: FC<ChatInputProps> = ({
     textareaRef.current?.focus();
   };
 
-  const runCommandNow = async (cmdText: string) => {
-    if (isPending || disabled) return;
-    await onSubmit({ text: cmdText });
-  };
-
   return (
     <section
       className={containerClassName}
@@ -354,7 +349,6 @@ export const ChatInput: FC<ChatInputProps> = ({
             <CommandsMenu
               projectId={projectId}
               onInsert={handleCommandSelect}
-              onRun={runCommandNow}
             />
             <Button
               onClick={handleSubmit}

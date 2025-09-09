@@ -76,6 +76,10 @@ export const UserConversationContent: FC<{
     }
   }
 
+  if (content.type === "tool_result") {
+    return null;
+  }
+
   return (
     <Card
       className="border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20"

@@ -16,6 +16,7 @@ import { getBranches } from "../service/git/getBranches";
 import { getCommits } from "../service/git/getCommits";
 import { getDiff } from "../service/git/getDiff";
 import { getMcpList } from "../service/mcp/getMcpList";
+import { PermissionService } from "../service/permission/PermissionService";
 import { getProject } from "../service/project/getProject";
 import { getProjects } from "../service/project/getProjects";
 import { deleteSession, getSession } from "../service/session/getSession";
@@ -420,6 +421,38 @@ export const routes = (app: HonoAppType) => {
           const { sessionId } = c.req.valid("json");
           taskController.abortTask(sessionId);
           return c.json({ message: "Task aborted" });
+        },
+      )
+
+      .get("/permissions/settings", async (c) => {
+        const permissionService = PermissionService.getInstance();
+        return c.json(permissionService.getSettings());
+      })
+
+      .post(
+        "/permissions/settings",
+        zValidator(
+          "json",
+          z.object({
+            defaultMode: z
+              .enum(["default", "acceptEdits", "bypassPermissions", "plan"])
+              .optional(),
+            globalBypass: z.boolean().optional(),
+          }),
+        ),
+        async (c) => {
+          const settings = c.req.valid("json");
+          const permissionService = PermissionService.getInstance();
+
+          try {
+            permissionService.saveSettings(settings);
+            return c.json({
+              message: "Settings saved successfully",
+              settings: permissionService.getSettings(),
+            });
+          } catch (_error) {
+            return c.json({ error: "Failed to save settings" }, 500);
+          }
         },
       )
 

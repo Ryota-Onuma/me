@@ -3,6 +3,7 @@ import { query } from "@anthropic-ai/claude-code";
 import prexit from "prexit";
 import { ulid } from "ulid";
 import { type EventBus, getEventBus } from "../events/EventBus";
+import { PermissionService } from "../permission/PermissionService";
 import {
   createMessageGenerator,
   type UserMessageInput,
@@ -114,14 +115,38 @@ export class ClaudeCodeTaskController {
 
         let currentTask: AliveClaudeCodeTask | undefined;
 
+        const permissionService = PermissionService.getInstance();
+
         for await (const message of query({
           prompt: task.generateMessages(),
           options: {
             resume: task.baseSessionId,
             cwd: task.cwd,
             pathToClaudeCodeExecutable: this.pathToClaudeCodeExecutable,
-            permissionMode: "bypassPermissions",
+            permissionMode: permissionService.getPermissionMode(),
             abortController: abortController,
+            canUseTool: async (toolName, toolInput) => {
+              // Generate a unique tool use ID for this request
+              const toolUseId = `tool_use_${ulid()}`;
+
+              // Determine session ID from current task
+              const sessionId =
+                currentTask?.sessionId || task.baseSessionId || "unknown";
+
+              // Create a description based on tool name and input
+              const description = this.createToolDescription(
+                toolName,
+                toolInput,
+              );
+
+              return await permissionService.requestPermission(
+                sessionId,
+                toolName,
+                toolUseId,
+                toolInput,
+                description,
+              );
+            },
           },
         })) {
           currentTask ??= this.aliveTasks.find((t) => t.id === task.id);
@@ -249,5 +274,41 @@ export class ClaudeCodeTaskController {
       type: "task_changed",
       data: this.aliveTasks,
     });
+  }
+
+  private createToolDescription(
+    toolName: string,
+    toolInput: Record<string, unknown>,
+  ): string {
+    switch (toolName) {
+      case "Edit":
+        return `Edit file ${toolInput.file_path || "unknown file"}`;
+
+      case "Write":
+        return `Write to file ${toolInput.file_path || "unknown file"}`;
+
+      case "Read":
+        return `Read file ${toolInput.file_path || "unknown file"}`;
+
+      case "Bash": {
+        const command = toolInput.command as string;
+        return `Execute shell command: ${command ? command.substring(0, 100) : "unknown command"}${command && command.length > 100 ? "..." : ""}`;
+      }
+
+      case "Glob":
+        return `Search for files matching pattern: ${toolInput.pattern || "unknown pattern"}`;
+
+      case "Grep":
+        return `Search for pattern "${toolInput.pattern || "unknown"}" in files`;
+
+      case "WebFetch":
+        return `Fetch content from URL: ${toolInput.url || "unknown URL"}`;
+
+      case "Task":
+        return `Launch task: ${toolInput.description || "unknown task"}`;
+
+      default:
+        return `Use tool ${toolName}`;
+    }
   }
 }

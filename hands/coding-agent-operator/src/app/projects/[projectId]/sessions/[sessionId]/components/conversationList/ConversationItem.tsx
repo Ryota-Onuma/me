@@ -73,9 +73,13 @@ export const ConversationItem: FC<{
       if (Array.isArray(content)) {
         return (
           <ul className="w-full" id={`message-${conversation.uuid}`}>
-            {content.map((c) => (
+            {content.map((c, index) => (
               <li
-                key={typeof c === "string" ? c : JSON.stringify(c).slice(0, 50)}
+                key={
+                  typeof c === "string"
+                    ? `${index}-${c}`
+                    : `${index}-${JSON.stringify(c).slice(0, 50)}`
+                }
               >
                 <UserConversationContent content={c} />
               </li>

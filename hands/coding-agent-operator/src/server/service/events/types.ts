@@ -1,4 +1,5 @@
 import type { WatchEventType } from "node:fs";
+import type { PermissionRequest } from "@/lib/types/permission";
 import type { SerializableAliveTask } from "../claude-code/types";
 
 export type WatcherEvent =
@@ -38,6 +39,10 @@ export type SSEEvent = BaseSSEEvent &
     | {
         type: "task_changed";
         data: SerializableAliveTask[];
+      }
+    | {
+        type: "permission_request";
+        data: PermissionRequest;
       }
   );
 

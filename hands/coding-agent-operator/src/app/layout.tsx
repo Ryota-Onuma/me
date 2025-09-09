@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { GlobalPermissionRequestDialog } from "../components/GlobalPermissionRequestDialog";
 import { Toaster } from "../components/ui/sonner";
+import { PermissionRequestProvider } from "../hooks/usePermissionRequests";
 import { QueryClientProviderWrapper } from "../lib/api/QueryClientProviderWrapper";
 import { RootErrorBoundary } from "./components/RootErrorBoundary";
 import { ServerEventsProvider } from "./components/ServerEventsProvider";
@@ -45,7 +47,10 @@ export default async function RootLayout({
       >
         <RootErrorBoundary>
           <QueryClientProviderWrapper>
-            <ServerEventsProvider>{children}</ServerEventsProvider>
+            <PermissionRequestProvider>
+              <ServerEventsProvider>{children}</ServerEventsProvider>
+              <GlobalPermissionRequestDialog />
+            </PermissionRequestProvider>
           </QueryClientProviderWrapper>
         </RootErrorBoundary>
         <Toaster position="top-right" />
