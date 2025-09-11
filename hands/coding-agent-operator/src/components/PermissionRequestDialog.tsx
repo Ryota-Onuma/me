@@ -77,7 +77,7 @@ export function PermissionRequestDialog({
   if (!request) return null;
 
   const severityConfig = SEVERITY_CONFIG[request.severity];
-  const toolIcon = TOOL_ICONS[request.toolName] || TOOL_ICONS['default'];
+  const toolIcon = TOOL_ICONS[request.toolName] || TOOL_ICONS["default"];
 
   const handleResponse = (decision: "allow" | "deny") => {
     onResponse({

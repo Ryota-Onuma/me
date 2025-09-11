@@ -76,7 +76,9 @@ export function PermissionSettings() {
           <Shield className="h-5 w-5" />
           Permission Settings
         </h2>
-        <p className="text-sm text-muted-foreground">Loading permission settings...</p>
+        <p className="text-sm text-muted-foreground">
+          Loading permission settings...
+        </p>
       </div>
     );
   }
@@ -127,7 +129,7 @@ export function PermissionSettings() {
           <AlertTriangle className="h-4 w-4 text-orange-500" />
           <h3 className="font-semibold">Quick Override</h3>
         </div>
-        
+
         <div className="border rounded-lg p-5">
           <div className="flex items-start gap-4">
             <Checkbox
@@ -145,12 +147,12 @@ export function PermissionSettings() {
                 Always bypass all permissions (Dangerous)
               </label>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Automatically approves all Claude Code actions without asking. 
+                Automatically approves all Claude Code actions without asking.
                 Use only in trusted environments.
               </p>
             </div>
           </div>
-          
+
           {settings.globalBypass && (
             <div className="mt-4 p-4 text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg dark:text-red-200 dark:bg-red-950/30 dark:border-red-800">
               <div className="flex items-start gap-3">
@@ -158,7 +160,8 @@ export function PermissionSettings() {
                 <div>
                   <div className="font-semibold mb-1">Security Warning</div>
                   <div>
-                    All actions will be automatically approved without confirmation.
+                    All actions will be automatically approved without
+                    confirmation.
                   </div>
                 </div>
               </div>
@@ -178,18 +181,23 @@ export function PermissionSettings() {
             </span>
           )}
         </div>
-        
+
         <div className="border rounded-lg p-5 space-y-4">
           <p className="text-sm text-muted-foreground text-left">
-            Choose how Claude Code should handle permission requests when not overridden.
+            Choose how Claude Code should handle permission requests when not
+            overridden.
           </p>
-          
+
           <Select
             value={settings.defaultMode}
-            onValueChange={(value) => setPermissionMode(value as PermissionMode)}
+            onValueChange={(value) =>
+              setPermissionMode(value as PermissionMode)
+            }
             disabled={isLoading || settings.globalBypass}
           >
-            <SelectTrigger className={`cursor-pointer ${settings.globalBypass ? "opacity-50 cursor-not-allowed" : ""}`}>
+            <SelectTrigger
+              className={`cursor-pointer ${settings.globalBypass ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
               <SelectValue>
                 <div className="flex items-center gap-3">
                   {currentOption?.icon}
@@ -199,22 +207,29 @@ export function PermissionSettings() {
             </SelectTrigger>
             <SelectContent>
               {PERMISSION_MODE_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value} className="cursor-pointer">
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className="cursor-pointer"
+                >
                   <div className="flex items-center gap-3 py-1">
                     <div className="flex-shrink-0">{option.icon}</div>
                     <div className="text-left">
                       <div className="font-medium text-sm">{option.label}</div>
-                      <div className="text-xs text-muted-foreground">{option.description}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {option.description}
+                      </div>
                     </div>
                   </div>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          
+
           {settings.globalBypass && (
             <p className="text-xs text-muted-foreground text-left">
-              This setting is disabled while "Always bypass all permissions" is enabled.
+              This setting is disabled while "Always bypass all permissions" is
+              enabled.
             </p>
           )}
         </div>
@@ -226,14 +241,15 @@ export function PermissionSettings() {
           <Shield className="h-4 w-4" />
           Permission Modes Guide
         </h3>
-        
+
         <div className="space-y-3">
           {PERMISSION_MODE_OPTIONS.map((option) => (
-            <div key={option.value} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-default">
+            <div
+              key={option.value}
+              className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-default"
+            >
               <div className="flex items-start gap-4">
-                <div className="p-2 rounded-md bg-muted">
-                  {option.icon}
-                </div>
+                <div className="p-2 rounded-md bg-muted">{option.icon}</div>
                 <div className="flex-1 text-left">
                   <div className="flex items-center gap-3 mb-2">
                     <h4 className="font-semibold">{option.label}</h4>
@@ -249,7 +265,7 @@ export function PermissionSettings() {
             </div>
           ))}
         </div>
-        
+
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950/20 dark:border-blue-800">
           <div className="flex items-start gap-3">
             <Shield className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -258,8 +274,9 @@ export function PermissionSettings() {
                 💡 Tip
               </div>
               <div className="text-sm text-blue-700 dark:text-blue-300">
-                Start with <strong>Default</strong> mode to understand Claude's actions, 
-                then switch to <strong>Accept Edits</strong> for faster workflows.
+                Start with <strong>Default</strong> mode to understand Claude's
+                actions, then switch to <strong>Accept Edits</strong> for faster
+                workflows.
               </div>
             </div>
           </div>
