@@ -1,0 +1,14 @@
+[tools]
+node = "20"
+
+[tasks.build]
+description = "Compile extension with TypeScript"
+run = "npm run compile"
+
+[tasks.test]
+description = "Run VS Code extension tests"
+run = "npm test"
+
+[tasks.package]
+description = "Package VS Code extension"
+run = "npm run package"

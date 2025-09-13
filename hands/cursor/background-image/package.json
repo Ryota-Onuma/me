@@ -1,0 +1,208 @@
+{
+  "name": "background-image",
+  "displayName": "Background Image",
+  "description": "Set background images safely via WebView (no system changes)",
+  "version": "1.0.17",
+  "publisher": "ryota-onuma",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ryota-Onuma/me"
+  },
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": [
+    "Themes",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "backgroundImage.setImage",
+        "title": "Set Background Image",
+        "category": "Background Image"
+      },
+      {
+        "command": "backgroundImage.removeImage",
+        "title": "Remove Background",
+        "category": "Background Image"
+      },
+      {
+        "command": "backgroundImage.openSettings",
+        "title": "Background Settings",
+        "category": "Background Image"
+      },
+      {
+        "command": "backgroundImage.openPreviewPanel",
+        "title": "Open Full Preview",
+        "category": "Background Image"
+      },
+      {
+        "command": "backgroundImage.toggleSlideshow",
+        "title": "Toggle Slideshow",
+        "category": "Background Image"
+      },
+      {
+        "command": "backgroundImage.unsafe.apply",
+        "title": "Apply Unsafe Background",
+        "category": "Background Image (Unsafe)"
+      },
+      {
+        "command": "backgroundImage.unsafe.remove",
+        "title": "Remove Unsafe Background",
+        "category": "Background Image (Unsafe)"
+      },
+      {
+        "command": "backgroundImage.unsafe.openCssPath",
+        "title": "Open Workbench CSS Path",
+        "category": "Background Image (Unsafe)"
+      }
+    ],
+    "configuration": {
+      "title": "Background Image",
+      "properties": {
+        "backgroundImage.imagePath": {
+          "type": "string",
+          "description": "Path to background image (file:// protocol only)"
+        },
+        "backgroundImage.opacity": {
+          "type": "number",
+          "default": 0.1,
+          "minimum": 0,
+          "maximum": 0.8,
+          "description": "Background opacity (0-0.8)"
+        },
+        "backgroundImage.size": {
+          "type": "string",
+          "enum": [
+            "cover",
+            "contain",
+            "auto"
+          ],
+          "default": "cover",
+          "description": "Background size"
+        },
+        "backgroundImage.position": {
+          "type": "string",
+          "default": "center",
+          "description": "Background position"
+        },
+        "backgroundImage.slideshow.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable image rotation (slideshow)"
+        },
+        "backgroundImage.slideshow.images": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Image list (file:// or data: URIs only)"
+        },
+        "backgroundImage.slideshow.interval": {
+          "type": "number",
+          "default": 30,
+          "minimum": 3,
+          "maximum": 3600,
+          "description": "Rotation interval in seconds"
+        },
+        "backgroundImage.slideshow.shuffle": {
+          "type": "boolean",
+          "default": false,
+          "description": "Shuffle order"
+        },
+        "backgroundImage.unsafe.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable unsafe mode (modifies workbench files directly)"
+        },
+        "backgroundImage.unsafe.image": {
+          "type": "string",
+          "description": "Background image path for unsafe mode (file:// or data: URI)"
+        },
+        "backgroundImage.unsafe.opacity": {
+          "type": "number",
+          "default": 0.12,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Background opacity for unsafe mode (0-1)"
+        },
+        "backgroundImage.unsafe.size": {
+          "type": "string",
+          "enum": [
+            "cover",
+            "contain",
+            "auto"
+          ],
+          "default": "cover",
+          "description": "Background size for unsafe mode"
+        },
+        "backgroundImage.unsafe.position": {
+          "type": "string",
+          "default": "center",
+          "description": "Background position for unsafe mode"
+        },
+        "backgroundImage.unsafe.repeat": {
+          "type": "string",
+          "default": "no-repeat",
+          "description": "Background repeat for unsafe mode"
+        },
+        "backgroundImage.unsafe.workbenchCssPath": {
+          "type": "string",
+          "description": "Manual override for workbench CSS path (for detection failures)"
+        },
+        "backgroundImage.unsafe.embedImage": {
+          "type": "boolean",
+          "default": true,
+          "description": "Embed image as data: URL instead of file: path"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "backgroundImage",
+          "title": "Background Image",
+          "icon": "media/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "backgroundImage": [
+        {
+          "type": "webview",
+          "id": "backgroundImage.view",
+          "name": "Background Preview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/vscode": "1.70.0",
+    "@types/mocha": "^10.0.6",
+    "mocha": "^10.2.0",
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.57.0",
+    "typescript": "^4.9.5",
+    "vsce": "^2.15.0"
+  }
+}

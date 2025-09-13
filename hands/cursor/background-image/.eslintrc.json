@@ -1,0 +1,14 @@
+{
+  "root": true,
+  "env": { "es2020": true, "node": true },
+  "parserOptions": { "ecmaVersion": 2020, "sourceType": "script" },
+  "ignorePatterns": ["out/**", "**/*.js"],
+  "extends": ["eslint:recommended"],
+  "rules": {
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error",
+    "no-console": ["warn", { "allow": ["error"] }]
+  }
+}
+
