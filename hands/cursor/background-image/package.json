@@ -2,7 +2,7 @@
   "name": "background-image",
   "displayName": "Background Image",
   "description": "Set background images safely via WebView (no system changes)",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "publisher": "ryota-onuma",
   "icon": "media/icon.png",
   "repository": {
@@ -49,6 +49,11 @@
         "command": "backgroundImage.toggleSlideshow",
         "title": "Toggle Slideshow",
         "category": "Background Image"
+      },
+      {
+        "command": "backgroundImage.unsafe.setImage",
+        "title": "Set Unsafe Background Image",
+        "category": "Background Image (Unsafe)"
       },
       {
         "command": "backgroundImage.unsafe.apply",
@@ -164,6 +169,11 @@
           "type": "boolean",
           "default": true,
           "description": "Embed image as data: URL instead of file: path"
+        },
+        "backgroundImage.unsafe.suppressBannerAfterRemove": {
+          "type": "boolean",
+          "default": true,
+          "description": "After Remove, keep a tiny JS-only patch to hide the 'installation appears to be corrupt' banner."
         }
       }
     },

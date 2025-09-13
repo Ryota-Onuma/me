@@ -189,7 +189,7 @@ export function getWorkbenchJsPath(): string | null {
  * Build JS snippet for dynamic corruption suppression
  */
 export function buildJsSuppressionSnippet(): string {
-  return `\n${JS_START_MARKER}\n(function(){\n  try {\n    const log = (...a)=>{ try{ console.log('[background-image:unsafe]', ...a); }catch(_){} };\n    log('v1.0.17 JS suppression active');\n\n    const patterns = [\n      'appears to be corrupt','cursor installation','please reinstall','installation appears','installation has been modified','corrupt'\n    ];\n\n    function hide(el){\n      if(!el) return;\n      try {\n        el.style.setProperty('display','none','important');\n        el.style.setProperty('visibility','hidden','important');\n        el.style.setProperty('position','absolute','important');\n        el.style.setProperty('top','-9999px','important');\n        el.style.setProperty('left','-9999px','important');\n        el.setAttribute('data-bgimg-suppressed','1');\n      } catch(_){}\n    }\n\n    function suppress(){\n      let n=0;\n      try {\n        document.querySelectorAll('.editor-banner, .notification-toast-container, .notifications-toasts .notification-toast').forEach(el=>{\n          const t=(el.textContent||el.getAttribute('aria-label')||'').toLowerCase();\n          if(patterns.some(p=>t.includes(p))){ hide(el); n++; }\n        });\n        if(n>0) log('suppressed', n, 'elements');\n      } catch(e){ log('error during suppress', e); }\n    }\n\n    if (document.readyState === 'loading') {\n      document.addEventListener('DOMContentLoaded', suppress);\n    } else {\n      suppress();\n    }\n\n    const mo=new MutationObserver(()=>{ try{ suppress(); }catch(_){}});\n    mo.observe(document.body, { childList:true, subtree:true, attributes:true, attributeFilter:['class','style','id','aria-label','title'] });\n    setInterval(suppress, 1000);\n    log('JS suppression fully active');\n  } catch (e) { try{ console.error('[background-image:unsafe] JS init error', e);}catch(_){}}\n})();\n${JS_END_MARKER}\n`;
+  return `\n${JS_START_MARKER}\n(function(){\n  try {\n    const log = (...a)=>{ try{ console.log('[background-image:unsafe]', ...a); }catch(_){} };\n    log('v1.0.18 JS suppression active');\n\n    const patterns = [\n      'appears to be corrupt','cursor installation','please reinstall','installation appears','installation has been modified','corrupt'\n    ];\n\n    function hide(el){\n      if(!el) return;\n      try {\n        el.style.setProperty('display','none','important');\n        el.style.setProperty('visibility','hidden','important');\n        el.style.setProperty('position','absolute','important');\n        el.style.setProperty('top','-9999px','important');\n        el.style.setProperty('left','-9999px','important');\n        el.setAttribute('data-bgimg-suppressed','1');\n      } catch(_){}\n    }\n\n    function suppress(){\n      let n=0;\n      try {\n        document.querySelectorAll('.editor-banner, .notification-toast-container, .notifications-toasts .notification-toast').forEach(el=>{\n          const t=(el.textContent||el.getAttribute('aria-label')||'').toLowerCase();\n          if(patterns.some(p=>t.includes(p))){ hide(el); n++; }\n        });\n        if(n>0) log('suppressed', n, 'elements');\n      } catch(e){ log('error during suppress', e); }\n    }\n\n    if (document.readyState === 'loading') {\n      document.addEventListener('DOMContentLoaded', suppress);\n    } else {\n      suppress();\n    }\n\n    const mo=new MutationObserver(()=>{ try{ suppress(); }catch(_){}});\n    mo.observe(document.body, { childList:true, subtree:true, attributes:true, attributeFilter:['class','style','id','aria-label','title'] });\n    setInterval(suppress, 1000);\n    log('JS suppression fully active');\n  } catch (e) { try{ console.error('[background-image:unsafe] JS init error', e);}catch(_){}}\n})();\n${JS_END_MARKER}\n`;
 }
 
 /** Strip previously patched JS */
@@ -883,7 +883,15 @@ export function removeCssPatch(): boolean {
       return true; // Nothing to remove is still success
     }
 
-    fs.writeFileSync(cssPath, cleanedContent, 'utf-8');
+    // Write atomically and flush
+    try {
+      const fd = fs.openSync(cssPath, 'w');
+      fs.writeFileSync(fd, cleanedContent, 'utf-8');
+      try { fs.fsyncSync(fd); } catch {}
+      fs.closeSync(fd);
+    } catch (e) {
+      fs.writeFileSync(cssPath, cleanedContent, 'utf-8');
+    }
     console.log('✅ CSS file cleaned successfully');
     out('removeCssPatch cleaned OK');
 

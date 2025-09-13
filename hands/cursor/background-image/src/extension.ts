@@ -92,6 +92,56 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }),
 
     // Unsafe mode commands
+    vscode.commands.registerCommand('backgroundImage.unsafe.setImage', async () => {
+      try {
+        // 選択肢: ファイル選択 or URL入力
+        const mode = await vscode.window.showQuickPick(
+          ['ファイルから選ぶ', 'URLを入力する'],
+          { placeHolder: 'Unsafe 背景画像の指定方法を選択' }
+        );
+        if (!mode) return;
+
+        let selected: string | undefined;
+        if (mode === 'ファイルから選ぶ') {
+          const pick = await vscode.window.showOpenDialog({
+            canSelectMany: false,
+            openLabel: '画像を選択',
+            filters: { Images: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'] },
+          });
+          if (!pick || !pick[0]) return;
+          selected = pick[0].with({ scheme: 'file' }).toString(true);
+          // Safe側バリデータで file:// / data: の基本チェックのみ実施
+          const res = await validateImageInput(selected);
+          if (!res.valid) {
+            vscode.window.showErrorMessage(res.error);
+            return;
+          }
+        } else {
+          const url = await vscode.window.showInputBox({
+            prompt: '画像URL（http/https, file://, data:）を入力',
+            placeHolder: '例) https://example.com/bg.jpg',
+            validateInput: (v) => {
+              if (!v) return '必須です';
+              const ok = v.startsWith('http://') || v.startsWith('https://') || v.startsWith('file://') || v.startsWith('data:');
+              return ok ? undefined : 'http/https/file/data のいずれかで指定してください';
+            }
+          });
+          if (!url) return;
+          selected = url.trim();
+        }
+
+        // 設定へ保存（Global）
+        const config = vscode.workspace.getConfiguration('backgroundImage.unsafe');
+        await config.update('image', selected, vscode.ConfigurationTarget.Global);
+        await config.update('enabled', true, vscode.ConfigurationTarget.Global);
+
+        // そのまま適用
+        await vscode.commands.executeCommand('backgroundImage.unsafe.apply');
+      } catch (e) {
+        console.error('unsafe.setImage error', e);
+        vscode.window.showErrorMessage(`画像の設定に失敗しました: ${e}`);
+      }
+    }),
     vscode.commands.registerCommand('backgroundImage.unsafe.apply', async () => {
       console.log('🚀 backgroundImage.unsafe.apply: Command started');
 
@@ -258,9 +308,22 @@ function registerCommands(context: vscode.ExtensionContext): void {
 
         const cssRemoved = hasPatches ? removeCssPatch() : true;
         const jsRemoved = removeJsPatch();
-        const success = cssRemoved && jsRemoved;
+        let success = cssRemoved && jsRemoved;
         console.log('🔄 Removal result:', { cssRemoved, jsRemoved, success });
         vscode.window.showInformationMessage(`Unsafe 除去: CSS=${cssRemoved ? 'OK' : 'NG'}, JS=${jsRemoved ? 'OK' : 'NG'}`);
+
+        // Remove後も警告を黙らせる（設定でONのとき）
+        try {
+          const cfg = vscode.workspace.getConfiguration('backgroundImage.unsafe');
+          const keepQuiet = cfg.get<boolean>('suppressBannerAfterRemove', true);
+          if (keepQuiet) {
+            const jsQuiet = applyJsSuppressionPatch();
+            console.log('🤫 Post-remove banner suppression (JS):', jsQuiet);
+            success = success || jsQuiet; // 静音化に成功していればユーザー体験はOK
+          }
+        } catch (e) {
+          console.warn('post-remove suppression error', e);
+        }
 
         if (success) {
           const action = await vscode.window.showInformationMessage(
