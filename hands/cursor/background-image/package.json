@@ -1,8 +1,8 @@
 {
   "name": "background-image",
-  "displayName": "Background Image",
-  "description": "Set background images only for local. DO NOT PUBLISH TO MARCKET",
-  "version": "1.1.0",
+  "displayName": "Background Image (Unsafe Mode Only)",
+  "description": "Unsafe workbench background images by directly modifying VS Code/Cursor CSS. LOCAL USE ONLY - DO NOT PUBLISH",
+  "version": "1.1.2",
   "private": true,
   "publisher": "ryota-onuma",
   "icon": "media/icon.png",
@@ -27,31 +27,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "backgroundImage.setImage",
-        "title": "Set Background Image",
-        "category": "Background Image"
-      },
-      {
-        "command": "backgroundImage.removeImage",
-        "title": "Remove Background",
-        "category": "Background Image"
-      },
-      {
-        "command": "backgroundImage.openSettings",
-        "title": "Background Settings",
-        "category": "Background Image"
-      },
-      {
-        "command": "backgroundImage.openPreviewPanel",
-        "title": "Open Full Preview",
-        "category": "Background Image"
-      },
-      {
-        "command": "backgroundImage.toggleSlideshow",
-        "title": "Toggle Slideshow",
-        "category": "Background Image"
-      },
-      {
         "command": "backgroundImage.unsafe.setImage",
         "title": "Set Unsafe Background Image",
         "category": "Background Image (Unsafe)"
@@ -75,57 +50,6 @@
     "configuration": {
       "title": "Background Image",
       "properties": {
-        "backgroundImage.imagePath": {
-          "type": "string",
-          "description": "Path to background image (file:// protocol only)"
-        },
-        "backgroundImage.opacity": {
-          "type": "number",
-          "default": 0.1,
-          "minimum": 0,
-          "maximum": 0.8,
-          "description": "Background opacity (0-0.8)"
-        },
-        "backgroundImage.size": {
-          "type": "string",
-          "enum": [
-            "cover",
-            "contain",
-            "auto"
-          ],
-          "default": "cover",
-          "description": "Background size"
-        },
-        "backgroundImage.position": {
-          "type": "string",
-          "default": "center",
-          "description": "Background position"
-        },
-        "backgroundImage.slideshow.enabled": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable image rotation (slideshow)"
-        },
-        "backgroundImage.slideshow.images": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": [],
-          "description": "Image list (file:// or data: URIs only)"
-        },
-        "backgroundImage.slideshow.interval": {
-          "type": "number",
-          "default": 30,
-          "minimum": 3,
-          "maximum": 3600,
-          "description": "Rotation interval in seconds"
-        },
-        "backgroundImage.slideshow.shuffle": {
-          "type": "boolean",
-          "default": false,
-          "description": "Shuffle order"
-        },
         "backgroundImage.unsafe.enabled": {
           "type": "boolean",
           "default": false,
@@ -177,24 +101,6 @@
           "description": "After Remove, keep a tiny JS-only patch to hide the 'installation appears to be corrupt' banner."
         }
       }
-    },
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "backgroundImage",
-          "title": "Background Image",
-          "icon": "media/icon.png"
-        }
-      ]
-    },
-    "views": {
-      "backgroundImage": [
-        {
-          "type": "webview",
-          "id": "backgroundImage.view",
-          "name": "Background Preview"
-        }
-      ]
     }
   },
   "scripts": {
@@ -210,12 +116,14 @@
     "guard:check": "node scripts/publish-guard.js"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.6",
     "@types/node": "^18.19.0",
     "@types/vscode": "1.70.0",
-    "@types/mocha": "^10.0.6",
-    "mocha": "^10.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
     "@vscode/test-electron": "^2.3.8",
     "eslint": "^8.57.0",
+    "mocha": "^10.2.0",
     "typescript": "^4.9.5",
     "vsce": "^2.15.0"
   }

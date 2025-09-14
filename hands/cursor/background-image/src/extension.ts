@@ -1,10 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { ConfigManager } from './configManager';
-import { BackgroundWebviewProvider } from './webviewProvider';
-import { BackgroundManagerImpl } from './backgroundManager';
 import { validateImageInput } from './utils/imageValidator';
-import { PreviewPanel } from './previewPanel';
 import {
   getWorkbenchCssPath,
   applyCssPatch,
@@ -16,7 +12,6 @@ import {
   removeJsPatch,
 } from './unsafeWorkbenchPatcher';
 
-let provider: BackgroundWebviewProvider | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
   validateSecurityConstraints();
@@ -24,16 +19,8 @@ export function activate(context: vscode.ExtensionContext) {
   // 出力チャンネルを常に作成（ユーザーがすぐ選べるように）
   try { vscode.window.createOutputChannel('Background Image (Unsafe)'); } catch {}
 
-  provider = new BackgroundWebviewProvider(context);
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(BackgroundWebviewProvider.viewType, provider)
-  );
-
   registerCommands(context);
   setupConfigurationWatcher(context);
-
-  // Apply initial config to webview (if already created later, watcher will update)
-  initializeWebView();
 }
 
 export function deactivate() {
@@ -41,56 +28,7 @@ export function deactivate() {
 }
 
 function registerCommands(context: vscode.ExtensionContext): void {
-  const cfg = new ConfigManager();
-  const mgr = new BackgroundManagerImpl(cfg, provider!);
-
   context.subscriptions.push(
-    vscode.commands.registerCommand('backgroundImage.setImage', async () => {
-      const pick = await vscode.window.showOpenDialog({
-        canSelectMany: false,
-        openLabel: 'Select Background Image',
-        filters: { Images: ['png', 'jpg', 'jpeg', 'gif', 'webp'] },
-      });
-      if (!pick || !pick[0]) return;
-      const uri = pick[0];
-      const fileUrl = uri.with({ scheme: 'file' }).toString(true);
-      const res = await validateImageInput(fileUrl);
-      if (!res.valid) {
-        vscode.window.showErrorMessage(res.error);
-        return;
-      }
-      await mgr.setBackgroundImage(fileUrl);
-      vscode.window.showInformationMessage('Background image set safely.');
-    }),
-
-    vscode.commands.registerCommand('backgroundImage.removeImage', async () => {
-      await mgr.removeBackground();
-      vscode.window.showInformationMessage('Background removed.');
-    }),
-
-    vscode.commands.registerCommand('backgroundImage.openSettings', async () => {
-      await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:background-image');
-    }),
-
-    vscode.commands.registerCommand('backgroundImage.openPreviewPanel', async () => {
-      const cfg = new ConfigManager().getConfig();
-      PreviewPanel.createOrShow(context, cfg);
-    }),
-
-    vscode.commands.registerCommand('backgroundImage.toggleSlideshow', async () => {
-      const cm = new ConfigManager();
-      const cur = cm.getConfig();
-      const next = cm.sanitizeConfig({
-        ...cur,
-        slideshow: { enabled: !cur.slideshow?.enabled, images: cur.slideshow?.images ?? [], interval: cur.slideshow?.interval ?? 30, shuffle: cur.slideshow?.shuffle ?? false },
-      });
-      if (!cm.validateConfig(next)) return;
-      await cm.saveConfig(next);
-      provider?.update(next);
-      PreviewPanel.current?.update(next);
-      vscode.window.showInformationMessage(`Slideshow ${next.slideshow?.enabled ? 'enabled' : 'disabled'}.`);
-    }),
-
     // Unsafe mode commands
     vscode.commands.registerCommand('backgroundImage.unsafe.setImage', async () => {
       try {
@@ -403,23 +341,10 @@ function registerCommands(context: vscode.ExtensionContext): void {
   );
 }
 
-function initializeWebView(): void {
-  if (!provider) return;
-  const cfg = new ConfigManager();
-  const cur = cfg.getConfig();
-  provider.setInitialConfig(cur);
-  provider.update(cur);
-  PreviewPanel.current?.update(cur);
-}
 
 function setupConfigurationWatcher(context: vscode.ExtensionContext): void {
-  const cfg = new ConfigManager();
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(async (e) => {
-      if (e.affectsConfiguration('backgroundImage')) {
-        provider?.update(cfg.getConfig());
-      }
-
       // Handle unsafe configuration changes
       if (e.affectsConfiguration('backgroundImage.unsafe')) {
         const enabled = isUnsafeModeEnabled();
@@ -459,6 +384,6 @@ function setupConfigurationWatcher(context: vscode.ExtensionContext): void {
 
 function validateSecurityConstraints(): boolean {
   // 明示的な安全チェック（動的コード実行・外部リクエスト禁止の方針を確認）
-  // この拡張はWebView内でのみ描画し、システムファイルは一切書き換えません。
+  // この拡張はUnsafeモードでワークベンチCSSを直接改変します
   return true;
 }
