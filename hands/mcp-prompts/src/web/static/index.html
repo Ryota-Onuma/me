@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MCP Prompts Manager</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <h1 class="title">MCP Prompts Manager</h1>
+        <button class="btn btn-primary" id="new-prompt-btn">New Prompt</button>
+      </header>
+
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="search-container">
+            <input type="text" id="search" class="search-input" placeholder="Search prompts..." />
+          </div>
+          <div class="prompts-list" id="prompts-list"></div>
+        </aside>
+
+        <main class="main">
+          <div class="editor-container" id="editor-container">
+            <div class="empty-state" id="empty-state">
+              <h2>Select a prompt to edit</h2>
+              <p>Choose a prompt from the sidebar or create a new one</p>
+            </div>
+
+            <div class="editor" id="editor" style="display: none">
+              <div class="editor-header">
+                <input type="text" id="prompt-name" class="prompt-name" placeholder="Prompt name" />
+                <div class="editor-actions">
+                  <button class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                  <button class="btn btn-danger" id="delete-btn" style="display: none">
+                    Delete
+                  </button>
+                  <button class="btn btn-primary" id="save-btn">Save</button>
+                </div>
+              </div>
+
+              <div class="editor-tabs">
+                <button class="tab-btn active" data-tab="frontmatter">Metadata</button>
+                <button class="tab-btn" data-tab="content">Content</button>
+                <button class="tab-btn" data-tab="preview">Preview</button>
+              </div>
+
+              <div class="tab-content">
+                <div class="tab-pane active" id="frontmatter-tab">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="model">Model</label>
+                      <input type="text" id="model" placeholder="claude-3-haiku" />
+                    </div>
+                    <div class="form-group">
+                      <label for="tags">Tags</label>
+                      <input type="text" id="tags" placeholder="git, commit" />
+                    </div>
+                    <div class="form-group">
+                      <label for="argument-hint">Argument Hint</label>
+                      <input
+                        type="text"
+                        id="argument-hint"
+                        placeholder="command [scope] [priority]"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="version">Version</label>
+                      <input type="number" id="version" placeholder="1" min="1" />
+                    </div>
+                    <div class="form-group full-width">
+                      <label for="allowed-tools">Allowed Tools</label>
+                      <textarea
+                        id="allowed-tools"
+                        rows="3"
+                        placeholder="- Bash(git status:*, git diff:*)&#10;- Read(/path/to/files/*.md)"
+                      ></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                      <label for="aliases">Aliases</label>
+                      <input type="text" id="aliases" placeholder="c, ci, commit" />
+                    </div>
+                    <div class="form-group full-width">
+                      <label for="targets">Targets</label>
+                      <input type="text" id="targets" placeholder="claude, cursor, codex" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tab-pane" id="content-tab">
+                  <div class="form-group">
+                    <label for="content">Prompt Content</label>
+                    <textarea
+                      id="content"
+                      rows="20"
+                      placeholder="# Your prompt title&#10;&#10;Your prompt content goes here...&#10;&#10;Use {{variable}} for named variables and $1, $2 for positional args."
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div class="tab-pane" id="preview-tab">
+                  <div class="preview-content" id="preview-content">
+                    <p>Select the content tab and add some content to see the preview.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="modal" id="delete-modal" style="display: none">
+      <div class="modal-content">
+        <h3>Delete Prompt</h3>
+        <p>Are you sure you want to delete this prompt? This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="cancel-delete-btn">Cancel</button>
+          <button class="btn btn-danger" id="confirm-delete-btn">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" style="display: none"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
