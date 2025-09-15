@@ -4,9 +4,12 @@
 
 ## English
 
-A unified MCP (Model Context Protocol) server for custom prompts across **Claude Code**, **Cursor**, and **Codex CLI**.
+A unified MCP (Model Context Protocol) server for custom prompts across **Claude
+Code**, **Cursor**, and **Codex CLI**.
 
-This server enables you to manage a single set of Markdown prompts with frontmatter that work seamlessly across multiple AI coding assistants, with client-specific optimizations and frontmatter handling.
+This server enables you to manage a single set of Markdown prompts with
+frontmatter that work seamlessly across multiple AI coding assistants, with
+client-specific optimizations and frontmatter handling.
 
 ## Japanese
 
@@ -17,10 +20,15 @@ This server enables you to manage a single set of Markdown prompts with frontmat
 ## Features / 特徴
 
 ### English
-- 🔄 **Universal Compatibility**: Single prompt files work across Claude Code, Cursor, and Codex CLI
-- 📝 **Frontmatter Support**: Claude-compatible YAML/TOML frontmatter with client-specific handling
-- 🎯 **Template Engine**: Positional (`$1`, `$2`) and named (`{{name}}`) argument substitution
-- 🎨 **Client Optimization**: Automatic optimization for each client's capabilities
+
+- 🔄 **Universal Compatibility**: Single prompt files work across Claude Code,
+  Cursor, and Codex CLI
+- 📝 **Frontmatter Support**: Claude-compatible YAML/TOML frontmatter with
+  client-specific handling
+- 🎯 **Template Engine**: Positional (`$1`, `$2`) and named (`{{name}}`)
+  argument substitution
+- 🎨 **Client Optimization**: Automatic optimization for each client's
+  capabilities
 - 🔥 **Hot Reload**: Real-time file watching for development
 - 🏷️ **Rich Metadata**: Tags, aliases, version tracking, and search
 - 🔒 **Security**: Path validation and sandboxed file access
@@ -28,9 +36,13 @@ This server enables you to manage a single set of Markdown prompts with frontmat
 - 📊 **Observability**: Structured JSON logging
 
 ### 日本語
-- 🔄 **汎用互換性**: Claude Code、Cursor、Codex CLIで共通のプロンプトファイルを使用
-- 📝 **フロントマターサポート**: Claude互換のYAML/TOMLフロントマターとクライアント固有処理
-- 🎯 **テンプレートエンジン**: 位置指定（`$1`, `$2`）と名前指定（`{{name}}`）の引数置換
+
+- 🔄 **汎用互換性**: Claude Code、Cursor、Codex
+  CLIで共通のプロンプトファイルを使用
+- 📝 **フロントマターサポート**:
+  Claude互換のYAML/TOMLフロントマターとクライアント固有処理
+- 🎯 **テンプレートエンジン**: 位置指定（`$1`,
+  `$2`）と名前指定（`{{name}}`）の引数置換
 - 🎨 **クライアント最適化**: 各クライアントの機能に応じた自動最適化
 - 🔥 **ホットリロード**: 開発時のリアルタイムファイル監視
 - 🏷️ **リッチメタデータ**: タグ、エイリアス、バージョン管理、検索機能
@@ -63,19 +75,20 @@ mkdir -p ~/prompt-registry/commands
 model: claude-3-haiku
 allowed-tools:
   - Bash(git status:*, git diff:*, git show:*)
-argument-hint: "commit [scope] [priority]"
-tags: ["git", "commit"]
+argument-hint: 'commit [scope] [priority]'
+tags: ['git', 'commit']
 version: 1
 ---
+
 # Create a high-quality commit message
 
 Please read the staged changes and write:
+
 - Title (<= 50 chars)
 - Body: What/Why/How, risks, test notes
 - Bullet points for key changes
 
-Scope: {{scope}}
-Priority: $1
+Scope: {{scope}} Priority: $1
 ```
 
 3. **Start the MCP server:**
@@ -107,19 +120,20 @@ mkdir -p ~/prompt-registry/commands
 model: claude-3-haiku
 allowed-tools:
   - Bash(git status:*, git diff:*, git show:*)
-argument-hint: "commit [scope] [priority]"
-tags: ["git", "commit"]
+argument-hint: 'commit [scope] [priority]'
+tags: ['git', 'commit']
 version: 1
 ---
+
 # 高品質なコミットメッセージを作成
 
 ステージされた変更を読み、以下を作成してください:
+
 - タイトル (50文字以内)
 - 本文: 何を/なぜ/どのように、リスク、テスト注意事項
 - 主要な変更の箇条書き
 
-スコープ: {{scope}}
-優先度: $1
+スコープ: {{scope}} 優先度: $1
 ```
 
 3. **MCPサーバーの起動:**
@@ -133,6 +147,13 @@ mcp-prompts --client claude --watch
 ### English
 
 #### Claude Code
+
+```
+claude mcp add prompts \
+  --scope user \
+  -- node /Users/ryota/Desktop/programming/me/hands/mcp-prompts/dist/index.js \
+       --prompts-dir /Users/ryota/Desktop/programming/me/brain/prompts
+```
 
 MCP prompts automatically appear as slash commands:
 
@@ -216,14 +237,22 @@ env = { PROMPTS_DIR = "~/prompt-registry/commands" }
 
 #### Claude Code with Custom Settings
 
-For Claude Code, you can customize the MCP server behavior with additional environment variables:
+For Claude Code, you can customize the MCP server behavior with additional
+environment variables:
 
 ```json
 {
   "mcpServers": {
     "mcp-prompts": {
       "command": "npx",
-      "args": ["-y", "mcp-prompts", "--client", "claude", "--watch", "--verbose"],
+      "args": [
+        "-y",
+        "mcp-prompts",
+        "--client",
+        "claude",
+        "--watch",
+        "--verbose"
+      ],
       "env": {
         "PROMPTS_DIR": "~/my-prompts",
         "LOG_LEVEL": "debug",
@@ -284,7 +313,15 @@ If you have mcp-prompts installed locally:
   "mcpServers": {
     "dev-prompts": {
       "command": "npx",
-      "args": ["-y", "mcp-prompts", "--client", "claude", "--watch", "--verbose", "--no-cache"],
+      "args": [
+        "-y",
+        "mcp-prompts",
+        "--client",
+        "claude",
+        "--watch",
+        "--verbose",
+        "--no-cache"
+      ],
       "env": {
         "PROMPTS_DIR": "~/dev/prompts",
         "LOG_LEVEL": "debug"
@@ -305,7 +342,14 @@ Claude Codeでは、追加の環境変数でMCPサーバーの動作をカスタ
   "mcpServers": {
     "mcp-prompts": {
       "command": "npx",
-      "args": ["-y", "mcp-prompts", "--client", "claude", "--watch", "--verbose"],
+      "args": [
+        "-y",
+        "mcp-prompts",
+        "--client",
+        "claude",
+        "--watch",
+        "--verbose"
+      ],
       "env": {
         "PROMPTS_DIR": "~/my-prompts",
         "LOG_LEVEL": "debug",
@@ -366,7 +410,15 @@ mcp-promptsをローカルにインストールした場合：
   "mcpServers": {
     "dev-prompts": {
       "command": "npx",
-      "args": ["-y", "mcp-prompts", "--client", "claude", "--watch", "--verbose", "--no-cache"],
+      "args": [
+        "-y",
+        "mcp-prompts",
+        "--client",
+        "claude",
+        "--watch",
+        "--verbose",
+        "--no-cache"
+      ],
       "env": {
         "PROMPTS_DIR": "~/dev/prompts",
         "LOG_LEVEL": "debug"
@@ -414,16 +466,16 @@ allowed-tools:
   - Read(/path/to/files/*.md)
 
 # Usage hint for argument completion
-argument-hint: "command <required> [optional]"
+argument-hint: 'command <required> [optional]'
 
 # Tags for organization and search
-tags: ["git", "automation", "commit"]
+tags: ['git', 'automation', 'commit']
 
 # Client targeting (if not specified, available to all)
-targets: ["claude", "cursor", "codex"]
+targets: ['claude', 'cursor', 'codex']
 
 # Aliases for the prompt
-aliases: ["c", "ci"]
+aliases: ['c', 'ci']
 
 # Version for tracking changes
 version: 2
@@ -433,31 +485,37 @@ version: 2
 ### Template Variables
 
 #### Positional Arguments
+
 ```markdown
 Hello $1, welcome to $2!
+
 # Usage: prompt("Alice", "GitHub") → "Hello Alice, welcome to GitHub!"
 ```
 
 #### Named Arguments
+
 ```markdown
 User {{name}} has {{role}} access.
+
 # Usage: prompt({name: "Alice", role: "admin"}) → "User Alice has admin access."
 ```
 
 #### Escaping
+
 ```markdown
 Literal: $$1 and {{{escaped}}}
+
 # Output: "Literal: $1 and {{escaped}}"
 ```
 
 ## Client-Specific Behavior
 
-| Feature | Claude | Cursor | Codex | Notes |
-|---------|--------|--------|-------|-------|
-| Frontmatter | ✅ Kept | ❌ Stripped | ❌ Stripped | Claude preserves for tool permissions |
-| System Messages | ✅ Yes | ✅ Yes | ❌ No | Codex converts to user content |
-| Template Args | ✅ Yes | ✅ Yes | ✅ Yes | All clients support templating |
-| Hot Reload | ✅ Yes | ✅ Yes | ✅ Yes | Real-time prompt updates |
+| Feature         | Claude  | Cursor      | Codex       | Notes                                 |
+| --------------- | ------- | ----------- | ----------- | ------------------------------------- |
+| Frontmatter     | ✅ Kept | ❌ Stripped | ❌ Stripped | Claude preserves for tool permissions |
+| System Messages | ✅ Yes  | ✅ Yes      | ❌ No       | Codex converts to user content        |
+| Template Args   | ✅ Yes  | ✅ Yes      | ✅ Yes      | All clients support templating        |
+| Hot Reload      | ✅ Yes  | ✅ Yes      | ✅ Yes      | Real-time prompt updates              |
 
 ## Advanced Features
 
@@ -478,6 +536,7 @@ Literal: $$1 and {{{escaped}}}
 ### Flattened Paths
 
 With `--flatten-paths`:
+
 - `git/commit.md` → `git__commit`
 - `docs/readme.md` → `docs__readme`
 
@@ -596,9 +655,12 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/your-org/mcp-prompts/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/mcp-prompts/discussions)
+- **Discussions**:
+  [GitHub Discussions](https://github.com/your-org/mcp-prompts/discussions)
 - **Documentation**: [Full Documentation](https://docs.mcp-prompts.dev)
 
 ---
 
-**Note**: This project implements the Model Context Protocol (MCP) specification for prompts. For more information about MCP, visit [modelcontextprotocol.org](https://modelcontextprotocol.org).
+**Note**: This project implements the Model Context Protocol (MCP) specification
+for prompts. For more information about MCP, visit
+[modelcontextprotocol.org](https://modelcontextprotocol.org).
