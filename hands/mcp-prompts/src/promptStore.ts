@@ -257,15 +257,29 @@ export class PromptStore {
     const parsed = path.parse(relativePath);
     const nameWithoutExt = parsed.name;
 
+    let promptName: string;
     if (this.options.flattenPaths) {
       // Convert path separators to double underscores
       const dir = parsed.dir;
       if (dir) {
-        return dir.replace(/[/\\]/g, '__') + '__' + nameWithoutExt;
+        promptName = dir.replace(/[/\\]/g, '__') + '__' + nameWithoutExt;
+      } else {
+        promptName = nameWithoutExt;
       }
+    } else {
+      promptName = nameWithoutExt;
     }
 
-    return nameWithoutExt;
+    // Normalize prompt name for MCP slash command compatibility
+    // Convert to lowercase and replace non-alphanumeric characters with underscores
+    return this.normalizePromptName(promptName);
+  }
+
+  private normalizePromptName(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
   }
 
   private findPrompt(name: string): PromptFileInfo | null {
