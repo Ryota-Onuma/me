@@ -1,0 +1,20 @@
+MCP RAG Server テストドキュメント
+
+これはMCP RAG Serverのテスト用ドキュメントです。
+Go言語で実装されており、高速でシンプルな動作を実現しています。
+
+主な機能：
+- Model Context Protocol (MCP) 対応
+- ベクトル検索機能
+- PostgreSQL + pgvector によるデータストレージ
+- ドキュメントの自動チャンク分割
+- セマンティック検索
+
+技術スタック：
+- Go 1.22
+- PostgreSQL with pgvector
+- Docker Compose
+- JSON-RPC over stdio
+
+このシステムは高い性能と使いやすさを両立させ、
+開発者にとって理想的なRAGソリューションを提供します。
