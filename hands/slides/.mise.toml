@@ -1,0 +1,25 @@
+[tools]
+node = "20"
+
+[tasks.setup]
+description = "Marp CLIの依存をインストール"
+run = "npm install"
+
+[tasks.preview]
+description = "slides配下のMarkdownをローカルサーバーでプレビュー"
+depends = ["setup"]
+run = "npx @marp-team/marp-cli --server slides --watch"
+
+[tasks.pdf]
+description = "slides配下のMarkdownをPDF出力 (dist/pdf)"
+depends = ["setup"]
+run = "bash -lc 'mkdir -p dist/pdf && npx @marp-team/marp-cli --pdf --input-dir slides --output dist/pdf'"
+
+[tasks.html]
+description = "slides配下のMarkdownをHTML出力 (dist/html)"
+depends = ["setup"]
+run = "bash -lc 'mkdir -p dist/html && npx @marp-team/marp-cli --html --input-dir slides --output dist/html'"
+
+[tasks.clean]
+description = "生成物を削除"
+run = "rm -rf dist"
