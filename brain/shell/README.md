@@ -46,3 +46,15 @@ brew install eza
 brew install fzf
 $(brew --prefix)/opt/fzf/install
 ```
+
+
+
+# Update files
+
+```sh
+cp brain/shell/.private.zsh ~/.private.zsh && \
+cp brain/shell/.zshrc ~/.zshrc && \
+cp brain/shell/starship.toml ~/.config/starship.toml && \
+cp brain/nvim/init.lua ~/.config/nvim/init.lua && \
+cp brain/shell/.tmux.conf ~/.tmux.conf
+```
