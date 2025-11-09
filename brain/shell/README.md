@@ -1,3 +1,11 @@
+# Install ghostty
+```sh
+brew install --cask ghostty
+```
+
+Open ghostty setting and copy `brain/ghostty/config`
+
+
 # Install oh-my-zsh and zsh pligin
 
 ```sh
