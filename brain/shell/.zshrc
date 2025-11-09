@@ -1,5 +1,5 @@
 export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="robbyrussell"
+ZSH_THEME=""  # Starshipを使うのでテーマを無効化
 
 # Zsh plugins
 plugins=(
@@ -28,7 +28,7 @@ alias cl='clear'
 alias zshrc='vim ~/.zshrc'
 
 alias mv='mv -iv'
-alias rm='mv -i ~/Trash'
+alias rm='rm -i'
 
 alias ls='eza --icons'
 alias ll='eza -l --icons'
@@ -58,5 +58,9 @@ alias dce='docker compose exec'
 
 
 [ -f ~/.private.zsh ] && source ~/.private.zsh
+
+if command -v mise 1>/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
