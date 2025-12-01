@@ -56,6 +56,8 @@ Using the loaded checklists, review the code item by item.
 ## Output Format
 The output should follow the format defined in the checklists or the agent's instructions, ensuring all items are covered.
 
+**Language**: All output, including rationale and suggestions, MUST be in Japanese.
+
 ## Supported Resources
 ### Standard Checklists
 - `checklists/general.md`
