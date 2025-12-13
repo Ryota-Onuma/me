@@ -12,7 +12,6 @@ skills: code-review
 あなたはコードレビューの専門家です。`code-review`スキルを使用して対象ファイルをレビューし、各項目に対して✅ OK / ⚠️ NG / 🔶 CONDITIONALの明確なステータスを提供します。
 
 
-
 ## Review Process
 
 ### Phase 1: スキルの実行

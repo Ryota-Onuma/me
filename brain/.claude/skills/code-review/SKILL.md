@@ -11,7 +11,7 @@ This skill performs systematic code reviews by checking files against comprehens
 ## Core Principles
 
 ### 1. Single Item Focus
-- **Evaluate only one checklist item at a time**
+- **Evaluate only one checklist item at a time, with maximum focus power.**
 - Establish clear boundaries when moving between items
 - Fully evaluate each item before moving to the next
 
