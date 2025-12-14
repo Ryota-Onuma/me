@@ -1,0 +1,42 @@
+{
+  "tags": [
+    "essay",
+    "career",
+    "engineer",
+    "output",
+    "env",
+    "Qiita"
+  ],
+  "notes": [
+    {
+      "filename": "2025-12-14-reason-developers-should-stop-qiita-output",
+      "title": "全ての開発者がQiitaへのアウトプットをやめるべき理由",
+      "date": "2025-12-14",
+      "tags": [
+        "Qiita",
+        "essay",
+        "career",
+        "engineer",
+        "output"
+      ],
+      "is_secret": false
+    },
+    {
+      "filename": "2025-12-14-test-file-for-public",
+      "title": "テストファイル（公開用）",
+      "date": "2025-12-14",
+      "tags": null,
+      "is_secret": false
+    },
+    {
+      "filename": "2025-12-14-test-file-for-confidential",
+      "title": "テストファイル（機密用）",
+      "date": "2025-12-14",
+      "tags": [
+        "env"
+      ],
+      "is_secret": true
+    }
+  ],
+  "lastUpdated": "2025-12-14T21:23:28"
+}

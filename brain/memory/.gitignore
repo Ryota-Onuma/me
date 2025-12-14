@@ -1,0 +1,17 @@
+# --- OS/System ---
+.DS_Store
+Thumbs.db
+.env
+
+# --- どこにあろうと "Secret" ディレクトリの中身はGitに入れない ---
+**/Secret/
+**/private/
+
+# --- ツール類のバイナリ ---
+90_System/gardener_web/gardener_web
+
+# --- テスト関連 ---
+90_System/gardener_web/coverage.out
+
+# --- プロジェクト設定（ローカル用）---
+90_System/gardener_web/projects.json
