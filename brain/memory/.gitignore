@@ -15,3 +15,6 @@ Thumbs.db
 
 # --- プロジェクト設定（ローカル用）---
 90_System/gardener_web/projects.json
+
+# --- メタデータ ---
+**/metadata.json

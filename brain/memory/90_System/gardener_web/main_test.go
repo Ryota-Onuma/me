@@ -21,10 +21,12 @@ func setupTestProject(t *testing.T) (string, func()) {
 	
 	// Create standard directory structure
 	dirs := []string{
+		"00-Literature-Notes",
 		"01-Fleeting-Notes",
 		"01-Fleeting-Notes/Secret",
 		"02-Permanent-Notes",
 		"02-Permanent-Notes/Secret",
+		"03-Structured-Notes",
 		"91_Metadata",
 	}
 	for _, d := range dirs {
@@ -40,7 +42,7 @@ func setupTestProject(t *testing.T) (string, func()) {
 	return tmpDir, cleanup
 }
 
-// Test loadProjectConfig creates default on first run
+
 func TestLoadProjectConfig_CreatesDefault(t *testing.T) {
 	// Save original config file path and restore after test
 	origFile := ProjectConfigFile
@@ -78,7 +80,7 @@ func TestLoadProjectConfig_CreatesDefault(t *testing.T) {
 	_ = origFile
 }
 
-// Test getActiveProject returns correct project
+
 func TestGetActiveProject(t *testing.T) {
 	projectConfig = &ProjectConfig{
 		Projects: []Project{
@@ -100,7 +102,7 @@ func TestGetActiveProject(t *testing.T) {
 	}
 }
 
-// Test getActiveProject fallback when active not found
+
 func TestGetActiveProject_Fallback(t *testing.T) {
 	projectConfig = &ProjectConfig{
 		Projects: []Project{
@@ -118,7 +120,7 @@ func TestGetActiveProject_Fallback(t *testing.T) {
 	}
 }
 
-// Test getActiveProject with nil config
+
 func TestGetActiveProject_NilConfig(t *testing.T) {
 	projectConfig = nil
 	
@@ -128,7 +130,7 @@ func TestGetActiveProject_NilConfig(t *testing.T) {
 	}
 }
 
-// Test getPaths returns correct paths
+
 func TestGetPaths(t *testing.T) {
 	projectConfig = &ProjectConfig{
 		Projects: []Project{
@@ -164,7 +166,7 @@ func TestGetPaths(t *testing.T) {
 	}
 }
 
-// Test handleGetProjects API
+
 func TestHandleGetProjects(t *testing.T) {
 	projectConfig = &ProjectConfig{
 		Projects: []Project{
@@ -195,7 +197,7 @@ func TestHandleGetProjects(t *testing.T) {
 	}
 }
 
-// Test handleSwitchProject API
+
 func TestHandleSwitchProject(t *testing.T) {
 	// Save original config file location
 	tmpFile := filepath.Join(os.TempDir(), "test_switch_projects.json")
@@ -223,7 +225,7 @@ func TestHandleSwitchProject(t *testing.T) {
 	}
 }
 
-// Test handleSwitchProject with nonexistent project
+
 func TestHandleSwitchProject_NotFound(t *testing.T) {
 	projectConfig = &ProjectConfig{
 		Projects: []Project{
@@ -244,7 +246,7 @@ func TestHandleSwitchProject_NotFound(t *testing.T) {
 	}
 }
 
-// Test slugify function
+
 func TestSlugify(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -266,7 +268,7 @@ func TestSlugify(t *testing.T) {
 	}
 }
 
-// Test scanFleeting with test directory
+
 func TestScanFleeting(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -309,7 +311,7 @@ func TestScanFleeting(t *testing.T) {
 	}
 }
 
-// Test handleCreateProject API
+
 func TestHandleCreateProject(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -339,7 +341,7 @@ func TestHandleCreateProject(t *testing.T) {
 	}
 }
 
-// Test handleCreateProject creates directories
+
 func TestHandleCreateProject_CreatesDirectories(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -385,7 +387,7 @@ func TestHandleCreateProject_CreatesDirectories(t *testing.T) {
 	}
 }
 
-// Test handleCreateProject with missing name
+
 func TestHandleCreateProject_MissingName(t *testing.T) {
 	projectConfig = &ProjectConfig{
 		Projects:      []Project{},
@@ -404,7 +406,7 @@ func TestHandleCreateProject_MissingName(t *testing.T) {
 	}
 }
 
-// Test handleCreateProject duplicate
+
 func TestHandleCreateProject_Duplicate(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -428,7 +430,7 @@ func TestHandleCreateProject_Duplicate(t *testing.T) {
 	}
 }
 
-// Test handleDeleteProject API
+
 func TestHandleDeleteProject(t *testing.T) {
 	projectConfig = &ProjectConfig{
 		Projects: []Project{
@@ -454,7 +456,7 @@ func TestHandleDeleteProject(t *testing.T) {
 	}
 }
 
-// Test handleDeleteProject - cannot delete last project
+
 func TestHandleDeleteProject_LastProject(t *testing.T) {
 	projectConfig = &ProjectConfig{
 		Projects: []Project{
@@ -475,7 +477,7 @@ func TestHandleDeleteProject_LastProject(t *testing.T) {
 	}
 }
 
-// Test handleDeleteProject - not found
+
 func TestHandleDeleteProject_NotFound(t *testing.T) {
 	projectConfig = &ProjectConfig{
 		Projects: []Project{
@@ -497,7 +499,7 @@ func TestHandleDeleteProject_NotFound(t *testing.T) {
 	}
 }
 
-// Test handleDeleteProject - switches active when deleting active project
+
 func TestHandleDeleteProject_SwitchesActive(t *testing.T) {
 	projectConfig = &ProjectConfig{
 		Projects: []Project{
@@ -519,7 +521,7 @@ func TestHandleDeleteProject_SwitchesActive(t *testing.T) {
 	}
 }
 
-// Test loadMetadata with test directory
+
 func TestLoadMetadata(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -545,7 +547,7 @@ func TestLoadMetadata(t *testing.T) {
 	}
 }
 
-// Test saveMetadata and loadMetadata roundtrip
+
 func TestSaveLoadMetadata(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -585,7 +587,7 @@ func TestSaveLoadMetadata(t *testing.T) {
 	}
 }
 
-// Test handleGetMetadata API
+
 func TestHandleGetMetadata(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -612,7 +614,7 @@ func TestHandleGetMetadata(t *testing.T) {
 	}
 }
 
-// Test handleCreate API
+
 func TestHandleCreate(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -648,7 +650,7 @@ func TestHandleCreate(t *testing.T) {
 	}
 }
 
-// Test handleCreate - secret file
+
 func TestHandleCreate_Secret(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -684,7 +686,7 @@ func TestHandleCreate_Secret(t *testing.T) {
 	}
 }
 
-// Test handleCreate - empty content
+
 func TestHandleCreate_EmptyContent(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -708,7 +710,7 @@ func TestHandleCreate_EmptyContent(t *testing.T) {
 	}
 }
 
-// Test handleCreate - wrong method
+
 func TestHandleCreate_WrongMethod(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/create", nil)
 	w := httptest.NewRecorder()
@@ -720,7 +722,7 @@ func TestHandleCreate_WrongMethod(t *testing.T) {
 	}
 }
 
-// Test handleReadInbox API
+
 func TestHandleReadInbox(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -752,7 +754,7 @@ func TestHandleReadInbox(t *testing.T) {
 	}
 }
 
-// Test handleReadInbox - missing path
+
 func TestHandleReadInbox_MissingPath(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/inbox/read", nil)
 	w := httptest.NewRecorder()
@@ -764,7 +766,7 @@ func TestHandleReadInbox_MissingPath(t *testing.T) {
 	}
 }
 
-// Test handleReadInbox - file not found
+
 func TestHandleReadInbox_NotFound(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -786,7 +788,7 @@ func TestHandleReadInbox_NotFound(t *testing.T) {
 	}
 }
 
-// Test handleUpdateInbox API
+
 func TestHandleUpdateInbox(t *testing.T) {
 	tmpDir, cleanup := setupTestProject(t)
 	defer cleanup()
@@ -1299,5 +1301,609 @@ func TestHandleIndex(t *testing.T) {
 	}
 	if !strings.Contains(body, "Gardener Web") {
 		t.Error("Expected page title in response")
+	}
+}
+
+// ============================================================
+// Tests for new functions added in Tab Enhancement
+// ============================================================
+
+// Test getAllPaths returns correct PathConfig
+func TestGetAllPaths(t *testing.T) {
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: "/test/root"},
+		},
+		ActiveProject: "test",
+	}
+
+	paths := getAllPaths()
+
+	if paths == nil {
+		t.Fatal("Expected PathConfig, got nil")
+	}
+	if paths.Literature != "/test/root/00-Literature-Notes" {
+		t.Errorf("Literature path: expected /test/root/00-Literature-Notes, got %s", paths.Literature)
+	}
+	if paths.Fleeting != "/test/root/01-Fleeting-Notes" {
+		t.Errorf("Fleeting path: expected /test/root/01-Fleeting-Notes, got %s", paths.Fleeting)
+	}
+	if paths.Permanent != "/test/root/02-Permanent-Notes" {
+		t.Errorf("Permanent path: expected /test/root/02-Permanent-Notes, got %s", paths.Permanent)
+	}
+	if paths.Structured != "/test/root/03-Structured-Notes" {
+		t.Errorf("Structured path: expected /test/root/03-Structured-Notes, got %s", paths.Structured)
+	}
+}
+
+// Test getAllPaths with nil config
+func TestGetAllPaths_NilConfig(t *testing.T) {
+	projectConfig = nil
+
+	paths := getAllPaths()
+	if paths != nil {
+		t.Errorf("Expected nil with nil config, got %+v", paths)
+	}
+}
+
+// Test scanLiterature
+func TestScanLiterature(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	// Create test files
+	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "book1.md"), []byte("Book 1"), 0644)
+	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "book2.md"), []byte("Book 2"), 0644)
+	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", ".hidden.md"), []byte("Hidden"), 0644) // Should be ignored
+
+	notes := scanLiterature()
+
+	if len(notes) != 2 {
+		t.Errorf("Expected 2 notes, got %d", len(notes))
+	}
+}
+
+// Test scanLiterature empty dir
+func TestScanLiterature_Empty(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	notes := scanLiterature()
+	if len(notes) != 0 {
+		t.Errorf("Expected 0 notes, got %d", len(notes))
+	}
+}
+
+// Test scanPermanent
+func TestScanPermanent(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	// Create test files
+	os.WriteFile(filepath.Join(tmpDir, "02-Permanent-Notes", "note1.md"), []byte("Note 1"), 0644)
+	os.WriteFile(filepath.Join(tmpDir, "02-Permanent-Notes", "Secret", "secret1.md"), []byte("Secret"), 0644)
+
+	notes := scanPermanent()
+
+	if len(notes) != 2 {
+		t.Errorf("Expected 2 notes, got %d", len(notes))
+	}
+
+	// Check secret count
+	secretCount := 0
+	for _, n := range notes {
+		if n.IsSecret {
+			secretCount++
+		}
+	}
+	if secretCount != 1 {
+		t.Errorf("Expected 1 secret note, got %d", secretCount)
+	}
+}
+
+// Test scanStructured
+func TestScanStructured(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	// Create test files
+	os.WriteFile(filepath.Join(tmpDir, "03-Structured-Notes", "moc.md"), []byte("MOC"), 0644)
+
+	notes := scanStructured()
+
+	if len(notes) != 1 {
+		t.Errorf("Expected 1 note, got %d", len(notes))
+	}
+}
+
+// Test handleListLiterature API
+func TestHandleListLiterature(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "book.md"), []byte("Book"), 0644)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/literature", nil)
+	w := httptest.NewRecorder()
+
+	handleListLiterature(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	var notes []Note
+	json.NewDecoder(w.Body).Decode(&notes)
+	if len(notes) != 1 {
+		t.Errorf("Expected 1 note, got %d", len(notes))
+	}
+}
+
+// Test handleReadLiterature API
+func TestHandleReadLiterature(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "book.md"), []byte("Book content"), 0644)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/literature/read?path=book.md", nil)
+	w := httptest.NewRecorder()
+
+	handleReadLiterature(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	var result map[string]string
+	json.NewDecoder(w.Body).Decode(&result)
+	if result["content"] != "Book content" {
+		t.Errorf("Expected 'Book content', got %s", result["content"])
+	}
+}
+
+// Test handleReadLiterature missing path
+func TestHandleReadLiterature_MissingPath(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/literature/read", nil)
+	w := httptest.NewRecorder()
+
+	handleReadLiterature(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+// Test handleCreateLiterature API
+func TestHandleCreateLiterature(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	body := strings.NewReader(`{"filename": "newbook", "content": "New book content"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/literature/create", body)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handleCreateLiterature(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	// Verify file was created
+	content, err := os.ReadFile(filepath.Join(tmpDir, "00-Literature-Notes", "newbook.md"))
+	if err != nil {
+		t.Fatalf("Failed to read created file: %v", err)
+	}
+	if string(content) != "New book content" {
+		t.Errorf("Expected 'New book content', got %s", string(content))
+	}
+}
+
+// Test handleCreateLiterature - empty filename
+func TestHandleCreateLiterature_EmptyFilename(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	body := strings.NewReader(`{"filename": "", "content": "content"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/literature/create", body)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handleCreateLiterature(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+// Test handleCreateLiterature - duplicate file
+func TestHandleCreateLiterature_Duplicate(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	// Create existing file
+	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "existing.md"), []byte("Existing"), 0644)
+
+	body := strings.NewReader(`{"filename": "existing", "content": "New content"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/literature/create", body)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handleCreateLiterature(w, req)
+
+	if w.Code != http.StatusConflict {
+		t.Errorf("Expected status 409, got %d", w.Code)
+	}
+}
+
+// Test handleUpdateLiterature API
+func TestHandleUpdateLiterature(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	// Create initial file
+	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "book.md"), []byte("Old content"), 0644)
+
+	body := strings.NewReader(`{"path": "book.md", "content": "Updated content"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/literature/update", body)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handleUpdateLiterature(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	// Verify content was updated
+	content, _ := os.ReadFile(filepath.Join(tmpDir, "00-Literature-Notes", "book.md"))
+	if string(content) != "Updated content" {
+		t.Errorf("Expected 'Updated content', got %s", string(content))
+	}
+}
+
+// Test handleDeleteLiterature API
+func TestHandleDeleteLiterature(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	// Create file to delete
+	filePath := filepath.Join(tmpDir, "00-Literature-Notes", "todelete.md")
+	os.WriteFile(filePath, []byte("Delete me"), 0644)
+
+	body := strings.NewReader(`{"path": "todelete.md"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/literature/delete", body)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handleDeleteLiterature(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	// Verify file was deleted
+	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
+		t.Error("Expected file to be deleted")
+	}
+}
+
+// Test handleListPermanent API
+func TestHandleListPermanent(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	os.WriteFile(filepath.Join(tmpDir, "02-Permanent-Notes", "note.md"), []byte("Note"), 0644)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/permanent", nil)
+	w := httptest.NewRecorder()
+
+	handleListPermanent(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	var notes []Note
+	json.NewDecoder(w.Body).Decode(&notes)
+	if len(notes) != 1 {
+		t.Errorf("Expected 1 note, got %d", len(notes))
+	}
+}
+
+// Test handleReadPermanent API
+func TestHandleReadPermanent(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	os.WriteFile(filepath.Join(tmpDir, "02-Permanent-Notes", "note.md"), []byte("Permanent content"), 0644)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/permanent/read?path=note.md", nil)
+	w := httptest.NewRecorder()
+
+	handleReadPermanent(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	var result map[string]string
+	json.NewDecoder(w.Body).Decode(&result)
+	if result["content"] != "Permanent content" {
+		t.Errorf("Expected 'Permanent content', got %s", result["content"])
+	}
+}
+
+// Test handleReadPermanent - Secret file
+func TestHandleReadPermanent_Secret(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	os.WriteFile(filepath.Join(tmpDir, "02-Permanent-Notes", "Secret", "secret.md"), []byte("Secret content"), 0644)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/permanent/read?path=Secret/secret.md", nil)
+	w := httptest.NewRecorder()
+
+	handleReadPermanent(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	var result map[string]string
+	json.NewDecoder(w.Body).Decode(&result)
+	if result["content"] != "Secret content" {
+		t.Errorf("Expected 'Secret content', got %s", result["content"])
+	}
+}
+
+// Test handleReadPermanent - missing path
+func TestHandleReadPermanent_MissingPath(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/permanent/read", nil)
+	w := httptest.NewRecorder()
+
+	handleReadPermanent(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+// Test handleListStructured API
+func TestHandleListStructured(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	os.WriteFile(filepath.Join(tmpDir, "03-Structured-Notes", "moc.md"), []byte("MOC"), 0644)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/structured", nil)
+	w := httptest.NewRecorder()
+
+	handleListStructured(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	var notes []Note
+	json.NewDecoder(w.Body).Decode(&notes)
+	if len(notes) != 1 {
+		t.Errorf("Expected 1 note, got %d", len(notes))
+	}
+}
+
+// Test handleReadStructured API
+func TestHandleReadStructured(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	os.WriteFile(filepath.Join(tmpDir, "03-Structured-Notes", "moc.md"), []byte("MOC content"), 0644)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/structured/read?path=moc.md", nil)
+	w := httptest.NewRecorder()
+
+	handleReadStructured(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	var result map[string]string
+	json.NewDecoder(w.Body).Decode(&result)
+	if result["content"] != "MOC content" {
+		t.Errorf("Expected 'MOC content', got %s", result["content"])
+	}
+}
+
+// Test handleReadStructured - missing path
+func TestHandleReadStructured_MissingPath(t *testing.T) {
+	tmpDir, cleanup := setupTestProject(t)
+	defer cleanup()
+
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: tmpDir},
+		},
+		ActiveProject: "test",
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/structured/read", nil)
+	w := httptest.NewRecorder()
+
+	handleReadStructured(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("Expected status 400, got %d", w.Code)
+	}
+}
+
+// Test handleSetDefaultAgent API
+func TestHandleSetDefaultAgent(t *testing.T) {
+	projectConfig = &ProjectConfig{
+		Projects: []Project{
+			{ID: "test", Name: "Test", RootPath: "/test"},
+		},
+		ActiveProject: "test",
+		DefaultAgent:  "claude",
+	}
+
+	body := strings.NewReader(`{"agent": "gemini"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/agent/set", body)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handleSetDefaultAgent(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d", w.Code)
+	}
+
+	if projectConfig.DefaultAgent != "gemini" {
+		t.Errorf("Expected default agent 'gemini', got %s", projectConfig.DefaultAgent)
+	}
+}
+
+// Test handleSetDefaultAgent - wrong method
+func TestHandleSetDefaultAgent_WrongMethod(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/agent/set", nil)
+	w := httptest.NewRecorder()
+
+	handleSetDefaultAgent(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Errorf("Expected status 405, got %d", w.Code)
 	}
 }

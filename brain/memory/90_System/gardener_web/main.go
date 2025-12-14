@@ -35,7 +35,7 @@ type ProjectConfig struct {
 
 var projectConfig *ProjectConfig
 
-// プロジェクト設定の読み込み
+
 func loadProjectConfig() error {
 	data, err := os.ReadFile(ProjectConfigFile)
 	if err != nil {
@@ -65,7 +65,7 @@ func loadProjectConfig() error {
 	return json.Unmarshal(data, projectConfig)
 }
 
-// プロジェクト設定の保存
+
 func saveProjectConfig() error {
 	data, err := json.MarshalIndent(projectConfig, "", "  ")
 	if err != nil {
@@ -74,7 +74,7 @@ func saveProjectConfig() error {
 	return os.WriteFile(ProjectConfigFile, data, 0644)
 }
 
-// アクティブプロジェクトの取得
+
 func getActiveProject() *Project {
 	if projectConfig == nil {
 		return nil
@@ -91,18 +91,42 @@ func getActiveProject() *Project {
 	return nil
 }
 
-// 動的パス解決
-func getPaths() (fleeting, fleetSecret, permanent, permSecret, metadata string) {
+// PathConfig holds all the directory paths for a project
+type PathConfig struct {
+	Literature      string
+	Fleeting        string
+	FleetingSecret  string
+	Permanent       string
+	PermanentSecret string
+	Structured      string
+	Metadata        string
+}
+
+// 動的パス解決（全パス）
+func getAllPaths() *PathConfig {
 	project := getActiveProject()
 	if project == nil {
-		return "", "", "", "", ""
+		return nil
 	}
 	root := project.RootPath
-	return filepath.Join(root, "01-Fleeting-Notes"),
-		filepath.Join(root, "01-Fleeting-Notes/Secret"),
-		filepath.Join(root, "02-Permanent-Notes"),
-		filepath.Join(root, "02-Permanent-Notes/Secret"),
-		filepath.Join(root, "91_Metadata/metadata.json")
+	return &PathConfig{
+		Literature:      filepath.Join(root, "00-Literature-Notes"),
+		Fleeting:        filepath.Join(root, "01-Fleeting-Notes"),
+		FleetingSecret:  filepath.Join(root, "01-Fleeting-Notes/Secret"),
+		Permanent:       filepath.Join(root, "02-Permanent-Notes"),
+		PermanentSecret: filepath.Join(root, "02-Permanent-Notes/Secret"),
+		Structured:      filepath.Join(root, "03-Structured-Notes"),
+		Metadata:        filepath.Join(root, "91_Metadata/metadata.json"),
+	}
+}
+
+// 動的パス解決 (後方互換性のため維持)
+func getPaths() (fleeting, fleetSecret, permanent, permSecret, metadata string) {
+	paths := getAllPaths()
+	if paths == nil {
+		return "", "", "", "", ""
+	}
+	return paths.Fleeting, paths.FleetingSecret, paths.Permanent, paths.PermanentSecret, paths.Metadata
 }
 
 // --- エージェント設定 ---
@@ -146,14 +170,14 @@ type Note struct {
 	IsSecret bool   // Secretフォルダにあるか
 }
 
-// AIからの応答を解析するための構造体
+
 type AIResponse struct {
 	Title string   `json:"title"`
 	Slug  string   `json:"slug"`
 	Tags  []string `json:"tags"`
 }
 
-// メタデータ構造体
+
 type NoteMetadata struct {
 	Filename     string   `json:"filename"`
 	Title        string   `json:"title"`
@@ -171,32 +195,46 @@ type Metadata struct {
 
 // --- メイン処理 ---
 func main() {
-	// プロジェクト設定の読み込み
 	if err := loadProjectConfig(); err != nil {
 		log.Fatalf("Failed to load project config: %v", err)
 	}
 
-	// ルーティング
+
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/process", handleProcess)
 	http.HandleFunc("/create", handleCreate)
 	
-	// Inbox API
+
 	http.HandleFunc("/api/inbox/read", handleReadInbox)
 	http.HandleFunc("/api/inbox/update", handleUpdateInbox)
 	http.HandleFunc("/api/inbox/delete", handleDeleteInbox)
 	
-	// メタデータAPI
+
 	http.HandleFunc("/api/metadata", handleGetMetadata)
 	http.HandleFunc("/api/metadata/add", handleAddMetadata)
 	http.HandleFunc("/api/metadata/sync", handleSyncMetadata)
 
-	// プロジェクトAPI
+
 	http.HandleFunc("/api/projects", handleGetProjects)
 	http.HandleFunc("/api/projects/create", handleCreateProject)
 	http.HandleFunc("/api/projects/switch", handleSwitchProject)
 	http.HandleFunc("/api/projects/delete", handleDeleteProject)
 	http.HandleFunc("/api/agent/set", handleSetDefaultAgent)
+
+
+	http.HandleFunc("/api/literature", handleListLiterature)
+	http.HandleFunc("/api/literature/read", handleReadLiterature)
+	http.HandleFunc("/api/literature/update", handleUpdateLiterature)
+	http.HandleFunc("/api/literature/create", handleCreateLiterature)
+	http.HandleFunc("/api/literature/delete", handleDeleteLiterature)
+
+
+	http.HandleFunc("/api/permanent", handleListPermanent)
+	http.HandleFunc("/api/permanent/read", handleReadPermanent)
+
+
+	http.HandleFunc("/api/structured", handleListStructured)
+	http.HandleFunc("/api/structured/read", handleReadStructured)
 
 	project := getActiveProject()
 	projectName := "Unknown"
@@ -1189,6 +1227,277 @@ func scanFleeting() []Note {
 	return notes
 }
 
+// --- ユーティリティ: Literature Notes走査 ---
+func scanLiterature() []Note {
+	var notes []Note
+	paths := getAllPaths()
+	if paths == nil {
+		return notes
+	}
+
+	entries, _ := os.ReadDir(paths.Literature)
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".md") && !strings.HasPrefix(e.Name(), ".") {
+			notes = append(notes, Note{Path: e.Name(), Filename: e.Name(), IsSecret: false})
+		}
+	}
+	return notes
+}
+
+// --- ユーティリティ: Permanent Notes走査 ---
+func scanPermanent() []Note {
+	var notes []Note
+	paths := getAllPaths()
+	if paths == nil {
+		return notes
+	}
+
+	// Public
+	entries, _ := os.ReadDir(paths.Permanent)
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".md") && !strings.HasPrefix(e.Name(), ".") {
+			notes = append(notes, Note{Path: e.Name(), Filename: e.Name(), IsSecret: false})
+		}
+	}
+
+	// Secret
+	secretEntries, _ := os.ReadDir(paths.PermanentSecret)
+	for _, e := range secretEntries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".md") && !strings.HasPrefix(e.Name(), ".") {
+			notes = append(notes, Note{Path: filepath.Join("Secret", e.Name()), Filename: "🔒 " + e.Name(), IsSecret: true})
+		}
+	}
+	return notes
+}
+
+// --- ユーティリティ: Structured Notes走査 ---
+func scanStructured() []Note {
+	var notes []Note
+	paths := getAllPaths()
+	if paths == nil {
+		return notes
+	}
+
+	entries, _ := os.ReadDir(paths.Structured)
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".md") && !strings.HasPrefix(e.Name(), ".") {
+			notes = append(notes, Note{Path: e.Name(), Filename: e.Name(), IsSecret: false})
+		}
+	}
+	return notes
+}
+
+// --- ハンドラー: Literature Notes API ---
+// GET /api/literature - 一覧取得
+func handleListLiterature(w http.ResponseWriter, r *http.Request) {
+	notes := scanLiterature()
+	if notes == nil {
+		notes = []Note{}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(notes)
+}
+
+// GET /api/literature/read - ファイル読み取り
+func handleReadLiterature(w http.ResponseWriter, r *http.Request) {
+	paths := getAllPaths()
+	if paths == nil {
+		http.Error(w, "No active project", http.StatusBadRequest)
+		return
+	}
+
+	filename := r.URL.Query().Get("path")
+	if filename == "" {
+		http.Error(w, "path required", http.StatusBadRequest)
+		return
+	}
+
+	fullPath := filepath.Join(paths.Literature, filename)
+	content, err := os.ReadFile(fullPath)
+	if err != nil {
+		http.Error(w, "Failed to read file", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"content": string(content)})
+}
+
+// POST /api/literature/update - ファイル更新
+func handleUpdateLiterature(w http.ResponseWriter, r *http.Request) {
+	paths := getAllPaths()
+	if paths == nil {
+		http.Error(w, "No active project", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		Path    string `json:"path"`
+		Content string `json:"content"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	fullPath := filepath.Join(paths.Literature, req.Path)
+	if err := os.WriteFile(fullPath, []byte(req.Content), 0644); err != nil {
+		http.Error(w, "Failed to write file", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+// POST /api/literature/create - 新規作成
+func handleCreateLiterature(w http.ResponseWriter, r *http.Request) {
+	paths := getAllPaths()
+	if paths == nil {
+		http.Error(w, "No active project", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		Filename string `json:"filename"`
+		Content  string `json:"content"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	if req.Filename == "" {
+		http.Error(w, "filename required", http.StatusBadRequest)
+		return
+	}
+
+	// .mdを追加
+	if !strings.HasSuffix(req.Filename, ".md") {
+		req.Filename += ".md"
+	}
+
+	fullPath := filepath.Join(paths.Literature, req.Filename)
+	
+	// 既存ファイルチェック
+	if _, err := os.Stat(fullPath); err == nil {
+		http.Error(w, "File already exists", http.StatusConflict)
+		return
+	}
+
+	if err := os.WriteFile(fullPath, []byte(req.Content), 0644); err != nil {
+		http.Error(w, "Failed to create file", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "filename": req.Filename})
+}
+
+// POST /api/literature/delete - ファイル削除
+func handleDeleteLiterature(w http.ResponseWriter, r *http.Request) {
+	paths := getAllPaths()
+	if paths == nil {
+		http.Error(w, "No active project", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		Path string `json:"path"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	fullPath := filepath.Join(paths.Literature, req.Path)
+	if err := os.Remove(fullPath); err != nil {
+		http.Error(w, "Failed to delete file", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+// --- ハンドラー: Permanent/Structured Notes API (読み取り専用) ---
+// GET /api/permanent - 一覧取得
+func handleListPermanent(w http.ResponseWriter, r *http.Request) {
+	notes := scanPermanent()
+	if notes == nil {
+		notes = []Note{}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(notes)
+}
+
+// GET /api/permanent/read - ファイル読み取り
+func handleReadPermanent(w http.ResponseWriter, r *http.Request) {
+	paths := getAllPaths()
+	if paths == nil {
+		http.Error(w, "No active project", http.StatusBadRequest)
+		return
+	}
+
+	filename := r.URL.Query().Get("path")
+	if filename == "" {
+		http.Error(w, "path required", http.StatusBadRequest)
+		return
+	}
+
+	// Secretの場合
+	var fullPath string
+	if strings.HasPrefix(filename, "Secret/") {
+		fullPath = filepath.Join(paths.PermanentSecret, strings.TrimPrefix(filename, "Secret/"))
+	} else {
+		fullPath = filepath.Join(paths.Permanent, filename)
+	}
+
+	content, err := os.ReadFile(fullPath)
+	if err != nil {
+		http.Error(w, "Failed to read file", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"content": string(content)})
+}
+
+// GET /api/structured - 一覧取得
+func handleListStructured(w http.ResponseWriter, r *http.Request) {
+	notes := scanStructured()
+	if notes == nil {
+		notes = []Note{}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(notes)
+}
+
+// GET /api/structured/read - ファイル読み取り
+func handleReadStructured(w http.ResponseWriter, r *http.Request) {
+	paths := getAllPaths()
+	if paths == nil {
+		http.Error(w, "No active project", http.StatusBadRequest)
+		return
+	}
+
+	filename := r.URL.Query().Get("path")
+	if filename == "" {
+		http.Error(w, "path required", http.StatusBadRequest)
+		return
+	}
+
+	fullPath := filepath.Join(paths.Structured, filename)
+	content, err := os.ReadFile(fullPath)
+	if err != nil {
+		http.Error(w, "Failed to read file", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"content": string(content)})
+}
+
 // --- フロントエンド (HTML/CSS/JS) 埋め込み ---
 const htmlTemplate = `
 <!DOCTYPE html>
@@ -1559,6 +1868,54 @@ const htmlTemplate = `
             margin-top: 32px;
         }
 
+        /* Collapsible Create Section */
+        .create-section {
+            max-width: 800px;
+            margin: 0 auto 40px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--glass-shadow);
+        }
+        
+        .create-header {
+            padding: 20px 24px;
+            background: rgba(255,255,255,0.02);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-main);
+            transition: background 0.2s;
+        }
+        
+        .create-header:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .create-form-container {
+            display: none;
+            padding: 24px;
+            border-top: 1px solid var(--card-border);
+            animation: slideDown 0.3s ease;
+        }
+        
+        .create-form-container.active {
+            display: block;
+        }
+        
+        .create-form-container textarea {
+            min-height: 200px;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* Modals */
         .modal {
             display: none;
@@ -1779,7 +2136,9 @@ const htmlTemplate = `
 
     <div class="tabs">
         <button class="tab-btn active" onclick="showTab('inbox')">📥 Inbox</button>
-        <button class="tab-btn" onclick="showTab('create')">✨ Create Note</button>
+        <button class="tab-btn" onclick="showTab('literature')">📖 Literature</button>
+        <button class="tab-btn" onclick="showTab('permanent')">📌 Permanent</button>
+        <button class="tab-btn" onclick="showTab('structured')">📋 Structured</button>
         <button class="tab-btn" onclick="showTab('settings')">⚙️ Settings</button>
     </div>
     
@@ -1789,8 +2148,38 @@ const htmlTemplate = `
         <button class="agent-btn codex" onclick="selectAgent('codex')"><span>🟢</span> Codex</button>
     </div>
 
-    <!-- Inbox Tab -->
+    <!-- Inbox Tab (with Create Note) -->
     <div id="tab-inbox" class="tab-content active">
+        <!-- Create Note Section -->
+        <div class="create-section">
+            <div class="create-header" onclick="toggleCreateForm()">
+                <span>📝 Create New Fleeting Note</span>
+                <span id="create-toggle-icon">▼</span>
+            </div>
+            <div id="create-form-container" class="create-form-container">
+                <textarea id="note-content" placeholder="# Title
+
+Enter your thought here...
+
+- Supports Markdown
+- AI will auto-tag and categorize"></textarea>
+                
+                <div class="toggle-container">
+                    <div class="toggle">
+                        <input type="checkbox" id="is-secret">
+                        <span class="slider"></span>
+                    </div>
+                    <span class="toggle-label">🔒 Save as Private (Secret)</span>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn-edit" onclick="clearForm()">🗑 Clear</button>
+                    <button class="btn-public" onclick="createNote()" id="create-btn" style="padding: 12px 40px;">✨ Create Note</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Inbox Notes Grid -->
         <div class="grid">
             {{range .}}
             <div class="card {{if .IsSecret}}secret-warning{{end}}" id="card-{{.Path}}">
@@ -1807,7 +2196,7 @@ const htmlTemplate = `
                 <h3>Your Inbox is Empty</h3>
                 <p>Great job! All fleeting notes have been processed.</p>
                 <div style="margin-top: 16px;">
-                    <button class="btn-public" onclick="showTab('create')" style="display:inline-flex;">Create New Note</button>
+                    <button class="btn-public" onclick="toggleCreateForm()" style="display:inline-flex;">Create New Note</button>
                 </div>
             </div>
             {{end}}
@@ -1820,30 +2209,74 @@ const htmlTemplate = `
         </div>
     </div>
 
-    <!-- Create Tab -->
-    <div id="tab-create" class="tab-content">
-        <div class="create-form">
-            <h2>📝 Capture Fleeting Note</h2>
-            
-            <textarea id="note-content" placeholder="# Title
-            
-Enter your thought here...
+    <!-- Literature Tab -->
+    <div id="tab-literature" class="tab-content">
+        <!-- Create Literature Note Section -->
+        <div class="create-section">
+            <div class="create-header" onclick="toggleLiteratureForm()">
+                <span>📖 Create New Literature Note</span>
+                <span id="literature-toggle-icon">▼</span>
+            </div>
+            <div id="literature-form-container" class="create-form-container">
+                <input type="text" id="literature-filename" placeholder="Filename (without .md)" style="width: 100%; margin-bottom: 16px; padding: 12px 16px; background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; color: var(--text-main); font-size: 1rem;">
+                <textarea id="literature-content" placeholder="# Document Title
 
-- Supports Markdown
-- AI will auto-tag and categorize"></textarea>
-            
-            <div class="toggle-container">
-                <div class="toggle">
-                    <input type="checkbox" id="is-secret">
-                    <span class="slider"></span>
+## Summary
+
+## Key Points
+
+## Notes"></textarea>
+                
+                <div class="form-actions">
+                    <button class="btn-edit" onclick="clearLiteratureForm()">🗑 Clear</button>
+                    <button class="btn-public" onclick="createLiteratureNote()" id="create-lit-btn" style="padding: 12px 40px;">📖 Create</button>
                 </div>
-                <span class="toggle-label">🔒 Save as Private (Secret)</span>
             </div>
+        </div>
+        
+        <div id="literature-grid" class="grid">
+            <div class="empty-state">
+                <div class="icon">📚</div>
+                <h3>Loading...</h3>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 60px; padding-bottom: 40px;">
+             <button class="btn-edit" onclick="loadLiteratureNotes()" style="background:transparent; border:1px solid var(--card-border); padding: 12px 32px;">
+                🔄 Refresh Literature
+             </button>
+        </div>
+    </div>
 
-            <div class="form-actions">
-                <button class="btn-edit" onclick="clearForm()">🗑 Clear</button>
-                <button class="btn-public" onclick="createNote()" id="create-btn" style="padding: 12px 40px;">✨ Create Note</button>
+    <!-- Permanent Tab (Read-only) -->
+    <div id="tab-permanent" class="tab-content">
+        <div id="permanent-grid" class="grid">
+            <div class="empty-state">
+                <div class="icon">📌</div>
+                <h3>Loading...</h3>
             </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 60px; padding-bottom: 40px;">
+             <button class="btn-edit" onclick="loadPermanentNotes()" style="background:transparent; border:1px solid var(--card-border); padding: 12px 32px;">
+                🔄 Refresh Permanent
+             </button>
+        </div>
+    </div>
+
+    <!-- Structured Tab (Read-only) -->
+    <div id="tab-structured" class="tab-content">
+        <div id="structured-grid" class="grid">
+            <div class="empty-state">
+                <div class="icon">📋</div>
+                <h3>Loading...</h3>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 60px; padding-bottom: 40px;">
+             <button class="btn-edit" onclick="loadStructuredNotes()" style="background:transparent; border:1px solid var(--card-border); padding: 12px 32px;">
+                🔄 Refresh Structured
+             </button>
         </div>
     </div>
 
@@ -1893,21 +2326,78 @@ Enter your thought here...
         </div>
     </div>
 
-    <!-- Edit Modal -->
-    <div id="editor-modal" class="modal">
+    <!-- Inbox Edit Modal -->
+    <div id="inbox-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="editor-title">Edit Note</h2>
-                <button class="modal-close" onclick="closeEditor()">&times;</button>
+            <div class="modal-header" style="border-bottom-color: var(--accent-primary);">
+                <h2 id="inbox-modal-title">📥 Edit Fleeting Note</h2>
+                <button class="modal-close" onclick="closeInboxModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <textarea id="editor-content"></textarea>
+                <textarea id="inbox-modal-content"></textarea>
             </div>
             <div class="modal-footer">
-                <button class="btn-edit" onclick="deleteCurrentNote()" style="color: var(--accent-danger); border-color: var(--accent-danger); margin-right: auto;">🗑 Delete</button>
-                <button class="btn-edit" onclick="saveEditorContent()">💾 Save Draft</button>
-                <button class="btn-public" onclick="saveAndProcess('public')">🌐 Process Public</button>
-                <button class="btn-private" onclick="saveAndProcess('private')">🔒 Process Secret</button>
+                <button class="btn-edit" onclick="deleteInboxNote()" style="color: var(--accent-danger); border-color: var(--accent-danger); margin-right: auto;">🗑 Delete</button>
+                <button class="btn-edit" onclick="saveInboxNote()">💾 Save Draft</button>
+                <button class="btn-public" onclick="saveAndProcessInbox('public')">🌐 Process Public</button>
+                <button class="btn-private" onclick="saveAndProcessInbox('private')">🔒 Process Secret</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Literature Edit Modal -->
+    <div id="literature-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" style="border-bottom-color: #60a5fa;">
+                <h2 id="literature-modal-title">📖 Edit Literature Note</h2>
+                <button class="modal-close" onclick="closeLiteratureModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="literature-modal-content"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-edit" onclick="deleteLiteratureFromModal()" style="color: var(--accent-danger); border-color: var(--accent-danger); margin-right: auto;">🗑 Delete</button>
+                <button class="btn-public" onclick="saveLiteratureNote()" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">💾 Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permanent View Modal (Read-only) -->
+    <div id="permanent-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" style="border-bottom-color: var(--accent-warning);">
+                <h2 id="permanent-modal-title">📌 Permanent Note</h2>
+                <button class="modal-close" onclick="closePermanentModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="readonly-notice" style="background: rgba(255,179,71,0.1); border: 1px solid rgba(255,179,71,0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; color: var(--accent-warning); font-size: 0.9rem;">
+                    🔒 This is a processed permanent note. View only.
+                </div>
+                <textarea id="permanent-modal-content" readonly style="background: rgba(0,0,0,0.2); opacity: 0.9;"></textarea>
+            </div>
+            <div class="modal-footer">
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Permanent notes are read-only</span>
+                <button class="btn-edit" onclick="closePermanentModal()">✓ Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Structured View Modal (Read-only) -->
+    <div id="structured-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" style="border-bottom-color: #a78bfa;">
+                <h2 id="structured-modal-title">📋 Structured Note</h2>
+                <button class="modal-close" onclick="closeStructuredModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="readonly-notice" style="background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; color: #a78bfa; font-size: 0.9rem;">
+                    📋 This is a structured reference note. View only.
+                </div>
+                <textarea id="structured-modal-content" readonly style="background: rgba(0,0,0,0.2); opacity: 0.9;"></textarea>
+            </div>
+            <div class="modal-footer">
+                <span style="color: var(--text-muted); font-size: 0.85rem;">Structured notes are read-only</span>
+                <button class="btn-edit" onclick="closeStructuredModal()">✓ Close</button>
             </div>
         </div>
     </div>
@@ -1916,19 +2406,26 @@ Enter your thought here...
         // State
         let currentAgent = 'claude';
         let currentEditPath = '';
+        let currentEditType = 'inbox'; // 'inbox', 'literature', 'view'
 
         // UI Helpers
         function showTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            // Find button that calls this function with this arg - workaround
+            // Update active tab button
             const btns = document.querySelectorAll('.tab-btn');
-            if(tabName === 'inbox') btns[0].classList.add('active');
-            if(tabName === 'create') btns[1].classList.add('active');
-            if(tabName === 'settings') btns[2].classList.add('active');
+            const tabIndex = { 'inbox': 0, 'literature': 1, 'permanent': 2, 'structured': 3, 'settings': 4 };
+            if (tabIndex[tabName] !== undefined) {
+                btns[tabIndex[tabName]].classList.add('active');
+            }
 
             document.getElementById('tab-' + tabName).classList.add('active');
+            
+            // Load data when switching tabs
+            if (tabName === 'literature') loadLiteratureNotes();
+            if (tabName === 'permanent') loadPermanentNotes();
+            if (tabName === 'structured') loadStructuredNotes();
         }
 
         function selectAgent(agent) {
@@ -1949,22 +2446,20 @@ Enter your thought here...
             document.getElementById('is-secret').checked = false;
         }
 
-        // --- Editor Logic ---
+        // --- Inbox Modal Logic ---
+        let currentInboxPath = '';
+
         async function openEditor(path) {
             try {
-                // Ensure UI feedback
                 document.body.style.cursor = 'wait';
                 const res = await fetch('/api/inbox/read?path=' + encodeURIComponent(path));
                 if (!res.ok) throw new Error('Failed to load file');
                 
                 const data = await res.json();
-                currentEditPath = path;
-                document.getElementById('editor-title').innerText = path;
-                document.getElementById('editor-content').value = data.content;
-                
-                const modal = document.getElementById('editor-modal');
-                modal.classList.add('active');
-                
+                currentInboxPath = path;
+                document.getElementById('inbox-modal-title').innerText = '📥 ' + path;
+                document.getElementById('inbox-modal-content').value = data.content;
+                document.getElementById('inbox-modal').classList.add('active');
             } catch (e) {
                 alert('Error: ' + e.message);
             } finally {
@@ -1972,22 +2467,21 @@ Enter your thought here...
             }
         }
 
-        function closeEditor() {
-            document.getElementById('editor-modal').classList.remove('active');
-            currentEditPath = '';
+        function closeInboxModal() {
+            document.getElementById('inbox-modal').classList.remove('active');
+            currentInboxPath = '';
         }
 
-        async function saveEditorContent() {
-            const content = document.getElementById('editor-content').value;
+        async function saveInboxNote() {
+            const content = document.getElementById('inbox-modal-content').value;
             try {
                 const res = await fetch('/api/inbox/update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ path: currentEditPath, content: content })
+                    body: JSON.stringify({ path: currentInboxPath, content: content })
                 });
                 
-                // Show toast or subtle feedback instead of alert? Keeping simple for now.
-                const btn = document.querySelector('#editor-modal .btn-edit:nth-child(2)');
+                const btn = document.querySelector('#inbox-modal .btn-edit:nth-child(2)');
                 const originalText = btn.innerText;
                 if (res.ok) {
                     btn.innerText = '✅ Saved';
@@ -2000,24 +2494,24 @@ Enter your thought here...
             }
         }
 
-        async function saveAndProcess(target) {
-            const pathToProcess = currentEditPath; // パスを保存
-            await saveEditorContent();
-            closeEditor();
-            await runAgent(pathToProcess, target); // 保存したパスを使用
+        async function saveAndProcessInbox(target) {
+            const pathToProcess = currentInboxPath;
+            await saveInboxNote();
+            closeInboxModal();
+            await runAgent(pathToProcess, target);
         }
 
-        async function deleteCurrentNote() {
+        async function deleteInboxNote() {
             if (!confirm('Are you sure you want to PERMANENTLY delete this note?')) return;
             try {
                 const res = await fetch('/api/inbox/delete', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ path: currentEditPath })
+                    body: JSON.stringify({ path: currentInboxPath })
                 });
                 if (res.ok) {
-                    closeEditor();
-                    const card = document.getElementById('card-' + currentEditPath);
+                    closeInboxModal();
+                    const card = document.getElementById('card-' + currentInboxPath);
                     if (card) {
                         card.style.transform = 'scale(0.9) opacity(0)';
                         setTimeout(() => card.remove(), 300);
@@ -2305,6 +2799,280 @@ Enter your thought here...
             } catch (e) {
                 alert('Network error');
             }
+        }
+
+        // --- Create Form Toggle ---
+        function toggleCreateForm() {
+            const container = document.getElementById('create-form-container');
+            const icon = document.getElementById('create-toggle-icon');
+            container.classList.toggle('active');
+            icon.innerText = container.classList.contains('active') ? '▲' : '▼';
+        }
+        
+        function toggleLiteratureForm() {
+            const container = document.getElementById('literature-form-container');
+            const icon = document.getElementById('literature-toggle-icon');
+            container.classList.toggle('active');
+            icon.innerText = container.classList.contains('active') ? '▲' : '▼';
+        }
+
+        // --- Literature Notes Functions ---
+        let currentLiteraturePath = '';
+        
+        async function loadLiteratureNotes() {
+            const container = document.getElementById('literature-grid');
+            container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><h3>Loading...</h3></div>';
+            
+            try {
+                const res = await fetch('/api/literature');
+                const notes = await res.json();
+                
+                if (notes.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="icon">📚</div><h3>No Literature Notes</h3><p>Create your first literature note above.</p></div>';
+                    return;
+                }
+                
+                container.innerHTML = notes.map(note => 
+                    '<div class="card" id="lit-card-' + note.Path + '">' +
+                        '<div class="filename" onclick="openLiteratureEditor(\'' + note.Path + '\')">' + note.Filename + '</div>' +
+                        '<div class="actions">' +
+                            '<button class="btn-edit" onclick="openLiteratureEditor(\'' + note.Path + '\')">✏️ Edit</button>' +
+                            '<button class="btn-private" onclick="deleteLiteratureNote(\'' + note.Path + '\')">🗑️</button>' +
+                        '</div>' +
+                    '</div>'
+                ).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><h3>Failed to load</h3></div>';
+            }
+        }
+        
+        function clearLiteratureForm() {
+            document.getElementById('literature-filename').value = '';
+            document.getElementById('literature-content').value = '';
+        }
+        
+        async function createLiteratureNote() {
+            const filename = document.getElementById('literature-filename').value.trim();
+            const content = document.getElementById('literature-content').value;
+            const btn = document.getElementById('create-lit-btn');
+            
+            if (!filename) {
+                alert('Please enter a filename');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Creating...';
+            
+            try {
+                const res = await fetch('/api/literature/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename, content })
+                });
+                
+                if (res.ok) {
+                    btn.innerHTML = '✅ Created!';
+                    clearLiteratureForm();
+                    toggleLiteratureForm();
+                    setTimeout(() => {
+                        btn.innerHTML = '📖 Create';
+                        btn.disabled = false;
+                        loadLiteratureNotes();
+                    }, 1000);
+                } else {
+                    const text = await res.text();
+                    alert('Error: ' + text);
+                    btn.disabled = false;
+                    btn.innerHTML = '📖 Create';
+                }
+            } catch (e) {
+                alert('Network error');
+                btn.disabled = false;
+                btn.innerHTML = '📖 Create';
+            }
+        }
+        
+        async function openLiteratureEditor(path) {
+            try {
+                document.body.style.cursor = 'wait';
+                const res = await fetch('/api/literature/read?path=' + encodeURIComponent(path));
+                if (!res.ok) throw new Error('Failed to load file');
+                
+                const data = await res.json();
+                currentLiteraturePath = path;
+                document.getElementById('literature-modal-title').innerText = '📖 ' + path;
+                document.getElementById('literature-modal-content').value = data.content;
+                document.getElementById('literature-modal').classList.add('active');
+            } catch (e) {
+                alert('Error: ' + e.message);
+            } finally {
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        function closeLiteratureModal() {
+            document.getElementById('literature-modal').classList.remove('active');
+            currentLiteraturePath = '';
+        }
+
+        async function saveLiteratureNote() {
+            const content = document.getElementById('literature-modal-content').value;
+            try {
+                const res = await fetch('/api/literature/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: currentLiteraturePath, content: content })
+                });
+                
+                const btn = document.querySelector('#literature-modal .btn-public');
+                const originalText = btn.innerText;
+                if (res.ok) {
+                    btn.innerText = '✅ Saved';
+                    setTimeout(() => btn.innerText = originalText, 1500);
+                } else {
+                    alert('Failed to save');
+                }
+            } catch (e) {
+                alert('Network error');
+            }
+        }
+
+        async function deleteLiteratureFromModal() {
+            if (!confirm('Delete "' + currentLiteraturePath + '"?')) return;
+            
+            try {
+                const res = await fetch('/api/literature/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: currentLiteraturePath })
+                });
+                
+                if (res.ok) {
+                    closeLiteratureModal();
+                    loadLiteratureNotes();
+                } else {
+                    alert('Failed to delete');
+                }
+            } catch (e) {
+                alert('Network error');
+            }
+        }
+        
+        async function deleteLiteratureNote(path) {
+            if (!confirm('Delete "' + path + '"?')) return;
+            
+            try {
+                const res = await fetch('/api/literature/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path })
+                });
+                
+                if (res.ok) {
+                    loadLiteratureNotes();
+                } else {
+                    alert('Failed to delete');
+                }
+            } catch (e) {
+                alert('Network error');
+            }
+        }
+
+        // --- Permanent Notes Functions (Read-only) ---
+        async function loadPermanentNotes() {
+            const container = document.getElementById('permanent-grid');
+            container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><h3>Loading...</h3></div>';
+            
+            try {
+                const res = await fetch('/api/permanent');
+                const notes = await res.json();
+                
+                if (notes.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="icon">📌</div><h3>No Permanent Notes</h3><p>Process Inbox notes to create permanent notes.</p></div>';
+                    return;
+                }
+                
+                container.innerHTML = notes.map(note => 
+                    '<div class="card ' + (note.IsSecret ? 'secret-warning' : '') + '">' +
+                        '<div class="filename" onclick="viewPermanentNote(\'' + note.Path + '\')">' + note.Filename + '</div>' +
+                        '<div class="actions">' +
+                            '<button class="btn-edit" onclick="viewPermanentNote(\'' + note.Path + '\')">👁️ View</button>' +
+                        '</div>' +
+                    '</div>'
+                ).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><h3>Failed to load</h3></div>';
+            }
+        }
+        
+        async function viewPermanentNote(path) {
+            try {
+                document.body.style.cursor = 'wait';
+                const res = await fetch('/api/permanent/read?path=' + encodeURIComponent(path));
+                if (!res.ok) throw new Error('Failed to load file');
+                
+                const data = await res.json();
+                document.getElementById('permanent-modal-title').innerText = '📌 ' + path;
+                document.getElementById('permanent-modal-content').value = data.content;
+                document.getElementById('permanent-modal').classList.add('active');
+            } catch (e) {
+                alert('Error: ' + e.message);
+            } finally {
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        function closePermanentModal() {
+            document.getElementById('permanent-modal').classList.remove('active');
+        }
+
+        // --- Structured Notes Functions (Read-only) ---
+        async function loadStructuredNotes() {
+            const container = document.getElementById('structured-grid');
+            container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><h3>Loading...</h3></div>';
+            
+            try {
+                const res = await fetch('/api/structured');
+                const notes = await res.json();
+                
+                if (notes.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="icon">📋</div><h3>No Structured Notes</h3></div>';
+                    return;
+                }
+                
+                container.innerHTML = notes.map(note => 
+                    '<div class="card">' +
+                        '<div class="filename" onclick="viewStructuredNote(\'' + note.Path + '\')">' + note.Filename + '</div>' +
+                        '<div class="actions">' +
+                            '<button class="btn-edit" onclick="viewStructuredNote(\'' + note.Path + '\')">👁️ View</button>' +
+                        '</div>' +
+                    '</div>'
+                ).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><h3>Failed to load</h3></div>';
+            }
+        }
+        
+        async function viewStructuredNote(path) {
+            try {
+                document.body.style.cursor = 'wait';
+                const res = await fetch('/api/structured/read?path=' + encodeURIComponent(path));
+                if (!res.ok) throw new Error('Failed to load file');
+                
+                const data = await res.json();
+                document.getElementById('structured-modal-title').innerText = '📋 ' + path;
+                document.getElementById('structured-modal-content').value = data.content;
+                document.getElementById('structured-modal').classList.add('active');
+            } catch (e) {
+                alert('Error: ' + e.message);
+            } finally {
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        function closeStructuredModal() {
+            document.getElementById('structured-modal').classList.remove('active');
         }
 
         // Init
