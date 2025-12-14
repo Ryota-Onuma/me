@@ -35,7 +35,13 @@ func setupTestProject(t *testing.T) (string, func()) {
 		}
 	}
 	
+	// Redirect projectConfigFilePath to temp file
+	tmpConfigFile := filepath.Join(tmpDir, "projects.json")
+	origConfigPath := projectConfigFilePath
+	projectConfigFilePath = tmpConfigFile
+	
 	cleanup := func() {
+		projectConfigFilePath = origConfigPath
 		os.RemoveAll(tmpDir)
 	}
 	
@@ -44,40 +50,51 @@ func setupTestProject(t *testing.T) (string, func()) {
 
 
 func TestLoadProjectConfig_CreatesDefault(t *testing.T) {
-	// Save original config file path and restore after test
-	origFile := ProjectConfigFile
-	tmpFile := filepath.Join(os.TempDir(), "test_projects.json")
+	// Create a temp directory for this test
+	tmpDir, err := os.MkdirTemp("", "gardener_config_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Save original config file path and redirect to temp
+	origConfigPath := projectConfigFilePath
+	tmpConfigFile := filepath.Join(tmpDir, "projects.json")
+	projectConfigFilePath = tmpConfigFile
 	defer func() {
-		os.Remove(tmpFile)
+		projectConfigFilePath = origConfigPath
 	}()
-	
-	// Temporarily override the config file path (we can't easily do this with const)
-	// Instead, test the logic by checking that default project is created
-	
-	// Ensure the file doesn't exist
-	os.Remove(tmpFile)
-	
-	// Since ProjectConfigFile is const, we test the init behavior indirectly
-	// by checking the projectConfig after loadProjectConfig is called
 	
 	// Reset projectConfig
 	projectConfig = nil
 	
-	// For this test, we'll verify the default project structure format
-	defaultProject := Project{
-		ID:       "default",
-		Name:     "Default",
-		RootPath: "/test/path",
+	// Call loadProjectConfig - it should create a default config
+	err = loadProjectConfig()
+	if err != nil {
+		t.Fatalf("loadProjectConfig failed: %v", err)
 	}
 	
-	if defaultProject.ID != "default" {
-		t.Errorf("Expected default ID 'default', got %s", defaultProject.ID)
+	// Verify default project was created
+	if projectConfig == nil {
+		t.Fatal("Expected projectConfig to be created")
 	}
-	if defaultProject.Name != "Default" {
-		t.Errorf("Expected default Name 'Default', got %s", defaultProject.Name)
+	if len(projectConfig.Projects) != 1 {
+		t.Errorf("Expected 1 project, got %d", len(projectConfig.Projects))
+	}
+	if projectConfig.Projects[0].ID != "default" {
+		t.Errorf("Expected default ID 'default', got %s", projectConfig.Projects[0].ID)
+	}
+	if projectConfig.Projects[0].Name != "Default" {
+		t.Errorf("Expected default Name 'Default', got %s", projectConfig.Projects[0].Name)
+	}
+	if projectConfig.ActiveProject != "default" {
+		t.Errorf("Expected active project 'default', got %s", projectConfig.ActiveProject)
 	}
 	
-	_ = origFile
+	// Verify config file was created
+	if _, err := os.Stat(tmpConfigFile); os.IsNotExist(err) {
+		t.Error("Expected config file to be created")
+	}
 }
 
 

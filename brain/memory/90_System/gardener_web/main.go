@@ -16,9 +16,11 @@ import (
 
 // --- 設定 ---
 const (
-	Port              = "56789"
-	ProjectConfigFile = "projects.json"
+	Port = "56789"
 )
+
+// projectConfigFilePath is the path to the project config file (can be overridden in tests)
+var projectConfigFilePath = "projects.json"
 
 // --- プロジェクト設定 ---
 type Project struct {
@@ -37,7 +39,7 @@ var projectConfig *ProjectConfig
 
 
 func loadProjectConfig() error {
-	data, err := os.ReadFile(ProjectConfigFile)
+	data, err := os.ReadFile(projectConfigFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// 初回起動: デフォルトプロジェクトを作成
@@ -71,7 +73,7 @@ func saveProjectConfig() error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(ProjectConfigFile, data, 0644)
+	return os.WriteFile(projectConfigFilePath, data, 0644)
 }
 
 
@@ -167,6 +169,7 @@ var runAgentCommand = func(agent AgentConfig, prompt string, workDir string) ([]
 type Note struct {
 	Path     string // 相対パス (例: Secret/memo.md)
 	Filename string // 表示名
+	Title    string // ノートのタイトル（Frontmatterから抽出）
 	IsSecret bool   // Secretフォルダにあるか
 }
 
@@ -1252,11 +1255,26 @@ func scanPermanent() []Note {
 		return notes
 	}
 
+	// メタデータを読み込んでタイトル取得用マップを作成
+	meta, _ := loadMetadata()
+	titleMap := make(map[string]string)
+	if meta != nil {
+		for _, n := range meta.Notes {
+			titleMap[n.Filename] = n.Title
+		}
+	}
+
 	// Public
 	entries, _ := os.ReadDir(paths.Permanent)
 	for _, e := range entries {
 		if !e.IsDir() && strings.HasSuffix(e.Name(), ".md") && !strings.HasPrefix(e.Name(), ".") {
-			notes = append(notes, Note{Path: e.Name(), Filename: e.Name(), IsSecret: false})
+			filenameWithoutExt := strings.TrimSuffix(e.Name(), ".md")
+			title := titleMap[filenameWithoutExt]
+			// メタデータにない場合はFrontmatterから抽出を試みる
+			if title == "" {
+				title = extractTitleFromFile(filepath.Join(paths.Permanent, e.Name()))
+			}
+			notes = append(notes, Note{Path: e.Name(), Filename: e.Name(), Title: title, IsSecret: false})
 		}
 	}
 
@@ -1264,10 +1282,39 @@ func scanPermanent() []Note {
 	secretEntries, _ := os.ReadDir(paths.PermanentSecret)
 	for _, e := range secretEntries {
 		if !e.IsDir() && strings.HasSuffix(e.Name(), ".md") && !strings.HasPrefix(e.Name(), ".") {
-			notes = append(notes, Note{Path: filepath.Join("Secret", e.Name()), Filename: "🔒 " + e.Name(), IsSecret: true})
+			filenameWithoutExt := strings.TrimSuffix(e.Name(), ".md")
+			title := titleMap[filenameWithoutExt]
+			// メタデータにない場合はFrontmatterから抽出を試みる
+			if title == "" {
+				title = extractTitleFromFile(filepath.Join(paths.PermanentSecret, e.Name()))
+			}
+			notes = append(notes, Note{Path: filepath.Join("Secret", e.Name()), Filename: "🔒 " + e.Name(), Title: title, IsSecret: true})
 		}
 	}
 	return notes
+}
+
+// extractTitleFromFile はFrontmatterからタイトルを抽出する
+func extractTitleFromFile(filePath string) string {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return ""
+	}
+	contentStr := string(content)
+	if !strings.HasPrefix(contentStr, "---") {
+		return ""
+	}
+	parts := strings.SplitN(contentStr, "---", 3)
+	if len(parts) < 2 {
+		return ""
+	}
+	frontmatter := parts[1]
+	titlePattern := regexp.MustCompile(`(?m)^title:\s*(.+)$`)
+	match := titlePattern.FindStringSubmatch(frontmatter)
+	if len(match) > 1 {
+		return strings.TrimSpace(match[1])
+	}
+	return ""
 }
 
 // --- ユーティリティ: Structured Notes走査 ---
@@ -2993,14 +3040,16 @@ Enter your thought here...
                     return;
                 }
                 
-                container.innerHTML = notes.map(note => 
-                    '<div class="card ' + (note.IsSecret ? 'secret-warning' : '') + '">' +
-                        '<div class="filename" onclick="viewPermanentNote(\'' + note.Path + '\')">' + note.Filename + '</div>' +
+                container.innerHTML = notes.map(note => {
+                    const displayTitle = note.Title ? note.Title : note.Filename;
+                    return '<div class="card ' + (note.IsSecret ? 'secret-warning' : '') + '">' +
+                        '<div class="filename" onclick="viewPermanentNote(\'' + note.Path + '\')" style="font-weight: 600; margin-bottom: 4px;">' + displayTitle + '</div>' +
+                        (note.Title ? '<div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">' + note.Filename + '</div>' : '') +
                         '<div class="actions">' +
                             '<button class="btn-edit" onclick="viewPermanentNote(\'' + note.Path + '\')">👁️ View</button>' +
                         '</div>' +
-                    '</div>'
-                ).join('');
+                    '</div>';
+                }).join('');
             } catch (e) {
                 container.innerHTML = '<div class="empty-state"><div class="icon">❌</div><h3>Failed to load</h3></div>';
             }
