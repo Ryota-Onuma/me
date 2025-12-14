@@ -21,7 +21,6 @@ func setupTestProject(t *testing.T) (string, func()) {
 	
 	// Create standard directory structure
 	dirs := []string{
-		"00-Literature-Notes",
 		"01-Fleeting-Notes",
 		"01-Fleeting-Notes/Secret",
 		"02-Permanent-Notes",
@@ -384,7 +383,6 @@ func TestHandleCreateProject_CreatesDirectories(t *testing.T) {
 
 	// Check that directories were created
 	expectedDirs := []string{
-		"00-Literature-Notes",
 		"01-Fleeting-Notes",
 		"02-Permanent-Notes",
 		"03-Structured-Notes",
@@ -1339,9 +1337,6 @@ func TestGetAllPaths(t *testing.T) {
 	if paths == nil {
 		t.Fatal("Expected PathConfig, got nil")
 	}
-	if paths.Literature != "/test/root/00-Literature-Notes" {
-		t.Errorf("Literature path: expected /test/root/00-Literature-Notes, got %s", paths.Literature)
-	}
 	if paths.Fleeting != "/test/root/01-Fleeting-Notes" {
 		t.Errorf("Fleeting path: expected /test/root/01-Fleeting-Notes, got %s", paths.Fleeting)
 	}
@@ -1360,48 +1355,6 @@ func TestGetAllPaths_NilConfig(t *testing.T) {
 	paths := getAllPaths()
 	if paths != nil {
 		t.Errorf("Expected nil with nil config, got %+v", paths)
-	}
-}
-
-// Test scanLiterature
-func TestScanLiterature(t *testing.T) {
-	tmpDir, cleanup := setupTestProject(t)
-	defer cleanup()
-
-	projectConfig = &ProjectConfig{
-		Projects: []Project{
-			{ID: "test", Name: "Test", RootPath: tmpDir},
-		},
-		ActiveProject: "test",
-	}
-
-	// Create test files
-	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "book1.md"), []byte("Book 1"), 0644)
-	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "book2.md"), []byte("Book 2"), 0644)
-	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", ".hidden.md"), []byte("Hidden"), 0644) // Should be ignored
-
-	notes := scanLiterature()
-
-	if len(notes) != 2 {
-		t.Errorf("Expected 2 notes, got %d", len(notes))
-	}
-}
-
-// Test scanLiterature empty dir
-func TestScanLiterature_Empty(t *testing.T) {
-	tmpDir, cleanup := setupTestProject(t)
-	defer cleanup()
-
-	projectConfig = &ProjectConfig{
-		Projects: []Project{
-			{ID: "test", Name: "Test", RootPath: tmpDir},
-		},
-		ActiveProject: "test",
-	}
-
-	notes := scanLiterature()
-	if len(notes) != 0 {
-		t.Errorf("Expected 0 notes, got %d", len(notes))
 	}
 }
 
@@ -1458,238 +1411,6 @@ func TestScanStructured(t *testing.T) {
 
 	if len(notes) != 1 {
 		t.Errorf("Expected 1 note, got %d", len(notes))
-	}
-}
-
-// Test handleListLiterature API
-func TestHandleListLiterature(t *testing.T) {
-	tmpDir, cleanup := setupTestProject(t)
-	defer cleanup()
-
-	projectConfig = &ProjectConfig{
-		Projects: []Project{
-			{ID: "test", Name: "Test", RootPath: tmpDir},
-		},
-		ActiveProject: "test",
-	}
-
-	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "book.md"), []byte("Book"), 0644)
-
-	req := httptest.NewRequest(http.MethodGet, "/api/literature", nil)
-	w := httptest.NewRecorder()
-
-	handleListLiterature(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Errorf("Expected status 200, got %d", w.Code)
-	}
-
-	var notes []Note
-	json.NewDecoder(w.Body).Decode(&notes)
-	if len(notes) != 1 {
-		t.Errorf("Expected 1 note, got %d", len(notes))
-	}
-}
-
-// Test handleReadLiterature API
-func TestHandleReadLiterature(t *testing.T) {
-	tmpDir, cleanup := setupTestProject(t)
-	defer cleanup()
-
-	projectConfig = &ProjectConfig{
-		Projects: []Project{
-			{ID: "test", Name: "Test", RootPath: tmpDir},
-		},
-		ActiveProject: "test",
-	}
-
-	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "book.md"), []byte("Book content"), 0644)
-
-	req := httptest.NewRequest(http.MethodGet, "/api/literature/read?path=book.md", nil)
-	w := httptest.NewRecorder()
-
-	handleReadLiterature(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Errorf("Expected status 200, got %d", w.Code)
-	}
-
-	var result map[string]string
-	json.NewDecoder(w.Body).Decode(&result)
-	if result["content"] != "Book content" {
-		t.Errorf("Expected 'Book content', got %s", result["content"])
-	}
-}
-
-// Test handleReadLiterature missing path
-func TestHandleReadLiterature_MissingPath(t *testing.T) {
-	tmpDir, cleanup := setupTestProject(t)
-	defer cleanup()
-
-	projectConfig = &ProjectConfig{
-		Projects: []Project{
-			{ID: "test", Name: "Test", RootPath: tmpDir},
-		},
-		ActiveProject: "test",
-	}
-
-	req := httptest.NewRequest(http.MethodGet, "/api/literature/read", nil)
-	w := httptest.NewRecorder()
-
-	handleReadLiterature(w, req)
-
-	if w.Code != http.StatusBadRequest {
-		t.Errorf("Expected status 400, got %d", w.Code)
-	}
-}
-
-// Test handleCreateLiterature API
-func TestHandleCreateLiterature(t *testing.T) {
-	tmpDir, cleanup := setupTestProject(t)
-	defer cleanup()
-
-	projectConfig = &ProjectConfig{
-		Projects: []Project{
-			{ID: "test", Name: "Test", RootPath: tmpDir},
-		},
-		ActiveProject: "test",
-	}
-
-	body := strings.NewReader(`{"filename": "newbook", "content": "New book content"}`)
-	req := httptest.NewRequest(http.MethodPost, "/api/literature/create", body)
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-
-	handleCreateLiterature(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Errorf("Expected status 200, got %d: %s", w.Code, w.Body.String())
-	}
-
-	// Verify file was created
-	content, err := os.ReadFile(filepath.Join(tmpDir, "00-Literature-Notes", "newbook.md"))
-	if err != nil {
-		t.Fatalf("Failed to read created file: %v", err)
-	}
-	if string(content) != "New book content" {
-		t.Errorf("Expected 'New book content', got %s", string(content))
-	}
-}
-
-// Test handleCreateLiterature - empty filename
-func TestHandleCreateLiterature_EmptyFilename(t *testing.T) {
-	tmpDir, cleanup := setupTestProject(t)
-	defer cleanup()
-
-	projectConfig = &ProjectConfig{
-		Projects: []Project{
-			{ID: "test", Name: "Test", RootPath: tmpDir},
-		},
-		ActiveProject: "test",
-	}
-
-	body := strings.NewReader(`{"filename": "", "content": "content"}`)
-	req := httptest.NewRequest(http.MethodPost, "/api/literature/create", body)
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-
-	handleCreateLiterature(w, req)
-
-	if w.Code != http.StatusBadRequest {
-		t.Errorf("Expected status 400, got %d", w.Code)
-	}
-}
-
-// Test handleCreateLiterature - duplicate file
-func TestHandleCreateLiterature_Duplicate(t *testing.T) {
-	tmpDir, cleanup := setupTestProject(t)
-	defer cleanup()
-
-	projectConfig = &ProjectConfig{
-		Projects: []Project{
-			{ID: "test", Name: "Test", RootPath: tmpDir},
-		},
-		ActiveProject: "test",
-	}
-
-	// Create existing file
-	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "existing.md"), []byte("Existing"), 0644)
-
-	body := strings.NewReader(`{"filename": "existing", "content": "New content"}`)
-	req := httptest.NewRequest(http.MethodPost, "/api/literature/create", body)
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-
-	handleCreateLiterature(w, req)
-
-	if w.Code != http.StatusConflict {
-		t.Errorf("Expected status 409, got %d", w.Code)
-	}
-}
-
-// Test handleUpdateLiterature API
-func TestHandleUpdateLiterature(t *testing.T) {
-	tmpDir, cleanup := setupTestProject(t)
-	defer cleanup()
-
-	projectConfig = &ProjectConfig{
-		Projects: []Project{
-			{ID: "test", Name: "Test", RootPath: tmpDir},
-		},
-		ActiveProject: "test",
-	}
-
-	// Create initial file
-	os.WriteFile(filepath.Join(tmpDir, "00-Literature-Notes", "book.md"), []byte("Old content"), 0644)
-
-	body := strings.NewReader(`{"path": "book.md", "content": "Updated content"}`)
-	req := httptest.NewRequest(http.MethodPost, "/api/literature/update", body)
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-
-	handleUpdateLiterature(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Errorf("Expected status 200, got %d", w.Code)
-	}
-
-	// Verify content was updated
-	content, _ := os.ReadFile(filepath.Join(tmpDir, "00-Literature-Notes", "book.md"))
-	if string(content) != "Updated content" {
-		t.Errorf("Expected 'Updated content', got %s", string(content))
-	}
-}
-
-// Test handleDeleteLiterature API
-func TestHandleDeleteLiterature(t *testing.T) {
-	tmpDir, cleanup := setupTestProject(t)
-	defer cleanup()
-
-	projectConfig = &ProjectConfig{
-		Projects: []Project{
-			{ID: "test", Name: "Test", RootPath: tmpDir},
-		},
-		ActiveProject: "test",
-	}
-
-	// Create file to delete
-	filePath := filepath.Join(tmpDir, "00-Literature-Notes", "todelete.md")
-	os.WriteFile(filePath, []byte("Delete me"), 0644)
-
-	body := strings.NewReader(`{"path": "todelete.md"}`)
-	req := httptest.NewRequest(http.MethodPost, "/api/literature/delete", body)
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-
-	handleDeleteLiterature(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Errorf("Expected status 200, got %d", w.Code)
-	}
-
-	// Verify file was deleted
-	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
-		t.Error("Expected file to be deleted")
 	}
 }
 

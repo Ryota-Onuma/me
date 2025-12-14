@@ -30,7 +30,6 @@ test:
 # 初期化: personalプロジェクトを作成
 init:
 	@echo "🌱 Initializing Gardener Web..."
-	@mkdir -p $(PERSONAL_DIR)/00-Literature-Notes
 	@mkdir -p $(PERSONAL_DIR)/01-Fleeting-Notes/Secret
 	@mkdir -p $(PERSONAL_DIR)/02-Permanent-Notes/Secret
 	@mkdir -p $(PERSONAL_DIR)/03-Structured-Notes
