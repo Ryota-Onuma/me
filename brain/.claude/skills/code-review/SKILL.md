@@ -35,7 +35,7 @@ For each item:
 
 1.  **Identify Language**: Analyze the target file's extension and content to determine the programming language and framework.
 2.  **Load Checklists**: Read **ONLY** the relevant checklist files from the `checklists/` directory.
-    *   **ALWAYS Load**: `checklists/general.md`
+    *   **ALWAYS Load**: `checklists/general.md`, `checklists/responsibility.md`
     *   **Conditional Loading**:
         *   TypeScript (`.ts`, `.tsx`): Load `checklists/typescript.md`
         *   React (`.tsx`, `.jsx`, imports React): Load `checklists/react.md`
@@ -61,6 +61,7 @@ The output should follow the format defined in the checklists or the agent's ins
 ## Supported Resources
 ### Standard Checklists
 - `checklists/general.md`
+- `checklists/responsibility.md`
 - `checklists/typescript.md`
 - `checklists/react.md`
 - `checklists/kotlin.md`

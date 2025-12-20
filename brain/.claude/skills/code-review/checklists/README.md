@@ -53,6 +53,7 @@ checklists/react.local.md
 
 上記は以下をロード：
 - `checklists/general.md`
+- `checklists/responsibility.md`
 - `checklists/typescript.md`
 - `checklists/react.md`
 - `checklists/general.local.md` (存在する場合)
