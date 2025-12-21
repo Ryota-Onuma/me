@@ -18,32 +18,55 @@ Identify the review target using one of the following:
 
 ### Step 2: Code Review
 
-**Reference skill**: Read `.claude/skills/code-review/SKILL.md` and follow its procedure.
+**Reference skill**: Read `.claude/skills/code-checklist-provider/SKILL.md` to get relevant checklists.
 
-#### Load Checklists
-- Always load: `checklists/general.md`, `checklists/responsibility.md`
-- Load language/file-specific checklists as needed (see SKILL.md for details)
+#### Get Checklists
+Call the skill with:
+1. Target file path(s)
+2. Tech stack: Language, Framework, Patterns (DDD/CQRS if applicable), Test file or not
+
+The skill will:
+- **Automatically include**: `checklists/general.md`, `checklists/responsibility.md` (mandatory)
+- **Add based on tech stack**: TypeScript, React, Kotlin, SQL, Test, DDD, CQRS checklists
 
 #### Execute Review (One Item at a Time)
-**Important**: Evaluate checklist items **one by one, sequentially**. Do not evaluate multiple items simultaneously.
 
-For each item:
-1. Focus exclusively on that item while reviewing the target code
+> [!IMPORTANT]
+> Evaluate checklist items **one by one, sequentially**. No parallel evaluation.
+
+For each checklist item:
+1. Focus exclusively on that item
 2. Determine status: ✅ OK / ⚠️ NG / 🔶 CONDITIONAL
-3. Record reasoning, location, and suggested fix
+3. Record: status, rationale, location (file:line), suggested fix (if NG)
 4. Move to the next item only after completion
 
-**Record all items**: Do not skip OK items—ensure full visibility of all evaluations.
+**Record ALL items**: Do not skip OK items—ensure full visibility of all evaluations.
 
 ---
 
 ### Step 3: Architecture Review
 
-**Reference skill**: Read `.claude/skills/architecture-review/SKILL.md` and follow its procedure.
+**Reference skill**: Read `.claude/skills/architecture-checklist-provider/SKILL.md` to get relevant checklists.
 
-1. **Structural Analysis**: Map directory structure, identify architecture patterns
-2. **Dependency Analysis**: Check import patterns, detect circular dependencies and layer violations
-3. **Checklist Evaluation**: Use `checklists/structure.md`, `checklists/dependencies.md`
+#### Get Checklists
+Call the skill with:
+1. Target directory/module path(s)
+2. Architecture context: Layer structure, Architecture pattern
+
+The skill will:
+- **Automatically include**: `checklists/structure.md`, `checklists/dependencies.md` (mandatory)
+- **Add if present**: Local architecture rules (`*.local.md`)
+
+#### Execute Review (One Item at a Time)
+
+> [!IMPORTANT]
+> Evaluate checklist items **one by one, sequentially**. No parallel evaluation.
+
+For each checklist item:
+1. Focus exclusively on that item
+2. Determine status: ✅ OK / ⚠️ NG / 🔶 CONDITIONAL
+3. Record: status, rationale, location, suggested fix (if NG)
+4. Move to the next item only after completion
 
 ---
 
@@ -94,6 +117,6 @@ Verify findings from Step 2 and Step 3:
 ---
 
 ## Skills Used
-- `.claude/skills/code-review/`
-- `.claude/skills/architecture-review/`
+- `.claude/skills/code-checklist-provider/`
+- `.claude/skills/architecture-checklist-provider/`
 - `.claude/skills/fact-checking/`
