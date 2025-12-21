@@ -1,0 +1,95 @@
+---
+description: Implementation planning with code and architecture checklists
+globs:
+alwaysApply: false
+---
+
+# Implementation Planning Rule
+
+When creating implementation plans, you MUST consider the checklists from the following skills:
+
+## Required Checklists
+
+### 1. Code Checklist Provider
+Reference: `brain/.claude/skills/code-checklist-provider`
+
+**Mandatory checklists (always consider):**
+- `checklists/general.md` - General code quality
+- `checklists/responsibility.md` - Single responsibility, separation of concerns
+
+**Tech stack specific checklists (consider based on target):**
+
+| Tech Stack | Checklist |
+|-----------|-----------|
+| TypeScript (.ts, .tsx) | `checklists/typescript.md` |
+| React (.tsx, .jsx) | `checklists/react.md` |
+| Kotlin (.kt) | `checklists/kotlin.md` |
+| SQL (.sql) | `checklists/sql.md` |
+| Test files | `checklists/test.md` |
+| DDD patterns | `checklists/ddd.md` |
+| CQRS patterns | `checklists/cqrs.md` |
+
+### 2. Architecture Checklist Provider
+Reference: `brain/.claude/skills/architecture-checklist-provider`
+
+**Mandatory checklists (always consider):**
+- `checklists/structure.md` - Directory and file organization
+- `checklists/dependencies.md` - Import patterns and coupling rules
+
+## Planning Procedure
+
+### Step 1: Analyze Target
+1. Identify the target files/modules to be modified or created
+2. Determine the tech stack (Language, Framework, Patterns)
+3. Understand the architecture context (Layer structure, Architecture pattern)
+
+### Step 2: Load Relevant Checklists
+1. Load all mandatory checklists from both providers
+2. Load tech stack specific checklists based on Step 1 analysis
+3. Check for any `*.local.md` custom checklists
+
+### Step 3: Plan with Checklist Awareness
+When writing the implementation plan, ensure:
+
+> [!IMPORTANT]
+> **For each proposed change:**
+> 1. Verify the change satisfies code quality checklist items
+> 2. Verify the change respects responsibility boundaries
+> 3. Verify the change follows architecture rules
+> 4. Document any checklist items that require special attention
+
+### Step 4: Include Verification Points
+In the "Verification Plan" section of implementation_plan.md:
+
+1. Reference specific checklist items that need verification
+2. Plan verification steps that align with checklist requirements
+3. Include both code-level and architecture-level verification
+
+## Example Usage
+
+When creating an implementation plan for a TypeScript React project with DDD:
+
+```markdown
+## Pre-Implementation Checklist Review
+
+### Code Quality (from code-checklist-provider)
+- [ ] Reviewed general.md checklist
+- [ ] Reviewed responsibility.md checklist
+- [ ] Reviewed typescript.md checklist
+- [ ] Reviewed react.md checklist
+- [ ] Reviewed ddd.md checklist
+
+### Architecture (from architecture-checklist-provider)
+- [ ] Reviewed structure.md checklist
+- [ ] Reviewed dependencies.md checklist
+
+### Special Considerations
+[Document any checklist items that require extra attention for this change]
+```
+
+## Key Reminders
+
+> [!CAUTION]
+> - Do NOT skip checklist review before planning
+> - Do NOT proceed without understanding architecture constraints
+> - Document any intentional deviations from checklist guidelines with justification
