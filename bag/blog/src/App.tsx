@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMotionValue, useSpring } from 'framer-motion';
+import { Routes, Route, useLocation } from 'react-router-dom';
 
 // Effects
 import { NoiseOverlay, Spotlight } from './components/effects';
@@ -8,7 +9,7 @@ import { NoiseOverlay, Spotlight } from './components/effects';
 import { Header, Footer, MobileMenu } from './components/layout';
 
 // Sections
-import { HeroSection, WorksSection } from './components/sections';
+import { HeroSection, WorksSection, BlogDetail } from './components/sections';
 
 // UI
 import { ProgressBar } from './components/ui';
@@ -18,13 +19,46 @@ import { useScrollProgress } from './hooks/useScrollProgress';
 
 const NAV_LINKS = ['home', 'works'];
 
-/**
- * App - メインアプリケーションコンポーネント
- */
+const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, isMobileMenuOpen, setIsMobileMenuOpen, lightX, lightY, scaleX }: any) => {
+    return (
+        <>
+            {/* Background Effects */}
+            <NoiseOverlay />
+            <Spotlight lightX={lightX} lightY={lightY} />
+
+            {/* Progress Bar */}
+            <ProgressBar scaleX={scaleX} />
+
+            {/* Navigation */}
+            <Header
+                isScrolled={isScrolled}
+                activeSection={activeSection}
+                navLinks={NAV_LINKS}
+                onMobileMenuOpen={onMobileMenuOpen}
+            />
+
+            {/* Sections */}
+            <HeroSection />
+            <WorksSection />
+
+            {/* Footer */}
+            <Footer />
+
+            {/* Mobile Menu */}
+            <MobileMenu
+                isOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
+                navLinks={NAV_LINKS}
+            />
+        </>
+    );
+};
+
 function App() {
     const [activeSection, setActiveSection] = useState('home');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const location = useLocation();
 
     const { scaleX } = useScrollProgress();
 
@@ -60,38 +94,25 @@ function App() {
             window.removeEventListener('scroll', handleScroll);
             observer.disconnect();
         };
-    }, [mouseX, mouseY]);
+    }, [mouseX, mouseY, location.pathname]);
 
     return (
         <div className="bg-[#050505] text-[#f0f0f0] font-sans overflow-x-hidden min-h-screen">
-            {/* Background Effects */}
-            <NoiseOverlay />
-            <Spotlight lightX={lightX} lightY={lightY} />
-
-            {/* Progress Bar */}
-            <ProgressBar scaleX={scaleX} />
-
-            {/* Navigation */}
-            <Header
-                isScrolled={isScrolled}
-                activeSection={activeSection}
-                navLinks={NAV_LINKS}
-                onMobileMenuOpen={() => setIsMobileMenuOpen(true)}
-            />
-
-            {/* Sections */}
-            <HeroSection />
-            <WorksSection />
-
-            {/* Footer */}
-            <Footer />
-
-            {/* Mobile Menu */}
-            <MobileMenu
-                isOpen={isMobileMenuOpen}
-                onClose={() => setIsMobileMenuOpen(false)}
-                navLinks={NAV_LINKS}
-            />
+            <Routes>
+                <Route path="/" element={
+                    <MainContent
+                        activeSection={activeSection}
+                        onMobileMenuOpen={() => setIsMobileMenuOpen(true)}
+                        isScrolled={isScrolled}
+                        isMobileMenuOpen={isMobileMenuOpen}
+                        setIsMobileMenuOpen={setIsMobileMenuOpen}
+                        lightX={lightX}
+                        lightY={lightY}
+                        scaleX={scaleX}
+                    />
+                } />
+                <Route path="/blog/:slug" element={<BlogDetail />} />
+            </Routes>
         </div>
     );
 }

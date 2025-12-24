@@ -1,9 +1,26 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
     --color-bg: #050505;
     --color-text: #f0f0f0;
     --font-sans: 'Inter', sans-serif;
+}
+
+/* Custom Typography Overrides */
+@utility prose-invert {
+    & :where(h1, h2, h3, h4, h5, h6, th):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+        color: #fff;
+    }
+
+    & :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+        color: #fff;
+        text-decoration-color: rgba(255, 255, 255, 0.4);
+
+        &:hover {
+            text-decoration-color: #fff;
+        }
+    }
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');

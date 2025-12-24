@@ -23,12 +23,12 @@ export const WorkCard = ({ title, category, description, date, tags, thumbnail, 
             {/* Thumbnail */}
             <div className="relative aspect-video overflow-hidden">
                 <img
-                    src={thumbnail || "/placeholder.jpg"}
+                    src={thumbnail || "/thumbnails/default_blog.png"}
                     alt={title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute top-4 left-4">
-                    <span className="bg-black/60 backdrop-blur-md text-[10px] text-white/90 px-2 py-1 rounded-sm font-bold uppercase tracking-widest border border-white/10">
+                    <span className="bg-black/60 backdrop-blur-md text-[10px] text-white/90 px-2 py-1 rounded-sm font-black uppercase tracking-[0.2em] italic border border-white/10">
                         {category}
                     </span>
                 </div>
@@ -39,7 +39,7 @@ export const WorkCard = ({ title, category, description, date, tags, thumbnail, 
             <div className="p-6 md:p-8 flex flex-col flex-1">
                 <div className="flex items-center gap-2 mb-4">
                     {date && (
-                        <span className="text-xs text-white/60 font-bold tracking-wider">
+                        <span className="text-[10px] text-white/60 font-black uppercase tracking-[0.25em] italic">
                             {date}
                         </span>
                     )}
@@ -48,19 +48,19 @@ export const WorkCard = ({ title, category, description, date, tags, thumbnail, 
                     <ArrowRight className="w-4 h-4 text-white/0 group-hover:text-white/100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300" />
                 </div>
 
-                <h3 className="text-lg md:text-2xl font-black uppercase tracking-normal leading-tight mb-3 group-hover:text-white transition-colors">
+                <h3 className="text-xl md:text-3xl font-black uppercase italic tracking-tighter leading-[0.9] mb-4 group-hover:text-white transition-colors">
                     {title}
                 </h3>
 
                 {description && (
-                    <p className="text-sm text-white/70 leading-relaxed line-clamp-2 mb-6 font-medium">
+                    <p className="text-sm text-white/50 leading-relaxed line-clamp-2 mb-8 font-medium italic">
                         {description}
                     </p>
                 )}
 
                 <div className="mt-auto flex flex-wrap gap-2">
                     {tags?.map((tag, idx) => (
-                        <span key={idx} className="text-[11px] font-bold text-white/70 group-hover:text-white/90 transition-colors uppercase tracking-[0.1em] border border-white/20 px-2 py-0.5 rounded-sm">
+                        <span key={idx} className="text-[10px] font-black text-white/40 group-hover:text-white/70 transition-all duration-300 uppercase tracking-[0.2em] italic border border-white/10 hover:border-white/30 px-3 py-1 rounded-full cursor-pointer bg-white/5 hover:bg-white/10">
                             #{tag}
                         </span>
                     ))}
