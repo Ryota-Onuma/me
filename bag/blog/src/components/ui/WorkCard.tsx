@@ -27,8 +27,8 @@ export const WorkCard = ({ title, category, description, date, tags, thumbnail, 
                     alt={title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute top-4 left-4">
-                    <span className="bg-black/60 backdrop-blur-md text-[10px] text-white/90 px-2 py-1 rounded-sm font-black uppercase tracking-[0.2em] italic border border-white/10">
+                <div className="absolute top-2 left-2">
+                    <span className="bg-black/60 backdrop-blur-md text-[9px] text-white/90 px-1.5 py-0.5 rounded-sm font-black uppercase tracking-[0.15em] italic border border-white/10">
                         {category}
                     </span>
                 </div>
@@ -36,31 +36,31 @@ export const WorkCard = ({ title, category, description, date, tags, thumbnail, 
             </div>
 
             {/* Content */}
-            <div className="p-6 md:p-8 flex flex-col flex-1">
-                <div className="flex items-center gap-2 mb-4">
+            <div className="p-3 md:p-4 flex flex-col flex-1">
+                <div className="flex items-center gap-1.5 mb-2">
                     {date && (
-                        <span className="text-[10px] text-white/60 font-black uppercase tracking-[0.25em] italic">
+                        <span className="text-[9px] text-white/60 font-black uppercase tracking-[0.2em] italic">
                             {date}
                         </span>
                     )}
-                    <div className="w-1 h-1 rounded-full bg-white/20" />
+                    <div className="w-0.5 h-0.5 rounded-full bg-white/20" />
                     <div className="flex-1" />
-                    <ArrowRight className="w-4 h-4 text-white/0 group-hover:text-white/100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300" />
+                    <ArrowRight className="w-3 h-3 text-white/0 group-hover:text-white/100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300" />
                 </div>
 
-                <h3 className="text-xl md:text-3xl font-black uppercase italic tracking-tighter leading-[0.9] mb-4 group-hover:text-white transition-colors">
+                <h3 className="text-sm md:text-base font-black uppercase italic tracking-tighter leading-tight mb-2 group-hover:text-white transition-colors line-clamp-2">
                     {title}
                 </h3>
 
                 {description && (
-                    <p className="text-sm text-white/50 leading-relaxed line-clamp-2 mb-8 font-medium italic">
+                    <p className="text-xs text-white/50 leading-relaxed line-clamp-2 mb-4 font-medium italic">
                         {description}
                     </p>
                 )}
 
-                <div className="mt-auto flex flex-wrap gap-2">
-                    {tags?.map((tag, idx) => (
-                        <span key={idx} className="text-[10px] font-black text-white/40 group-hover:text-white/70 transition-all duration-300 uppercase tracking-[0.2em] italic border border-white/10 hover:border-white/30 px-3 py-1 rounded-full cursor-pointer bg-white/5 hover:bg-white/10">
+                <div className="mt-auto flex flex-wrap gap-1">
+                    {tags?.slice(0, 3).map((tag, idx) => (
+                        <span key={idx} className="text-[8px] font-black text-white/40 group-hover:text-white/70 transition-all duration-300 uppercase tracking-[0.15em] italic border border-white/10 hover:border-white/30 px-2 py-0.5 rounded-full cursor-pointer bg-white/5 hover:bg-white/10">
                             #{tag}
                         </span>
                     ))}

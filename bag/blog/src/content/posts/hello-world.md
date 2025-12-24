@@ -1,8 +1,10 @@
 ---
+id: 'agentic-writing'
 title: "The Art of Agentic Writing"
 date: "2024-12-23"
 tags: ["AI", "Blog", "Writing"]
 thumbnail: "/thumbnails/agentic_writing.png"
+category: "Internal / Blog"
 description: "How to craft compelling narratives using AI agents as co-authors."
 ---
 

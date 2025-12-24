@@ -162,7 +162,7 @@ export const BlogDetail = () => {
                             ))}
                         </div>
                     </div>
-                    <h1 className="text-5xl md:text-8xl font-black tracking-tight mb-8 leading-[0.95] uppercase italic">
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-8 leading-[1.05] uppercase italic">
                         {post.title}
                     </h1>
                 </header>
