@@ -1,5 +1,4 @@
-import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowUpRight, Calendar, ExternalLink } from 'lucide-react';
 
 interface WorkCardProps {
     title: string;
@@ -9,64 +8,90 @@ interface WorkCardProps {
     tags?: string[];
     thumbnail?: string;
     url?: string;
+    isExternal?: boolean;
+    index?: number; // For LCP optimization
 }
 
-/**
- * WorkCard - ブログ形式のカードコンポーネント
- */
-export const WorkCard = ({ title, category, description, date, tags, thumbnail, url }: WorkCardProps) => {
+export const WorkCard = ({ title, category, description, date, tags, thumbnail, url, isExternal, index = 0 }: WorkCardProps) => {
+    const isAboveFold = index < 3;
+
     const CardContent = (
-        <motion.div
-            whileHover={{ y: -8 }}
-            className="group flex flex-col bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden transition-colors hover:bg-white/[0.05]"
-        >
+        <article className="group relative flex flex-col h-full bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden hover:bg-white/[0.06] hover:border-white/20 hover:shadow-2xl hover:shadow-white/5 transition-all duration-500 ease-out">
             {/* Thumbnail */}
-            <div className="relative aspect-video overflow-hidden">
+            <div className="relative aspect-[16/10] overflow-hidden">
                 <img
                     src={thumbnail || "/thumbnails/default_blog.png"}
                     alt={title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    loading={isAboveFold ? "eager" : "lazy"}
+                    {...(isAboveFold && { fetchPriority: "high" as const })}
                 />
-                <div className="absolute top-2 left-2">
-                    <span className="bg-black/60 backdrop-blur-md text-[9px] text-white/90 px-1.5 py-0.5 rounded-sm font-black uppercase tracking-[0.15em] italic border border-white/10">
+
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
+
+                {/* Category badge */}
+                <div className="absolute top-4 left-4">
+                    <span className="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-md border border-white/10 text-[10px] text-white px-3 py-1.5 rounded-full font-bold uppercase tracking-wider shadow-lg">
                         {category}
                     </span>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050505]/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                {/* External indicator */}
+                {(isExternal || url) && (
+                    <div className="absolute top-4 right-4">
+                        <span className="w-8 h-8 flex items-center justify-center bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-white transition-transform duration-300 group-hover:rotate-45">
+                            <ExternalLink className="w-3.5 h-3.5" />
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* Content */}
-            <div className="p-3 md:p-4 flex flex-col flex-1">
-                <div className="flex items-center gap-1.5 mb-2">
-                    {date && (
-                        <span className="text-[9px] text-white/60 font-black uppercase tracking-[0.2em] italic">
+            <div className="p-5 flex flex-col flex-1 relative">
+                {/* Date */}
+                {date && (
+                    <div className="flex items-center gap-2 mb-3">
+                        <Calendar className="w-3 h-3 text-white/40" />
+                        <span className="text-[11px] font-medium text-white/50 uppercase tracking-widest">
                             {date}
                         </span>
-                    )}
-                    <div className="w-0.5 h-0.5 rounded-full bg-white/20" />
-                    <div className="flex-1" />
-                    <ArrowRight className="w-3 h-3 text-white/0 group-hover:text-white/100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300" />
-                </div>
+                    </div>
+                )}
 
-                <h3 className="text-sm md:text-base font-black uppercase italic tracking-tighter leading-tight mb-2 group-hover:text-white transition-colors line-clamp-2">
+                {/* Title */}
+                <h3 className="text-lg font-bold leading-tight mb-3 text-white group-hover:text-white/90 line-clamp-2 transition-colors">
                     {title}
                 </h3>
 
+                {/* Description */}
                 {description && (
-                    <p className="text-xs text-white/50 leading-relaxed line-clamp-2 mb-4 font-medium italic">
+                    <p className="text-sm text-white/50 leading-relaxed line-clamp-2 mb-5 group-hover:text-white/60 transition-colors">
                         {description}
                     </p>
                 )}
 
-                <div className="mt-auto flex flex-wrap gap-1">
+                {/* Tags */}
+                <div className="mt-auto flex flex-wrap gap-1.5">
                     {tags?.slice(0, 3).map((tag, idx) => (
-                        <span key={idx} className="text-[8px] font-black text-white/40 group-hover:text-white/70 transition-all duration-300 uppercase tracking-[0.15em] italic border border-white/10 hover:border-white/30 px-2 py-0.5 rounded-full cursor-pointer bg-white/5 hover:bg-white/10">
-                            #{tag}
+                        <span
+                            key={idx}
+                            className="text-[10px] font-medium text-white/40 px-2 py-1 rounded bg-white/5 border border-white/5 group-hover:border-white/10 transition-colors"
+                        >
+                            {tag}
                         </span>
                     ))}
                 </div>
+
+                {/* Read more */}
+                <div className="flex items-center gap-2 mt-5 pt-4 border-t border-white/5 group-hover:border-white/10 transition-colors">
+                    <span className="text-xs font-bold uppercase tracking-wider text-white/40 group-hover:text-white transition-colors duration-300">
+                        Read Article
+                    </span>
+                    <ArrowUpRight className="w-3 h-3 text-white/40 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
+                </div>
             </div>
-        </motion.div>
+        </article>
     );
 
     if (url) {

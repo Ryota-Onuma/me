@@ -1,32 +1,18 @@
-import { motion } from 'framer-motion';
-
 /**
- * HeroSection - ヒーローセクション
+ * HeroSection - ヒーローセクション (CSS animations for better performance)
  */
 export const HeroSection = () => (
     <section
         id="home"
         className="relative h-dvh flex flex-col items-center justify-center text-center px-6 pt-24 md:pt-32 overflow-hidden"
     >
-        <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-            className="z-10 mix-blend-difference"
-        >
-            <h1 className="text-[12vw] sm:text-[9vw] md:text-[10vw] font-black tracking-tight leading-[1.0] sm:leading-[0.8] italic uppercase select-none">
+        <div className="z-10 mix-blend-difference animate-fade-in-up">
+            <h1 className="text-[13vw] sm:text-[10vw] md:text-[11vw] font-black tracking-tighter leading-[0.9] italic uppercase select-none transition-all duration-500 hover:scale-[1.02] hover:tracking-normal">
                 STAY <span className="text-outline-white transition-opacity duration-700 hover:opacity-80">CURIOUS.</span><br />
-                KEEP <span className="text-white">MOVING.</span>
+                KEEP <span className="text-white relative inline-block after:content-[''] after:absolute after:bottom-2 after:left-0 after:w-full after:h-[2px] after:bg-white after:scale-x-0 after:origin-right after:transition-transform after:duration-500 hover:after:scale-x-100 hover:after:origin-left">MOVING.</span>
             </h1>
 
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.3 }}
-                transition={{ delay: 2, duration: 1 }}
-                className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4"
-            >
-                <div className="w-px h-12 bg-gradient-to-b from-white/40 to-transparent" />
-            </motion.div>
-        </motion.div>
+
+        </div>
     </section>
 );

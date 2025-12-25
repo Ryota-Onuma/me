@@ -4,26 +4,93 @@
 @theme {
     --color-bg: #050505;
     --color-text: #f0f0f0;
-    --font-sans: 'Inter', sans-serif;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+@layer base {
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-weight: 900;
+        letter-spacing: -0.05em;
+        line-height: 1.1;
+        color: #fff;
+    }
+
+    h1 {
+        font-size: 3rem;
+    }
+
+    h2 {
+        font-size: 2rem;
+        letter-spacing: -0.04em;
+    }
+
+    h3 {
+        font-size: 1.75rem;
+        letter-spacing: -0.03em;
+    }
+
+    h4 {
+        font-size: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+        h1 {
+            font-size: 4.5rem;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+        }
+
+        h3 {
+            font-size: 2rem;
+        }
+    }
 }
 
 /* Custom Typography Overrides */
 @utility prose-invert {
     & :where(h1, h2, h3, h4, h5, h6, th):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
         color: #fff;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        margin-top: 2em;
+        margin-bottom: 0.8em;
+    }
+
+    & :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+        margin-top: 1.25em;
+        margin-bottom: 1.25em;
+        line-height: 1.8;
+        color: rgba(255, 255, 255, 0.85);
     }
 
     & :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
         color: #fff;
-        text-decoration-color: rgba(255, 255, 255, 0.4);
+        text-decoration: none;
+        background-image: linear-gradient(to right, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+        background-size: 100% 1px;
+        background-position: 0 100%;
+        background-repeat: no-repeat;
+        transition: background-size 0.3s;
 
         &:hover {
-            text-decoration-color: #fff;
+            background-size: 0% 1px;
+            color: rgba(255, 255, 255, 0.7);
         }
     }
-}
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+    & :where(li):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+}
 
 :root {
     color-scheme: dark;
@@ -74,4 +141,118 @@ body {
 .reveal-text {
     clip-path: inset(0 0 0 0);
     transition: clip-path 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Performance-optimized animations */
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in-delayed {
+
+    0%,
+    70% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0.3;
+    }
+}
+
+@keyframes width-expand {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+.animate-fade-in-up {
+    animation: fade-in-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in-delayed {
+    animation: fade-in-delayed 2s ease-out forwards;
+}
+
+.animate-width-expand {
+    animation: width-expand 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+    width: 0;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+
+    .animate-fade-in-up,
+    .animate-fade-in-delayed,
+    .animate-width-expand,
+    .animate-fade-in {
+        animation: none;
+        opacity: 1;
+        transform: none;
+        width: 100%;
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out forwards;
+}
+
+@keyframes float-up {
+    0% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.2;
+    }
+
+    90% {
+        opacity: 0.2;
+    }
+
+    100% {
+        transform: translateY(-1200px);
+        opacity: 0;
+    }
+}
+
+.animate-float-up {
+    animation: float-up linear infinite;
+}
+
+@keyframes float-down {
+    0% {
+        transform: translateY(-100%);
+    }
+
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+.animate-float-down {
+    animation: float-down 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }

@@ -1,21 +1,26 @@
-import { useScroll, useSpring, MotionValue } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
 interface UseScrollProgressReturn {
-    scrollYProgress: MotionValue<number>;
-    scaleX: MotionValue<number>;
+    scrollProgress: number;
 }
 
 /**
- * useScrollProgress - スクロール進行状況管理フック
+ * useScrollProgress - スクロール進行状況管理フック (vanilla JS)
  */
 export const useScrollProgress = (): UseScrollProgressReturn => {
-    const { scrollYProgress } = useScroll();
+    const [scrollProgress, setScrollProgress] = useState(0);
 
-    const scaleX = useSpring(scrollYProgress, {
-        stiffness: 100,
-        damping: 30,
-        restDelta: 0.001
-    });
+    useEffect(() => {
+        const updateProgress = () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = docHeight > 0 ? scrollTop / docHeight : 0;
+            setScrollProgress(progress);
+        };
 
-    return { scrollYProgress, scaleX };
+        window.addEventListener('scroll', updateProgress, { passive: true });
+        return () => window.removeEventListener('scroll', updateProgress);
+    }, []);
+
+    return { scrollProgress };
 };

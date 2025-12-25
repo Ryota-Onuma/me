@@ -1,85 +1,121 @@
-import { motion } from 'framer-motion';
-import { Menu } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Menu, Home, User, BookOpen, ArrowLeft } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
     isScrolled: boolean;
     activeSection: string;
     navLinks: string[];
     onMobileMenuOpen: () => void;
+    backLink?: string;
+    backLabel?: string;
 }
 
-/**
- * Header - ナビゲーションヘッダー
- */
+const navIcons: Record<string, React.ReactNode> = {
+    home: <Home className="w-3.5 h-3.5" />,
+    about: <User className="w-3.5 h-3.5" />,
+    blog: <BookOpen className="w-3.5 h-3.5" />,
+};
+
+const navLabels: Record<string, string> = {
+    home: 'Home',
+    about: 'About',
+    blog: 'Blog',
+};
+
 export const Header = ({
     isScrolled,
     activeSection,
     navLinks,
-    onMobileMenuOpen
+    onMobileMenuOpen,
+    backLink,
+    backLabel
 }: HeaderProps) => {
     const location = useLocation();
+    const navigate = useNavigate();
     const isHome = location.pathname === '/';
+    const isBlogPage = location.pathname === '/blog';
 
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: string) => {
+        if (item === 'blog') {
+            if (isBlogPage) {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            return;
+        }
         if (isHome) {
             e.preventDefault();
-            const element = document.getElementById(item);
-            if (element) {
-                element.scrollIntoView({ behavior: 'smooth' });
-            }
+            document.getElementById(item)?.scrollIntoView({ behavior: 'smooth' });
         }
+    };
+
+    const getLinkPath = (item: string) => {
+        if (item === 'blog') return '/blog';
+        return isHome ? `#${item}` : `/#${item}`;
+    };
+
+    const isActive = (item: string) => {
+        if (item === 'blog' && isBlogPage) return true;
+        return activeSection === item && !isBlogPage;
     };
 
     return (
         <header
-            className={`fixed top-0 left-0 w-full z-[1000] flex justify-between items-center transition-all duration-700 ease-[0.16,1,0.3,1] ${isScrolled
-                ? 'h-16 md:h-20 px-6 md:px-16 bg-[#050505]/90 backdrop-blur-xl border-b border-white/20'
-                : 'h-20 md:h-28 px-6 md:px-20 bg-transparent'
+            className={`fixed top-0 left-0 w-full z-[1000] transition-all duration-200 ${isScrolled
+                ? 'h-16 bg-[#050505]/95 backdrop-blur-md border-b border-white/10'
+                : 'h-20 md:h-24 bg-transparent'
                 }`}
         >
-            <Link
-                to="/"
-                className="flex items-center gap-4 cursor-pointer group"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
-                <div className="relative">
-                    <span className="text-lg font-black tracking-[-0.05em] uppercase italic transition-colors duration-500 group-hover:text-white">
-                        Ryota Onuma
-                    </span>
-                    <motion.div
-                        className="absolute -bottom-1 left-0 w-0 h-px bg-white group-hover:w-full transition-all duration-500 ease-out"
-                    />
-                </div>
-            </Link>
-
-            <nav className="hidden lg:flex gap-12 md:gap-16">
-                {navLinks.map((item) => (
-                    <Link
-                        key={item}
-                        to={isHome ? `#${item}` : `/#${item}`}
-                        onClick={(e: any) => handleLinkClick(e, item)}
-                        className={`text-[9px] tracking-[0.5em] font-black uppercase transition-all duration-500 relative ${activeSection === item ? 'text-white' : 'text-white/50 hover:text-white'
-                            }`}
+            <div className="h-full flex justify-between items-center px-6 md:px-16">
+                {backLink ? (
+                    <button
+                        onClick={() => navigate(backLink)}
+                        className="flex items-center gap-2 text-white/80 hover:text-white transition-colors group"
                     >
-                        {item}
-                        {activeSection === item && (
-                            <motion.div
-                                layoutId="navIndicator"
-                                className="absolute -bottom-2 left-0 w-full h-px bg-white"
-                            />
-                        )}
-                    </Link>
-                ))}
-            </nav>
+                        <div className="p-1.5 rounded-full bg-white/5 border border-white/10 group-hover:border-white/20 transition-colors">
+                            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+                        </div>
+                        <span className="text-sm font-bold tracking-wide uppercase">{backLabel || 'Back'}</span>
+                    </button>
+                ) : (
+                    <>
+                        {/* Logo */}
+                        <Link
+                            to="/"
+                            className="text-sm md:text-base font-bold tracking-tight text-white/90 hover:text-white transition-colors duration-150"
+                        >
+                            Ryota Onuma
+                        </Link>
 
-            <button
-                className="lg:hidden text-white p-2 -mr-2"
-                onClick={onMobileMenuOpen}
-                aria-label="Open menu"
-            >
-                <Menu className="w-6 h-6" />
-            </button>
+                        {/* Desktop Navigation */}
+                        <nav className="hidden lg:flex items-center gap-1">
+                            {navLinks.map((item) => (
+                                <Link
+                                    key={item}
+                                    to={getLinkPath(item)}
+                                    onClick={(e: any) => handleLinkClick(e, item)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-colors duration-150 ${isActive(item)
+                                        ? 'bg-white text-black'
+                                        : 'text-white/60 hover:text-white hover:bg-white/10'
+                                        }`}
+                                >
+                                    {navIcons[item]}
+                                    {navLabels[item]}
+                                </Link>
+                            ))}
+                        </nav>
+
+                        {/* Mobile Menu Button */}
+                        <button
+                            className="lg:hidden p-2 text-white/70 hover:text-white transition-colors duration-150"
+                            onClick={onMobileMenuOpen}
+                            aria-label="Open menu"
+                        >
+                            <Menu className="w-6 h-6" />
+                        </button>
+                    </>
+                )}
+            </div>
         </header>
     );
 };

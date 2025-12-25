@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useMotionValue, useSpring } from 'framer-motion';
 import { Routes, Route, useLocation } from 'react-router-dom';
 
 // Effects
@@ -9,7 +8,12 @@ import { NoiseOverlay, Spotlight } from './components/effects';
 import { Header, Footer, MobileMenu } from './components/layout';
 
 // Sections
-import { HeroSection, WorksSection, BlogDetail } from './components/sections';
+import { HeroSection, AboutSection, WorksSection } from './components/sections';
+
+// Pages
+import { Suspense, lazy } from 'react';
+const BlogListPage = lazy(() => import('./components/pages/BlogListPage').then(module => ({ default: module.BlogListPage })));
+const BlogDetail = lazy(() => import('./components/sections/BlogDetail').then(module => ({ default: module.BlogDetail })));
 
 // UI
 import { ProgressBar } from './components/ui';
@@ -17,17 +21,22 @@ import { ProgressBar } from './components/ui';
 // Hooks
 import { useScrollProgress } from './hooks/useScrollProgress';
 
-const NAV_LINKS = ['home', 'works'];
+// Utils
+import { DeferredRender } from './components/utils/DeferredRender';
 
-const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, isMobileMenuOpen, setIsMobileMenuOpen, lightX, lightY, scaleX }: any) => {
+const NAV_LINKS = ['home', 'about', 'blog'];
+
+const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, isMobileMenuOpen, setIsMobileMenuOpen, scrollProgress }: any) => {
     return (
         <>
-            {/* Background Effects */}
-            <NoiseOverlay />
-            <Spotlight lightX={lightX} lightY={lightY} />
+            {/* Deferred Background Effects - Priorities Content First */}
+            <DeferredRender timeout={100}>
+                <NoiseOverlay />
+                <Spotlight />
+            </DeferredRender>
 
             {/* Progress Bar */}
-            <ProgressBar scaleX={scaleX} />
+            <ProgressBar scrollProgress={scrollProgress} />
 
             {/* Navigation */}
             <Header
@@ -39,6 +48,7 @@ const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, isMobileMenu
 
             {/* Sections */}
             <HeroSection />
+            <AboutSection />
             <WorksSection />
 
             {/* Footer */}
@@ -60,19 +70,9 @@ function App() {
     const [isScrolled, setIsScrolled] = useState(false);
     const location = useLocation();
 
-    const { scaleX } = useScrollProgress();
-
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
-    const lightX = useSpring(mouseX, { stiffness: 40, damping: 30 });
-    const lightY = useSpring(mouseY, { stiffness: 40, damping: 30 });
+    const { scrollProgress } = useScrollProgress();
 
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            mouseX.set(e.clientX);
-            mouseY.set(e.clientY);
-        };
-
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 50);
         };
@@ -86,15 +86,13 @@ function App() {
         }, { threshold: 0.5 });
 
         document.querySelectorAll('section[id]').forEach((s) => observer.observe(s));
-        window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('scroll', handleScroll);
 
         return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('scroll', handleScroll);
             observer.disconnect();
         };
-    }, [mouseX, mouseY, location.pathname]);
+    }, [location.pathname]);
 
     return (
         <div className="bg-[#050505] text-[#f0f0f0] font-sans overflow-x-hidden min-h-screen">
@@ -106,12 +104,19 @@ function App() {
                         isScrolled={isScrolled}
                         isMobileMenuOpen={isMobileMenuOpen}
                         setIsMobileMenuOpen={setIsMobileMenuOpen}
-                        lightX={lightX}
-                        lightY={lightY}
-                        scaleX={scaleX}
+                        scrollProgress={scrollProgress}
                     />
                 } />
-                <Route path="/blog/:slug" element={<BlogDetail />} />
+                <Route path="/blog" element={
+                    <Suspense fallback={<div className="min-h-screen bg-[#050505]" />}>
+                        <BlogListPage />
+                    </Suspense>
+                } />
+                <Route path="/blog/:slug" element={
+                    <Suspense fallback={<div className="min-h-screen bg-[#050505]" />}>
+                        <BlogDetail />
+                    </Suspense>
+                } />
             </Routes>
         </div>
     );
