@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { scrollToSection } from '../utils/scroll';
 
@@ -7,16 +7,25 @@ import { scrollToSection } from '../utils/scroll';
  */
 export const useHashScroll = () => {
     const { pathname, hash } = useLocation();
+    const lastPathname = useRef(pathname);
 
     useEffect(() => {
-        // If we are at the root and there's a hash, scroll to that section
         if (pathname === '/' && hash) {
             const sectionId = hash.replace('#', '');
-            // Small delay to ensure DOM is ready after route transition
-            const timer = setTimeout(() => {
+            const isNewPage = lastPathname.current !== pathname;
+
+            if (isNewPage) {
+                // Cross-page jump: Small delay to ensure DOM is ready
+                const timer = setTimeout(() => {
+                    scrollToSection(sectionId);
+                }, 100);
+                return () => clearTimeout(timer);
+            } else {
+                // Same-page jump: Immediate scroll
                 scrollToSection(sectionId);
-            }, 100);
-            return () => clearTimeout(timer);
+            }
         }
+
+        lastPathname.current = pathname;
     }, [pathname, hash]);
 };

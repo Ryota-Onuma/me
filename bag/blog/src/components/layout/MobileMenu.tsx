@@ -1,6 +1,5 @@
 import { X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { scrollToSection } from '../../utils/scroll';
 
 interface MobileMenuProps {
     isOpen: boolean;
@@ -15,22 +14,19 @@ const navLabels: Record<string, string> = {
 };
 
 /**
- * MobileMenu - モバイルメニューオーバーレイ (CSS transitions)
+ * MobileMenu - モバイルメニューオーバーレイ
  */
-export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps) => {
+export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps): JSX.Element | null => {
     const location = useLocation();
     const isHome = location.pathname === '/';
 
 
-    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: string) => {
-        if (isHome && item !== 'blog') {
-            e.preventDefault();
-            scrollToSection(item);
-        }
+    const handleLinkClick = (): void => {
+        // Native behavior will update the hash, and useHashScroll will handle the scroll immediately.
         onClose();
     };
 
-    const getLinkPath = (item: string) => {
+    const getLinkPath = (item: string): string => {
         if (item === 'blog') return '/blog';
         return isHome ? `#${item}` : `/#${item}`;
     };
@@ -53,7 +49,7 @@ export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps) => {
                     <Link
                         key={item}
                         to={getLinkPath(item)}
-                        onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleLinkClick(e, item)}
+                        onClick={handleLinkClick}
                         className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-white/70 hover:text-accent active:text-accent transition-premium"
                     >
                         {navLabels[item] || item}

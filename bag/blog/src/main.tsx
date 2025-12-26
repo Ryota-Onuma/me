@@ -9,8 +9,10 @@ if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
 
-// Scroll to top on initial load
-window.scrollTo(0, 0);
+// Scroll to top on initial load unless there's a hash
+if (!window.location.hash) {
+    window.scrollTo(0, 0);
+}
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>

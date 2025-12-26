@@ -41,13 +41,11 @@ export const Header = ({
             if (isBlogPage) {
                 e.preventDefault();
                 scrollToSection('home');
+                return;
             }
-            return;
         }
-        if (isHome) {
-            e.preventDefault();
-            scrollToSection(item);
-        }
+        // For other links, native behavior will update the hash, 
+        // and useHashScroll will handle the scroll immediately.
     };
 
     const getLinkPath = (item: string) => {

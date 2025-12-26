@@ -56,6 +56,10 @@
             font-size: 2rem;
         }
     }
+
+    section {
+        scroll-margin-top: 80px;
+    }
 }
 
 /* Custom Typography Overrides */
