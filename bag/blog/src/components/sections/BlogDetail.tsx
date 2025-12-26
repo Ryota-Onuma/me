@@ -55,7 +55,7 @@ const CopyButton = ({ text }: { text: string }) => {
     );
 };
 
-export const BlogDetail = () => {
+export const BlogDetail = ({ onMobileMenuOpen }: { onMobileMenuOpen: () => void }) => {
     const { slug } = useParams();
     const navigate = useNavigate();
     const [post, setPost] = useState<ParsedPost | null>(null);
@@ -124,7 +124,7 @@ export const BlogDetail = () => {
                 isScrolled={isScrolled}
                 activeSection=""
                 navLinks={['home', 'about', 'blog']}
-                onMobileMenuOpen={() => { }}
+                onMobileMenuOpen={onMobileMenuOpen}
                 backLink="/blog"
                 backLabel="Back to Blog"
             />

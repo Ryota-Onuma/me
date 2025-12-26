@@ -23,11 +23,7 @@ export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps) => {
 
 
     const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, item: string) => {
-        if (item === 'blog') {
-            onClose();
-            return;
-        }
-        if (isHome) {
+        if (isHome && item !== 'blog') {
             e.preventDefault();
             scrollToSection(item);
         }
@@ -56,9 +52,9 @@ export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps) => {
                 {navLinks.map((item) => (
                     <Link
                         key={item}
-                        to={isHome ? '#' : getLinkPath(item)}
+                        to={getLinkPath(item)}
                         onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleLinkClick(e, item)}
-                        className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-white/40 hover:text-accent transition-all duration-300"
+                        className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-white/70 hover:text-accent active:text-accent transition-premium"
                     >
                         {navLabels[item] || item}
                     </Link>

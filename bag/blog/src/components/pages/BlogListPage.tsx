@@ -10,7 +10,7 @@ import { useHasScrolled } from '../../hooks/useHasScrolled';
 
 const ITEMS_PER_PAGE = 9;
 
-export const BlogListPage = () => {
+export const BlogListPage = ({ onMobileMenuOpen }: { onMobileMenuOpen: () => void }) => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const currentPage = parseInt(searchParams.get('page') || '1', 10);
@@ -66,7 +66,7 @@ export const BlogListPage = () => {
                 isScrolled={isScrolled}
                 activeSection="blog"
                 navLinks={['home', 'about', 'blog']}
-                onMobileMenuOpen={() => { }}
+                onMobileMenuOpen={onMobileMenuOpen}
             />
 
             <main className="pt-32 pb-20 px-6 md:px-16 lg:px-24 min-h-screen">

@@ -32,12 +32,10 @@ interface MainContentProps {
     activeSection: string;
     onMobileMenuOpen: () => void;
     isScrolled: boolean;
-    isMobileMenuOpen: boolean;
-    setIsMobileMenuOpen: (isOpen: boolean) => void;
     scrollProgress: number;
 }
 
-const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, isMobileMenuOpen, setIsMobileMenuOpen, scrollProgress }: MainContentProps) => {
+const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, scrollProgress }: MainContentProps) => {
     return (
         <>
             {/* Deferred Background Effects - Priorities Content First */}
@@ -64,13 +62,6 @@ const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, isMobileMenu
 
             {/* Footer */}
             <Footer />
-
-            {/* Mobile Menu */}
-            <MobileMenu
-                isOpen={isMobileMenuOpen}
-                onClose={() => setIsMobileMenuOpen(false)}
-                navLinks={NAV_LINKS}
-            />
         </>
     );
 };
@@ -118,15 +109,22 @@ function App() {
                 } />
                 <Route path="/blog" element={
                     <Suspense fallback={<div className="min-h-screen bg-[#050505]" />}>
-                        <BlogListPage />
+                        <BlogListPage onMobileMenuOpen={() => setIsMobileMenuOpen(true)} />
                     </Suspense>
                 } />
                 <Route path="/blog/:slug" element={
                     <Suspense fallback={<div className="min-h-screen bg-[#050505]" />}>
-                        <BlogDetail />
+                        <BlogDetail onMobileMenuOpen={() => setIsMobileMenuOpen(true)} />
                     </Suspense>
                 } />
             </Routes>
+
+            {/* Global Mobile Menu */}
+            <MobileMenu
+                isOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
+                navLinks={NAV_LINKS}
+            />
         </div>
     );
 }

@@ -82,14 +82,8 @@ export const AboutSection = () => (
                             <img
                                 src="/profile.jpg"
                                 alt="Ryota Onuma"
-                                className="w-full h-full object-cover grayscale brightness-90 group-hover:grayscale-0 group-hover:brightness-100 transition-premium duration-1000 ease-out group-hover:scale-105"
+                                className="w-full h-full object-cover lg:grayscale lg:brightness-90 group-hover:lg:grayscale-0 group-hover:lg:brightness-100 transition-premium duration-1000 ease-out group-hover:scale-105"
                             />
-                            {/* Signature or subtle info overlay */}
-                            <div className="absolute bottom-6 left-6 z-10 opacity-0 group-hover:opacity-100 transition-premium duration-700">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/50 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                                    Based in Japan
-                                </p>
-                            </div>
                         </div>
                     </div>
                 </div>
