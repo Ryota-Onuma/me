@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { contents } from '../../data/contents';
 import { WorkCard } from '../ui/WorkCard';
 import { NoiseOverlay, Spotlight } from '../effects';
 import { Header, Footer } from '../layout';
-import { ArrowLeft, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { DeferredRender } from '../utils/DeferredRender';
+import { useHasScrolled } from '../../hooks/useHasScrolled';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -14,7 +15,7 @@ export const BlogListPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const currentPage = parseInt(searchParams.get('page') || '1', 10);
 
-    const [isScrolled, setIsScrolled] = useState(false);
+    const { isScrolled } = useHasScrolled();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
@@ -39,12 +40,9 @@ export const BlogListPage = () => {
     const paginatedContents = filteredContents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 50);
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+        // Scroll to top on mount to ensure we start at the top
+        window.scrollTo(0, 0);
 
-    useEffect(() => {
         // Reset to page 1 when filters change, but only if we are not already on page 1
         if (currentPage !== 1) {
             setSearchParams({ page: '1' });
@@ -74,23 +72,14 @@ export const BlogListPage = () => {
             <main className="pt-32 pb-20 px-6 md:px-16 lg:px-24 min-h-screen">
                 {/* Header */}
                 <div className="mb-20 animate-fade-in-up">
-                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12 border-b border-white/10 pb-8">
-                        <div>
-                            <h1 className="mb-4 text-white">
-                                BLOG
-                            </h1>
-                            <p className="text-white/50 text-base md:text-lg max-w-2xl leading-relaxed">
-                                Thoughts, tutorials, and insights on development and design.<br />
-                                Currently featuring <span className="text-white font-semibold">{filteredContents.length}</span> articles.
-                            </p>
-                        </div>
-                        <Link
-                            to="/"
-                            className="group flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm font-medium uppercase tracking-wider mb-2"
-                        >
-                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                            Back to Home
-                        </Link>
+                    <div className="mb-12 border-b border-white/10 pb-8">
+                        <h1 className="mb-4 text-white">
+                            BLOG
+                        </h1>
+                        <p className="text-white/50 text-base md:text-lg max-w-2xl leading-relaxed">
+                            Thoughts, tutorials, and insights on development and design.<br />
+                            Currently featuring <span className="text-white font-semibold">{filteredContents.length}</span> articles.
+                        </p>
                     </div>
 
                     {/* Search & Tags */}

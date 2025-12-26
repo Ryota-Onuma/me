@@ -1,4 +1,4 @@
-import { contents } from '../../data/contents';
+import { contents, ContentItem } from '../../data/contents';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -11,6 +11,11 @@ import css from 'react-syntax-highlighter/dist/esm/languages/prism/css';
 import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
 import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash';
 import markdown from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
+import { ArrowLeft, Clock, Tag, Copy, Check, ArrowRight } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { Header, Footer } from '../layout';
+import { useHasScrolled } from '../../hooks/useHasScrolled';
+import { parseMarkdownPost, ParsedPost } from '../../utils/markdown';
 
 SyntaxHighlighter.registerLanguage('typescript', typescript);
 SyntaxHighlighter.registerLanguage('ts', typescript);
@@ -22,17 +27,6 @@ SyntaxHighlighter.registerLanguage('css', css);
 SyntaxHighlighter.registerLanguage('json', json);
 SyntaxHighlighter.registerLanguage('bash', bash);
 SyntaxHighlighter.registerLanguage('markdown', markdown);
-import { ArrowLeft, Clock, Tag, Copy, Check, ArrowRight } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Header, Footer } from '../layout';
-
-interface PostData {
-    title: string;
-    date: string;
-    tags: string[];
-    content: string;
-    thumbnail?: string;
-}
 
 // Vite's way to load all markdown files in the posts directory
 const posts: Record<string, string> = import.meta.glob('../../content/posts/*.md', { query: '?raw', import: 'default', eager: true });
@@ -64,25 +58,19 @@ const CopyButton = ({ text }: { text: string }) => {
 export const BlogDetail = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
-    const [post, setPost] = useState<PostData | null>(null);
+    const [post, setPost] = useState<ParsedPost | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [nextPost, setNextPost] = useState<any>(null);
-    const [prevPost, setPrevPost] = useState<any>(null);
+    const { isScrolled } = useHasScrolled();
 
-    useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 50);
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    useEffect(() => {
-        if (!slug) return;
+    // Derived data: compute prev/next posts from slug (no useEffect needed)
+    const { prevPost, nextPost } = useMemo((): { prevPost: ContentItem | null; nextPost: ContentItem | null } => {
+        if (!slug) return { prevPost: null, nextPost: null };
         const currentIndex = contents.findIndex(c => c.slug === slug);
-        if (currentIndex !== -1) {
-            setPrevPost(contents[currentIndex - 1] || null);
-            setNextPost(contents[currentIndex + 1] || null);
-        }
+        if (currentIndex === -1) return { prevPost: null, nextPost: null };
+        return {
+            prevPost: contents[currentIndex - 1] ?? null,
+            nextPost: contents[currentIndex + 1] ?? null
+        };
     }, [slug]);
 
     useEffect(() => {
@@ -98,37 +86,8 @@ export const BlogDetail = () => {
                     return;
                 }
 
-                // Simple manual frontmatter parser
-                const match = rawContent.match(/^---([\s\S]*?)---([\s\S]*)$/);
-                if (match) {
-                    const frontmatter = match[1];
-                    const content = match[2];
-
-                    const data: any = {};
-                    frontmatter.split('\n').forEach((line: string) => {
-                        const [key, ...valueParts] = line.split(':');
-                        if (key && valueParts.length > 0) {
-                            const value = valueParts.join(':').trim().replace(/^["']|["']$/g, '');
-                            if (key.trim() === 'tags') {
-                                // Remove brackets, split by comma, then trim and remove quotes from each tag
-                                data.tags = value
-                                    .replace(/[\[\]]/g, '')
-                                    .split(',')
-                                    .map((t: string) => t.trim().replace(/^["']|["']$/g, ''));
-                            } else {
-                                data[key.trim()] = value;
-                            }
-                        }
-                    });
-
-                    setPost({
-                        title: data.title || 'Untitled',
-                        date: data.date || '',
-                        tags: data.tags || [],
-                        thumbnail: data.thumbnail,
-                        content: content
-                    });
-                }
+                const parsed = parseMarkdownPost(rawContent);
+                setPost(parsed);
             } catch (err) {
                 console.error('Failed to parse post:', err);
                 setPost(null);

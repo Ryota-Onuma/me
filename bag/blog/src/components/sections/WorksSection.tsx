@@ -15,14 +15,14 @@ export const WorksSection = () => {
         <section id="blog" className="py-20 md:py-32 px-6 md:px-16 lg:px-24 bg-[#050505]">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-                <SectionHeading title="Works" />
+                <SectionHeading title="Blog" />
 
                 {contents.length > PREVIEW_COUNT && (
                     <Link
                         to="/blog"
                         className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-white text-black rounded-full text-sm font-semibold hover:bg-white/90 transition-colors mb-24 self-end"
                     >
-                        View All
+                        View All Articles
                         <ArrowRight className="w-4 h-4" />
                     </Link>
                 )}

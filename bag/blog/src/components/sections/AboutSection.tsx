@@ -1,4 +1,4 @@
-import { Github } from 'lucide-react';
+import { Github, ArrowUpRight } from 'lucide-react';
 
 // X (Twitter) icon component
 const XIcon = ({ className }: { className?: string }) => (
@@ -7,66 +7,93 @@ const XIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-/**
- * AboutSection - About Me セクション (CSS animations for performance)
- */
 import { SectionHeading } from '../ui/SectionHeading';
 
-// ...
+const SOCIAL_LINKS = [
+    {
+        label: 'GitHub',
+        href: 'https://github.com/Ryota-Onuma',
+        icon: Github,
+    },
+    {
+        label: 'X',
+        href: 'https://x.com/and_and_and30',
+        icon: XIcon,
+    },
+];
 
 export const AboutSection = () => (
     <section
         id="about"
-        className="py-20 md:py-40 px-6 md:px-24 bg-[#050505]"
+        className="py-20 md:py-32 px-6 md:px-24 bg-[#050505] overflow-hidden"
     >
-        <SectionHeading title="About" />
+        <div className="max-w-7xl mx-auto w-full">
+            <SectionHeading title="About" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
-            {/* Profile Image */}
-            <div className="relative">
-                <div className="aspect-square max-w-[400px] mx-auto relative">
-                    <div className="absolute inset-0 border border-white/10 translate-x-4 translate-y-4" />
-                    <div className="relative w-full h-full border border-white/10 overflow-hidden">
-                        <img
-                            src="/profile.jpg"
-                            alt="Ryota Onuma"
-                            className="w-full h-full object-cover object-center"
-                        />
+            <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-12 md:gap-24 items-start">
+
+                {/* Bio Text - Left Side (Asymmetric priority) */}
+                <div className="space-y-10 order-2 lg:order-1">
+                    <div className="animate-fade-in-up">
+                        <p className="text-xs uppercase tracking-[0.4em] text-accent font-black mb-4">
+                            Software Engineer
+                        </p>
+                        <h3 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">
+                            Ryota Onuma
+                        </h3>
+                    </div>
+
+                    <div className="space-y-8 max-w-2xl">
+                        <p className="text-white/90 leading-relaxed text-xl md:text-2xl font-semibold tracking-tight">
+                            長野県出身のソフトウェアエンジニア。
+                        </p>
+                        <p className="text-white/50 leading-relaxed text-lg md:text-xl font-medium">
+                            Go、Kotlin、TypeScript あたりをよく書く。最近はフィリピンのチームと協業している。<br className="hidden md:block" />
+                            好奇心を持ち続けること、動き続けることを大切にしている。
+                        </p>
+                    </div>
+
+                    {/* Social Links */}
+                    <div className="pt-6 flex flex-wrap gap-4">
+                        {SOCIAL_LINKS.map((link) => (
+                            <a
+                                key={link.label}
+                                href={link.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group/link flex items-center gap-4 px-8 py-4 rounded-full bg-white/[0.03] border border-white/10 text-white/60 transition-premium hover:text-accent hover:border-accent/40 hover:bg-accent/5 hover:scale-105"
+                            >
+                                <link.icon className="w-5 h-5" />
+                                <span className="text-sm font-black uppercase tracking-widest">{link.label}</span>
+                                <ArrowUpRight className="w-4 h-4 opacity-0 -ml-2 group-hover/link:opacity-100 group-hover/link:ml-0 transition-premium" />
+                            </a>
+                        ))}
                     </div>
                 </div>
-            </div>
 
-            {/* Bio Text */}
-            <div className="space-y-6">
-                <h3 className="text-2xl md:text-3xl font-bold tracking-tight">
-                    Ryota Onuma
-                </h3>
-                <p className="text-white/60 leading-relaxed text-sm md:text-base">
-                    長野県出身のソフトウェアエンジニア。Go、Kotlin、TypeScriptあたりをよく書く。最近はフィリピンのチームと協業している。
-                </p>
+                {/* Profile Image - Right Side (Tilted/Offset) */}
+                <div className="relative group flex justify-center lg:justify-end order-1 lg:order-2">
+                    <div className="aspect-[4/5] w-full max-w-[400px] relative lg:rotate-2 group-hover:rotate-0 transition-premium duration-1000">
+                        {/* Glow effect */}
+                        <div className="absolute -inset-4 bg-accent/20 rounded-3xl blur-3xl opacity-0 group-hover:opacity-40 transition-premium duration-1000" />
 
-
-                {/* Social Links */}
-                <div className="pt-6 flex gap-4">
-                    <a
-                        href="https://github.com/Ryota-Onuma"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200"
-                    >
-                        <Github className="w-4 h-4" />
-                        <span className="text-sm font-medium">GitHub</span>
-                    </a>
-                    <a
-                        href="https://x.com/and_and_and30"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200"
-                    >
-                        <XIcon className="w-4 h-4" />
-                        <span className="text-sm font-medium">X</span>
-                    </a>
+                        {/* Image container */}
+                        <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 group-hover:border-accent/30 shadow-2xl transition-premium duration-1000">
+                            <img
+                                src="/profile.jpg"
+                                alt="Ryota Onuma"
+                                className="w-full h-full object-cover grayscale brightness-90 group-hover:grayscale-0 group-hover:brightness-100 transition-premium duration-1000 ease-out group-hover:scale-105"
+                            />
+                            {/* Signature or subtle info overlay */}
+                            <div className="absolute bottom-6 left-6 z-10 opacity-0 group-hover:opacity-100 transition-premium duration-700">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/50 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                                    Based in Japan
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
             </div>
         </div>
     </section>

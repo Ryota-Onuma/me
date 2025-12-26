@@ -1,11 +1,18 @@
 import { X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { scrollToSection } from '../../utils/scroll';
 
 interface MobileMenuProps {
     isOpen: boolean;
     onClose: () => void;
     navLinks: string[];
 }
+
+const navLabels: Record<string, string> = {
+    home: 'Home',
+    blog: 'Blog',
+    about: 'About',
+};
 
 /**
  * MobileMenu - モバイルメニューオーバーレイ (CSS transitions)
@@ -22,7 +29,7 @@ export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps) => {
         }
         if (isHome) {
             e.preventDefault();
-            document.getElementById(item)?.scrollIntoView({ behavior: 'smooth' });
+            scrollToSection(item);
         }
         onClose();
     };
@@ -49,11 +56,11 @@ export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps) => {
                 {navLinks.map((item) => (
                     <Link
                         key={item}
-                        to={getLinkPath(item)}
-                        onClick={(e: any) => handleLinkClick(e, item)}
-                        className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-white/20 hover:text-white transition-all duration-300"
+                        to={isHome ? '#' : getLinkPath(item)}
+                        onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleLinkClick(e, item)}
+                        className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-white/40 hover:text-accent transition-all duration-300"
                     >
-                        {item}
+                        {navLabels[item] || item}
                     </Link>
                 ))}
             </div>

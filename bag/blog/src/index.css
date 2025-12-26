@@ -4,7 +4,11 @@
 @theme {
     --color-bg: #050505;
     --color-text: #f0f0f0;
+    --color-accent: #3b82f6;
+    /* Electric Blue */
+    --color-accent-dim: rgba(59, 130, 246, 0.4);
     --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
@@ -140,7 +144,11 @@ body {
 /* Smooth reveal utility */
 .reveal-text {
     clip-path: inset(0 0 0 0);
-    transition: clip-path 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: clip-path 0.8s var(--ease-out-expo);
+}
+
+.transition-premium {
+    transition: all 0.6s var(--ease-out-expo);
 }
 
 /* Performance-optimized animations */

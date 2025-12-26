@@ -20,13 +20,24 @@ import { ProgressBar } from './components/ui';
 
 // Hooks
 import { useScrollProgress } from './hooks/useScrollProgress';
+import { useHasScrolled } from './hooks/useHasScrolled';
+import { useHashScroll } from './hooks/useHashScroll';
 
 // Utils
 import { DeferredRender } from './components/utils/DeferredRender';
 
 const NAV_LINKS = ['home', 'about', 'blog'];
 
-const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, isMobileMenuOpen, setIsMobileMenuOpen, scrollProgress }: any) => {
+interface MainContentProps {
+    activeSection: string;
+    onMobileMenuOpen: () => void;
+    isScrolled: boolean;
+    isMobileMenuOpen: boolean;
+    setIsMobileMenuOpen: (isOpen: boolean) => void;
+    scrollProgress: number;
+}
+
+const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, isMobileMenuOpen, setIsMobileMenuOpen, scrollProgress }: MainContentProps) => {
     return (
         <>
             {/* Deferred Background Effects - Priorities Content First */}
@@ -67,29 +78,27 @@ const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, isMobileMenu
 function App() {
     const [activeSection, setActiveSection] = useState('home');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
     const location = useLocation();
 
     const { scrollProgress } = useScrollProgress();
+    const { isScrolled } = useHasScrolled();
+    useHashScroll();
 
     useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50);
-        };
-
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                     setActiveSection(entry.target.id);
                 }
             });
-        }, { threshold: 0.5 });
+        }, {
+            threshold: 0.2,
+            rootMargin: '-80px 0px -20% 0px' // Match corrected scroll offset
+        });
 
         document.querySelectorAll('section[id]').forEach((s) => observer.observe(s));
-        window.addEventListener('scroll', handleScroll);
 
         return () => {
-            window.removeEventListener('scroll', handleScroll);
             observer.disconnect();
         };
     }, [location.pathname]);

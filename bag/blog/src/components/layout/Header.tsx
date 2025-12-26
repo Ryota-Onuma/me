@@ -1,5 +1,6 @@
 import { Menu, Home, User, BookOpen, ArrowLeft } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { scrollToSection } from '../../utils/scroll';
 
 interface HeaderProps {
     isScrolled: boolean;
@@ -39,13 +40,13 @@ export const Header = ({
         if (item === 'blog') {
             if (isBlogPage) {
                 e.preventDefault();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                scrollToSection('home');
             }
             return;
         }
         if (isHome) {
             e.preventDefault();
-            document.getElementById(item)?.scrollIntoView({ behavior: 'smooth' });
+            scrollToSection(item);
         }
     };
 
@@ -93,7 +94,7 @@ export const Header = ({
                                 <Link
                                     key={item}
                                     to={getLinkPath(item)}
-                                    onClick={(e: any) => handleLinkClick(e, item)}
+                                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) => handleLinkClick(e, item)}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-semibold uppercase tracking-wider transition-colors duration-150 ${isActive(item)
                                         ? 'bg-white text-black'
                                         : 'text-white/60 hover:text-white hover:bg-white/10'

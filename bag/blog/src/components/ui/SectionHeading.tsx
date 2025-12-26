@@ -15,12 +15,12 @@ export const SectionHeading = ({
 
             <div className="relative z-10 flex items-center gap-6 pt-8">
                 <div className="flex flex-col">
-                    <span className="text-lg md:text-2xl tracking-[0.6em] text-white uppercase font-black italic leading-none pl-1">
+                    <span className="text-lg md:text-2xl tracking-[0.6em] text-white uppercase font-black italic leading-none pl-1 group-hover:text-accent transition-colors duration-500">
                         {title}
                     </span>
-                    <div className="h-[3px] bg-gradient-to-r from-white via-white/50 to-transparent mt-4 animate-width-expand origin-left" />
+                    <div className="h-[3px] bg-gradient-to-r from-accent via-accent/50 to-transparent mt-4 animate-width-expand origin-left" />
                 </div>
-                <div className="hidden md:block w-32 h-px bg-gradient-to-r from-white/20 to-transparent" />
+                <div className="hidden md:block w-32 h-px bg-gradient-to-r from-accent/30 to-transparent" />
             </div>
         </div>
     );
