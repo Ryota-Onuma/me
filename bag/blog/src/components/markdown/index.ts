@@ -1,3 +1,5 @@
-export { Mermaid } from './Mermaid';
-export { TableOfContents } from './TableOfContents';
-export { CopyButton } from './CopyButton';
+export * from './Mermaid';
+export * from './TableOfContents';
+export * from './CopyButton';
+export * from './AlertBlock';
+export * from './CodeBlock';

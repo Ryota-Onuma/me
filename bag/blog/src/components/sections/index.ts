@@ -1,3 +1,5 @@
-export { AboutSection } from './AboutSection';
-export { WorksSection } from './WorksSection';
-
+export * from './AboutSection';
+export * from './BlogDetail';
+export * from './BlogHero';
+export * from './BlogNavigation';
+export * from './WorksSection';

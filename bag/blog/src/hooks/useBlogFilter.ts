@@ -1,11 +1,21 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { contents } from '../data/contents';
+import { contents, ContentItem } from '../data/contents';
+
+export interface UseBlogFilterResult {
+    searchQuery: string;
+    setSearchQuery: (query: string) => void;
+    selectedTag: string | null;
+    setSelectedTag: (tag: string | null) => void;
+    allTags: string[];
+    filteredContents: ContentItem[];
+    totalItems: number;
+}
 
 /**
  * useBlogFilter - ブログ記事の検索、タグによるフィルタリングを管理する
  */
-export const useBlogFilter = () => {
+export const useBlogFilter = (): UseBlogFilterResult => {
     const [searchParams, setSearchParams] = useSearchParams();
     const selectedTag = searchParams.get('tag');
     const [searchQuery, setSearchQuery] = useState('');
