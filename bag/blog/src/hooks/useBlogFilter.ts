@@ -1,22 +1,33 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { contents } from '../data/contents';
 
-const ITEMS_PER_PAGE = 9;
-
 /**
- * useBlogFilter - ブログ記事のプロンプト、タグによるフィルタリングとページネーションを管理する
+ * useBlogFilter - ブログ記事の検索、タグによるフィルタリングを管理する
  */
 export const useBlogFilter = () => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const currentPage = parseInt(searchParams.get('page') || '1', 10);
+    const selectedTag = searchParams.get('tag');
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
+    const setSelectedTag = (tag: string | null) => {
+        const newParams = new URLSearchParams(searchParams);
+        if (tag) {
+            newParams.set('tag', tag);
+        } else {
+            newParams.delete('tag');
+        }
+        setSearchParams(newParams);
+    };
 
     const allTags = useMemo(() => {
         const tags = new Set<string>();
-        contents.forEach(item => item.tags?.forEach(tag => tags.add(tag)));
-        return Array.from(tags).slice(0, 6);
+        contents.forEach(item => item.tags?.forEach(tag => {
+            if (tag && tag.trim()) {
+                tags.add(tag);
+            }
+        }));
+        return Array.from(tags).sort();
     }, []);
 
     const filteredContents = useMemo(() => {
@@ -29,34 +40,13 @@ export const useBlogFilter = () => {
         });
     }, [searchQuery, selectedTag]);
 
-    const totalPages = Math.ceil(filteredContents.length / ITEMS_PER_PAGE);
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const paginatedContents = filteredContents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
-    useEffect(() => {
-        window.scrollTo(0, 0);
-        if (currentPage !== 1) {
-            setSearchParams({ page: '1' });
-        }
-    }, [searchQuery, selectedTag]);
-
-    const goToPage = (page: number): void => {
-        if (page >= 1 && page <= totalPages) {
-            setSearchParams({ page: page.toString() });
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
-
     return {
-        currentPage,
         searchQuery,
         setSearchQuery,
         selectedTag,
         setSelectedTag,
         allTags,
         filteredContents,
-        paginatedContents,
-        totalPages,
-        goToPage
+        totalItems: contents.length
     };
 };

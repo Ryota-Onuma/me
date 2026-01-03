@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 interface MobileMenuProps {
     isOpen: boolean;
@@ -8,37 +8,30 @@ interface MobileMenuProps {
 }
 
 const navLabels: Record<string, string> = {
-    home: 'Home',
-    blog: 'Blog',
     about: 'About',
+    blog: 'Blog',
 };
 
 /**
  * MobileMenu - モバイルメニューオーバーレイ
  */
 export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps): JSX.Element | null => {
-    const location = useLocation();
-    const isHome = location.pathname === '/';
-
-
     const handleLinkClick = (): void => {
-        // Native behavior will update the hash, and useHashScroll will handle the scroll immediately.
         onClose();
     };
 
     const getLinkPath = (item: string): string => {
-        if (item === 'blog') return '/blog';
-        return isHome ? `#${item}` : `/#${item}`;
+        return item === 'about' ? '/' : `/${item}`;
     };
 
     if (!isOpen) return null;
 
     return (
         <div
-            className="fixed inset-0 z-[2000] bg-[#050505]/95 backdrop-blur-xl flex flex-col items-center justify-center gap-10 animate-fade-in"
+            className="fixed inset-0 z-[2000] bg-[#fafafa]/95 backdrop-blur-xl flex flex-col items-center justify-center gap-10 animate-fade-in"
         >
             <button
-                className="absolute top-8 right-6 md:top-12 md:right-12 text-white/50 hover:text-white transition-colors"
+                className="absolute top-8 right-6 md:top-12 md:right-12 text-black/50 hover:text-black transition-colors"
                 onClick={onClose}
                 aria-label="Close menu"
             >
@@ -50,9 +43,9 @@ export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps): JSX.
                         key={item}
                         to={getLinkPath(item)}
                         onClick={handleLinkClick}
-                        className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-white/70 hover:text-accent active:text-accent transition-premium"
+                        className="text-4xl md:text-6xl font-black uppercase tracking-[0.2em] text-black/40 hover:text-black transition-premium"
                     >
-                        {navLabels[item] || item}
+                        {navLabels[item]}
                     </Link>
                 ))}
             </div>

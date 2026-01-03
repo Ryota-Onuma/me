@@ -11,15 +11,27 @@ export interface ContentItem {
     slug?: string;
 }
 
-// Vite's dynamic import for all markdown files
-const postFiles = import.meta.glob('../content/posts/*.md', { query: '?raw', eager: true });
+interface FrontmatterData {
+    id?: string;
+    title?: string;
+    category?: string;
+    description?: string;
+    date?: string;
+    tags?: string[];
+    thumbnail?: string;
+    url?: string;
+    external_url?: string;
+}
 
-function parseFrontmatter(content: string) {
+// Vite's dynamic import for all markdown files
+const postFiles: Record<string, { default: string }> = import.meta.glob('../content/posts/*.md', { query: '?raw', eager: true });
+
+function parseFrontmatter(content: string): FrontmatterData {
     const match = content.match(/^---\s*([\s\S]*?)\s*---/);
     if (!match) return {};
 
     const frontmatterRaw = match[1];
-    const data: any = {};
+    const data: FrontmatterData = {};
 
     frontmatterRaw.split('\n').forEach(line => {
         const colonIndex = line.indexOf(':');
@@ -36,9 +48,9 @@ function parseFrontmatter(content: string) {
 
             // Handle arrays (simple case for tags: ["AI", "Blog"])
             if (value.startsWith('[') && value.endsWith(']')) {
-                data[key] = value.slice(1, -1).split(',').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
+                (data as Record<string, string | string[]>)[key] = value.slice(1, -1).split(',').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
             } else {
-                data[key] = value;
+                (data as Record<string, string | string[]>)[key] = value;
             }
         }
     });
@@ -46,21 +58,24 @@ function parseFrontmatter(content: string) {
     return data;
 }
 
-export const contents: ContentItem[] = Object.entries(postFiles).map(([path, module]: [string, any]) => {
+export const contents: ContentItem[] = Object.entries(postFiles).map(([path, module]) => {
     const rawContent = module.default;
     const data = parseFrontmatter(rawContent);
     const slug = path.split('/').pop()?.replace('.md', '');
 
+    const externalUrl = data.url || data.external_url;
+
     return {
-        id: data.id || slug,
-        type: data.url ? 'external' : 'internal',
+        id: data.id || slug || '',
+        type: externalUrl ? 'external' : 'internal',
         title: data.title || 'Untitled',
         category: data.category || 'Blog',
         description: data.description || '',
         date: data.date || '',
         tags: data.tags || [],
         thumbnail: data.thumbnail || '/thumbnails/default_blog.png',
-        url: data.url,
-        slug: data.url ? undefined : slug
+        url: externalUrl,
+        slug: externalUrl ? undefined : slug
     } as ContentItem;
 }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+

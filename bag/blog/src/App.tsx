@@ -3,10 +3,9 @@ import { Routes, Route } from 'react-router-dom';
 
 import { NoiseOverlay, Spotlight } from './components/effects';
 import { Header, Footer, MobileMenu } from './components/layout';
-import { HeroSection, AboutSection, WorksSection } from './components/sections';
+
 
 import { Suspense, lazy } from 'react';
-const BlogListPage = lazy(() => import('./components/pages/BlogListPage').then(module => ({ default: module.BlogListPage })));
 const BlogDetail = lazy(() => import('./components/sections/BlogDetail').then(module => ({ default: module.BlogDetail })));
 
 import { ProgressBar } from './components/ui';
@@ -15,21 +14,26 @@ import { useScrollProgress } from './hooks/useScrollProgress';
 import { useHasScrolled } from './hooks/useHasScrolled';
 import { useHashScroll } from './hooks/useHashScroll';
 import { useSectionObserver } from './hooks/useSectionObserver';
+import { useScrollToTop } from './hooks/useScrollToTop';
 
 import { DeferredRender } from './components/utils/DeferredRender';
 
-const NAV_LINKS = ['home', 'about', 'blog'];
+const NAV_LINKS = ['about', 'blog'];
 
-interface MainContentProps {
-    activeSection: string;
-    onMobileMenuOpen: () => void;
-    isScrolled: boolean;
-    scrollProgress: number;
-}
+import { HomePage, BlogListPage, NotFoundPage } from './components/pages';
 
-const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, scrollProgress }: MainContentProps): JSX.Element => {
+function App(): JSX.Element {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    useSectionObserver();
+    const { scrollProgress } = useScrollProgress();
+    const { isScrolled } = useHasScrolled();
+    useHashScroll();
+    useScrollToTop();
+
+
+
     return (
-        <>
+        <div className="bg-[#fafafa] text-[#1a1a1a] font-sans overflow-x-hidden min-h-screen">
             <DeferredRender timeout={100}>
                 <NoiseOverlay />
                 <Spotlight />
@@ -39,49 +43,22 @@ const MainContent = ({ activeSection, onMobileMenuOpen, isScrolled, scrollProgre
 
             <Header
                 isScrolled={isScrolled}
-                activeSection={activeSection}
                 navLinks={NAV_LINKS}
-                onMobileMenuOpen={onMobileMenuOpen}
+                onMobileMenuOpen={() => setIsMobileMenuOpen(true)}
             />
 
-            <HeroSection />
-            <AboutSection />
-            <WorksSection />
+            <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/blog" element={<BlogListPage />} />
+                <Route path="/blog/:slug" element={
+                    <Suspense fallback={<div className="min-h-screen bg-[#fafafa]" />}>
+                        <BlogDetail />
+                    </Suspense>
+                } />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
 
             <Footer />
-        </>
-    );
-};
-
-function App(): JSX.Element {
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { activeSection } = useSectionObserver();
-    const { scrollProgress } = useScrollProgress();
-    const { isScrolled } = useHasScrolled();
-    useHashScroll();
-
-    return (
-        <div className="bg-[#050505] text-[#f0f0f0] font-sans overflow-x-hidden min-h-screen">
-            <Routes>
-                <Route path="/" element={
-                    <MainContent
-                        activeSection={activeSection}
-                        onMobileMenuOpen={() => setIsMobileMenuOpen(true)}
-                        isScrolled={isScrolled}
-                        scrollProgress={scrollProgress}
-                    />
-                } />
-                <Route path="/blog" element={
-                    <Suspense fallback={<div className="min-h-screen bg-[#050505]" />}>
-                        <BlogListPage onMobileMenuOpen={() => setIsMobileMenuOpen(true)} />
-                    </Suspense>
-                } />
-                <Route path="/blog/:slug" element={
-                    <Suspense fallback={<div className="min-h-screen bg-[#050505]" />}>
-                        <BlogDetail onMobileMenuOpen={() => setIsMobileMenuOpen(true)} />
-                    </Suspense>
-                } />
-            </Routes>
 
             <MobileMenu
                 isOpen={isMobileMenuOpen}
@@ -93,3 +70,4 @@ function App(): JSX.Element {
 }
 
 export default App;
+

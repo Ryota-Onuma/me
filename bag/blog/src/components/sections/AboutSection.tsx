@@ -1,31 +1,11 @@
-import { Github, ArrowUpRight } from 'lucide-react';
-
-// X (Twitter) icon component
-const XIcon = ({ className }: { className?: string }) => (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-);
-
+import { ArrowUpRight } from 'lucide-react';
 import { SectionHeading } from '../ui/SectionHeading';
-
-const SOCIAL_LINKS = [
-    {
-        label: 'GitHub',
-        href: 'https://github.com/Ryota-Onuma',
-        icon: Github,
-    },
-    {
-        label: 'X',
-        href: 'https://x.com/and_and_and30',
-        icon: XIcon,
-    },
-];
+import { SOCIAL_LINKS } from '../../data/socialLinks';
 
 export const AboutSection = () => (
     <section
         id="about"
-        className="py-20 md:py-32 px-6 md:px-24 bg-[#050505] overflow-hidden"
+        className="pt-28 pb-20 md:py-32 px-6 md:px-24 bg-[#fafafa] overflow-hidden"
     >
         <div className="max-w-7xl mx-auto w-full">
             <SectionHeading title="About" />
@@ -44,12 +24,8 @@ export const AboutSection = () => (
                     </div>
 
                     <div className="space-y-8 max-w-2xl">
-                        <p className="text-white/90 leading-relaxed text-xl md:text-2xl font-semibold tracking-tight">
-                            長野県出身のソフトウェアエンジニア。
-                        </p>
-                        <p className="text-white/50 leading-relaxed text-lg md:text-xl font-medium">
-                            Go、Kotlin、TypeScript あたりをよく書く。最近はフィリピンのチームと協業している。<br className="hidden md:block" />
-                            好奇心を持ち続けること、動き続けることを大切にしている。
+                        <p className="text-black/50 leading-relaxed text-lg md:text-xl font-medium italic">
+                            Stay curious.
                         </p>
                     </div>
 
@@ -61,7 +37,7 @@ export const AboutSection = () => (
                                 href={link.href}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group/link flex items-center gap-4 px-8 py-4 rounded-full bg-white/[0.03] border border-white/10 text-white/60 transition-premium hover:text-accent hover:border-accent/40 hover:bg-accent/5 hover:scale-105"
+                                className="group/link flex items-center gap-4 px-8 py-4 rounded-full bg-black/[0.02] border border-black/10 text-black/60 transition-premium hover:text-accent hover:border-accent/40 hover:bg-accent/5 hover:scale-105"
                             >
                                 <link.icon className="w-5 h-5" />
                                 <span className="text-sm font-black uppercase tracking-widest">{link.label}</span>
@@ -78,11 +54,11 @@ export const AboutSection = () => (
                         <div className="absolute -inset-4 bg-accent/20 rounded-3xl blur-3xl opacity-0 group-hover:opacity-40 transition-premium duration-1000" />
 
                         {/* Image container */}
-                        <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 group-hover:border-accent/30 shadow-2xl transition-premium duration-1000">
+                        <div className="relative w-full h-full rounded-2xl overflow-hidden border border-black/10 group-hover:border-accent/30 shadow-2xl transition-premium duration-1000">
                             <img
                                 src="/profile.jpg"
                                 alt="Ryota Onuma"
-                                className="w-full h-full object-cover lg:grayscale lg:brightness-90 group-hover:lg:grayscale-0 group-hover:lg:brightness-100 transition-premium duration-1000 ease-out group-hover:scale-105"
+                                className="w-full h-full object-cover transition-premium duration-1000 ease-out group-hover:scale-105"
                             />
                         </div>
                     </div>
