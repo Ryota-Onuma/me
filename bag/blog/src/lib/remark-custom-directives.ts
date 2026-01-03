@@ -9,7 +9,7 @@ import type { Node } from 'unist';
  */
 interface CustomNode extends Node {
     name?: string;
-    attributes?: Record<string, string | null | undefined>;
+    attributes?: Record<string, string | null | undefined> | null;
     children?: any[];
     data?: {
         hName?: string;
@@ -26,8 +26,9 @@ interface CustomNode extends Node {
 export const remarkCustomDirectives: Plugin<[], Root> = () => {
     return (tree) => {
         // 1. Handle Container Directives (:::message, :::details)
-        visit(tree as any, 'containerDirective', (node: CustomNode) => {
-            const { name, attributes } = node;
+        visit(tree as any, 'containerDirective', (node: any) => {
+            const customNode = node as CustomNode;
+            const { name, attributes } = customNode;
 
             if (name === 'message') {
                 node.data = {
@@ -49,8 +50,9 @@ export const remarkCustomDirectives: Plugin<[], Root> = () => {
         });
 
         // 2. Handle Leaf Directives (::youtube[id], etc.)
-        visit(tree as any, 'leafDirective', (node: CustomNode) => {
-            const { name, attributes } = node;
+        visit(tree as any, 'leafDirective', (node: any) => {
+            const customNode = node as CustomNode;
+            const { name, attributes } = customNode;
 
             const supportedEmbeds = [
                 'youtube', 'twitter', 'github', 'gist', 'codepen',
