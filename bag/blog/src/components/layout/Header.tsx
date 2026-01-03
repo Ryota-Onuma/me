@@ -15,6 +15,7 @@ interface HeaderProps {
 const navLabels: Record<string, string> = {
     about: 'About',
     blog: 'Blog',
+    scrap: 'Scrap',
 };
 
 export const Header = ({

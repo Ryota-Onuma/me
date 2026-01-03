@@ -1,14 +1,22 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useId } from 'react';
 import mermaid from 'mermaid';
 import { CopyButton } from './CopyButton';
 
 mermaid.initialize({
-    startOnLoad: true,
-    theme: 'dark',
+    startOnLoad: false,
+    theme: 'neutral',
     securityLevel: 'loose',
     fontFamily: 'Inter, system-ui, sans-serif',
+    themeVariables: {
+        primaryColor: '#76b5c5',
+        primaryTextColor: '#1a1a1a',
+        primaryBorderColor: '#76b5c5',
+        lineColor: '#1a1a1a',
+        secondaryColor: '#f0f9fa',
+        tertiaryColor: '#ffffff',
+    }
 });
 
 interface MermaidProps {
@@ -16,30 +24,42 @@ interface MermaidProps {
 }
 
 export const Mermaid = ({ chart }: MermaidProps): React.ReactNode => {
-    const [svg, setSvg] = useState('');
-    const containerId = useMemo(() => `mermaid-${Math.random().toString(36).substr(2, 9)}`, []);
+    const [svg, setSvg] = useState<string | null>(null);
+    const id = useId();
+    const containerId = `mermaid${id.replace(/:/g, '-')}`;
 
     useEffect(() => {
+        let cancelled = false;
         const renderChart = async () => {
             try {
                 const { svg } = await mermaid.render(containerId, chart);
-                setSvg(svg);
+                if (!cancelled) {
+                    setSvg(svg);
+                }
             } catch (err) {
                 console.error('Mermaid rendering failed:', err);
             }
         };
         renderChart();
+        return () => { cancelled = true; };
     }, [chart, containerId]);
 
     return (
-        <div className="relative my-8">
-            <div className="absolute top-2 right-2 z-10 bg-gray-800 rounded-md">
-                <CopyButton text={chart} />
+        <div className="relative my-12 group">
+            <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="bg-white/80 backdrop-blur-md rounded-xl border border-black/5 shadow-sm">
+                    <CopyButton text={chart} />
+                </div>
             </div>
             <div
-                className="flex justify-center bg-black/5 p-6 rounded-2xl border border-black/5 overflow-x-auto"
-                dangerouslySetInnerHTML={{ __html: svg }}
-            />
+                className="flex justify-center bg-white rounded-3xl border border-black/10 p-8 md:p-12 overflow-x-auto shadow-sm min-h-[100px]"
+            >
+                {svg ? (
+                    <div dangerouslySetInnerHTML={{ __html: svg }} />
+                ) : (
+                    <div className="text-black/30 text-sm">Loading diagram...</div>
+                )}
+            </div>
         </div>
     );
 };

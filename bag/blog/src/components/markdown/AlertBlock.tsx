@@ -16,10 +16,15 @@ interface AlertBlockProps {
     children: React.ReactNode;
 }
 
+// Type for React element props with children
+interface PropsWithChildren {
+    children?: React.ReactNode;
+}
+
 const findText = (node: React.ReactNode): string => {
     if (typeof node === 'string') return node;
-    if (React.isValidElement(node) && (node.props as any).children) {
-        return findText((node.props as any).children);
+    if (React.isValidElement<PropsWithChildren>(node) && node.props.children) {
+        return findText(node.props.children);
     }
     if (Array.isArray(node)) return node.map(findText).join('');
     return '';
@@ -30,11 +35,12 @@ const cleanChildren = (nodes: React.ReactNode): React.ReactNode => {
         if (typeof node === 'string') {
             return node.replace(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/, '');
         }
-        if (React.isValidElement(node) && (node.props as any).children) {
-            return React.cloneElement(node, {
-                ...(node.props as any),
-                children: cleanChildren((node.props as any).children)
-            } as any);
+        if (React.isValidElement<PropsWithChildren>(node) && node.props.children) {
+            return React.cloneElement(
+                node,
+                undefined,
+                cleanChildren(node.props.children)
+            );
         }
         return node;
     });

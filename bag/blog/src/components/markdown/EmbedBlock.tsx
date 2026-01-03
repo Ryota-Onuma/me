@@ -1,15 +1,26 @@
 import React, { useEffect, useRef } from 'react';
-import { Globe, Github, Youtube, Twitter, ArrowUpRight } from 'lucide-react';
-import { LinkCardClient } from './LinkCardClient';
+import { Github, Twitter, ArrowUpRight } from 'lucide-react';
 
 interface EmbedBlockProps {
     type: string;
     id: string;
 }
 
+// Twitter Widgets API interface
+interface TwitterWidgets {
+    ready: (callback: () => void) => void;
+    widgets: {
+        createTweet: (
+            id: string,
+            container: HTMLElement,
+            options?: { theme?: string; align?: string; dnt?: boolean }
+        ) => Promise<HTMLElement>;
+    };
+}
+
 declare global {
     interface Window {
-        twttr: any;
+        twttr?: TwitterWidgets;
     }
 }
 

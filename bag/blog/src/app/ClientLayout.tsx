@@ -7,7 +7,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useScrollProgress } from '@/hooks/useScrollProgress';
 import { useHasScrolled } from '@/hooks/useHasScrolled';
 
-const NAV_LINKS = ['about', 'blog'];
+const NAV_LINKS = ['about', 'blog', 'scrap'];
 
 interface ClientLayoutProps {
     children: React.ReactNode;

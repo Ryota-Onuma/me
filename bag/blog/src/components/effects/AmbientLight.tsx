@@ -1,5 +1,4 @@
-import { useMemo } from 'react';
-
+import { useState } from 'react';
 
 interface Particle {
     id: number;
@@ -9,19 +8,22 @@ interface Particle {
     size: number;
 }
 
+// Generate particles outside of render to avoid purity issues
+const generateParticles = (): Particle[] =>
+    [...Array(15)].map((_, i) => ({
+        id: i,
+        left: `${Math.random() * 100}%`,
+        duration: Math.random() * 20 + 20,
+        delay: Math.random() * -20,
+        size: Math.random() * 1.5 + 0.5
+    }));
+
 /**
  * AmbientLight - アンビエント・パーティクル：光の粒子
  */
 export const AmbientLight = () => {
-    const particles = useMemo<Particle[]>(() =>
-        [...Array(15)].map((_, i) => ({
-            id: i,
-            left: `${Math.random() * 100}%`,
-            duration: Math.random() * 20 + 20,
-            delay: Math.random() * -20,
-            size: Math.random() * 1.5 + 0.5
-        })),
-        []);
+    // Use useState with initializer to generate particles once on mount
+    const [particles] = useState<Particle[]>(generateParticles);
 
     return (
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">

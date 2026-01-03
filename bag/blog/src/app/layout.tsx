@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <body className="bg-[#fafafa] text-[#1a1a1a] font-sans overflow-x-hidden min-h-screen">
         {children}
       </body>
