@@ -59,6 +59,7 @@ export const AboutSection = () => (
                                 src="/profile.jpg"
                                 alt="Ryota Onuma"
                                 className="w-full h-full object-cover transition-premium duration-1000 ease-out group-hover:scale-105"
+                                loading="lazy"
                             />
                         </div>
                     </div>

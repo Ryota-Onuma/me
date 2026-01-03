@@ -1,4 +1,5 @@
 import { ArrowUpRight, Calendar, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
 
 interface WorkCardProps {
     title: string;
@@ -14,16 +15,18 @@ interface WorkCardProps {
 
 export const WorkCard = ({ title, category, description, date, tags, thumbnail, url, isExternal, index = 0 }: WorkCardProps) => {
     const isAboveFold = index < 3;
+    const [isLoaded, setIsLoaded] = useState(false);
 
     const CardContent = (
         <article className="group relative flex flex-col h-full bg-black/[0.02] border border-black/10 rounded-2xl overflow-hidden hover:bg-black/[0.04] hover:border-accent-dim hover:shadow-2xl hover:shadow-accent/5 transition-premium ease-out hover:-translate-y-1">
             {/* Thumbnail */}
-            <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
+            <div className={`relative aspect-[16/10] overflow-hidden bg-gray-100 ${!isLoaded ? 'shimmer' : ''}`}>
                 <img
                     src={thumbnail || "/thumbnails/default_blog.png"}
                     alt={title}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-1000 ease-out"
+                    className={`w-full h-full object-contain group-hover:scale-105 transition-all duration-1000 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                     loading={isAboveFold ? "eager" : "lazy"}
+                    onLoad={() => setIsLoaded(true)}
                     {...(isAboveFold && { fetchpriority: "high" })}
                 />
 
