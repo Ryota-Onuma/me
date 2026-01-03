@@ -1,4 +1,6 @@
-import { useMemo } from 'react';
+'use client';
+
+import React, { useMemo } from 'react';
 
 interface Heading {
     text: string;
@@ -9,7 +11,7 @@ interface TableOfContentsProps {
     content: string;
 }
 
-export const TableOfContents = ({ content }: TableOfContentsProps): JSX.Element | null => {
+export const TableOfContents = ({ content }: TableOfContentsProps): React.ReactNode => {
     const headings = useMemo((): Heading[] => {
         const matches = Array.from(content.matchAll(/^## (.*)$/gm));
         return matches.map(match => ({

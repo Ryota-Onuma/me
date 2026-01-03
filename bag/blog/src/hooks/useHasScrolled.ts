@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 
 const DEFAULT_SCROLL_THRESHOLD = 50;

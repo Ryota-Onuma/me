@@ -1,5 +1,8 @@
+'use client';
+
 import { Menu, ArrowLeft } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface HeaderProps {
     isScrolled: boolean;
@@ -21,16 +24,17 @@ export const Header = ({
     backLink,
     backLabel
 }: HeaderProps) => {
-    const location = useLocation();
-    const navigate = useNavigate();
+    const pathname = usePathname();
+    const router = useRouter();
+
     const getLinkPath = (item: string) => {
         return item === 'about' ? '/' : `/${item}`;
     };
 
     const isActive = (item: string) => {
         const path = getLinkPath(item);
-        if (path === '/') return location.pathname === '/';
-        return location.pathname.startsWith(path);
+        if (path === '/') return pathname === '/';
+        return pathname.startsWith(path);
     };
 
     return (
@@ -42,7 +46,7 @@ export const Header = ({
                 <div className="flex items-center gap-6 md:gap-8">
                     {/* Logo */}
                     <Link
-                        to="/"
+                        href="/"
                         className="text-lg md:text-xl font-black tracking-tighter text-black hover:text-black/80 transition-premium"
                     >
                         Ryota Onuma
@@ -50,7 +54,7 @@ export const Header = ({
 
                     {backLink && (
                         <button
-                            onClick={() => navigate(backLink)}
+                            onClick={() => router.push(backLink)}
                             className="flex items-center gap-2 text-black/40 hover:text-black transition-premium group"
                         >
                             <div className="p-1.5 rounded-full bg-black/5 border border-black/10 group-hover:border-black/20 transition-premium">
@@ -66,7 +70,7 @@ export const Header = ({
                     {navLinks.map((item) => (
                         <Link
                             key={item}
-                            to={getLinkPath(item)}
+                            href={getLinkPath(item)}
                             className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] transition-premium ${isActive(item)
                                 ? 'text-black'
                                 : 'text-black/30 hover:text-black hover:bg-black/5'

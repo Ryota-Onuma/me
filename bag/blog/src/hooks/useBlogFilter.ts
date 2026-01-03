@@ -1,7 +1,10 @@
-import { useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { contents, ContentItem } from '../data/contents';
+'use client';
 
+import { useState, useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import type { ContentItem } from '@/lib/posts';
+
+// Client-side hook that receives contents as prop
 export interface UseBlogFilterResult {
     searchQuery: string;
     setSearchQuery: (query: string) => void;
@@ -15,19 +18,20 @@ export interface UseBlogFilterResult {
 /**
  * useBlogFilter - ブログ記事の検索、タグによるフィルタリングを管理する
  */
-export const useBlogFilter = (): UseBlogFilterResult => {
-    const [searchParams, setSearchParams] = useSearchParams();
+export const useBlogFilter = (contents: ContentItem[] = []): UseBlogFilterResult => {
+    const searchParams = useSearchParams();
+    const router = useRouter();
     const selectedTag = searchParams.get('tag');
     const [searchQuery, setSearchQuery] = useState('');
 
     const setSelectedTag = (tag: string | null) => {
-        const newParams = new URLSearchParams(searchParams);
+        const newParams = new URLSearchParams(searchParams.toString());
         if (tag) {
             newParams.set('tag', tag);
         } else {
             newParams.delete('tag');
         }
-        setSearchParams(newParams);
+        router.push(`?${newParams.toString()}`);
     };
 
     const allTags = useMemo(() => {
@@ -38,17 +42,18 @@ export const useBlogFilter = (): UseBlogFilterResult => {
             }
         }));
         return Array.from(tags).sort();
-    }, []);
+    }, [contents]);
 
     const filteredContents = useMemo(() => {
+        const query = searchQuery.toLowerCase().trim();
         return contents.filter(item => {
-            const matchesSearch = !searchQuery ||
-                item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesTag = !selectedTag || item.tags?.includes(selectedTag);
+            const matchesSearch = !query ||
+                item.title.toLowerCase().includes(query) ||
+                (item.description?.toLowerCase().includes(query) ?? false);
+            const matchesTag = selectedTag === null || item.tags?.includes(selectedTag);
             return matchesSearch && matchesTag;
         });
-    }, [searchQuery, selectedTag]);
+    }, [contents, searchQuery, selectedTag]);
 
     return {
         searchQuery,

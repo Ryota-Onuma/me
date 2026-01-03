@@ -18,8 +18,8 @@ interface AlertBlockProps {
 
 const findText = (node: React.ReactNode): string => {
     if (typeof node === 'string') return node;
-    if (React.isValidElement(node) && node.props.children) {
-        return findText(node.props.children);
+    if (React.isValidElement(node) && (node.props as any).children) {
+        return findText((node.props as any).children);
     }
     if (Array.isArray(node)) return node.map(findText).join('');
     return '';
@@ -30,10 +30,10 @@ const cleanChildren = (nodes: React.ReactNode): React.ReactNode => {
         if (typeof node === 'string') {
             return node.replace(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/, '');
         }
-        if (React.isValidElement(node) && node.props.children) {
+        if (React.isValidElement(node) && (node.props as any).children) {
             return React.cloneElement(node, {
-                ...node.props,
-                children: cleanChildren(node.props.children)
+                ...(node.props as any),
+                children: cleanChildren((node.props as any).children)
             } as any);
         }
         return node;

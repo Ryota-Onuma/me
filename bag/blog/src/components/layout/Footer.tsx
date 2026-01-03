@@ -1,12 +1,14 @@
-import { useLocation } from 'react-router-dom';
-import { SOCIAL_LINKS } from '../../data/socialLinks';
+'use client';
+
+import { usePathname } from 'next/navigation';
+import { SOCIAL_LINKS } from '@/data/socialLinks';
 
 /**
  * Footer - Redesigned structured footer
  */
 export const Footer = () => {
-    const location = useLocation();
-    const isHomePage = location.pathname === '/';
+    const pathname = usePathname();
+    const isHomePage = pathname === '/';
 
     return (
         <footer className="py-16 md:py-20 px-6 md:px-20 bg-[#f5f5f5] text-[#1a1a1a] border-t border-black/10">

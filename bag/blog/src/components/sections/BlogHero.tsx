@@ -1,6 +1,12 @@
 import React from 'react';
 import { Clock, Tag } from 'lucide-react';
-import { ParsedPost } from '../../utils/markdown';
+
+interface ParsedPost {
+    title: string;
+    date: string;
+    tags: string[];
+    thumbnail?: string;
+}
 
 interface BlogHeroProps {
     post: ParsedPost;

@@ -1,4 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+'use client';
+
+import React, { useEffect, useState, useMemo } from 'react';
 import mermaid from 'mermaid';
 import { CopyButton } from './CopyButton';
 
@@ -13,7 +15,7 @@ interface MermaidProps {
     chart: string;
 }
 
-export const Mermaid = ({ chart }: MermaidProps): JSX.Element => {
+export const Mermaid = ({ chart }: MermaidProps): React.ReactNode => {
     const [svg, setSvg] = useState('');
     const containerId = useMemo(() => `mermaid-${Math.random().toString(36).substr(2, 9)}`, []);
 

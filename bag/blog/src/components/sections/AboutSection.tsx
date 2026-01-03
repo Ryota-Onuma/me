@@ -1,6 +1,6 @@
 import { ArrowUpRight } from 'lucide-react';
 import { SectionHeading } from '../ui/SectionHeading';
-import { SOCIAL_LINKS } from '../../data/socialLinks';
+import { SOCIAL_LINKS } from '@/data/socialLinks';
 
 export const AboutSection = () => (
     <section

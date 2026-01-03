@@ -9,7 +9,7 @@ external_url: "https://zenn.dev/buyselltech/articles/db14b7f21c28e7"
 
 # 親子関係のあるデータの検索を、Elasticsearch の Join field type を使って実現した
 
-この記事は外部サイト（Zenn）で公開されています。記事の詳細を読むには、上記のリンクをクリックして外部サイトにアクセスしてください。
+この記事は外部サイトで公開されています。記事の詳細を読むには、上記のリンクをクリックして外部サイトにアクセスしてください。
 
 Elasticsearch の Join field type を使用して、親子関係のあるデータの検索を効率的に実装する方法について解説しています。
 
@@ -20,4 +20,4 @@ Elasticsearch の Join field type を使用して、親子関係のあるデー�
 - 検索クエリの実装方法
 - パフォーマンスの考慮事項
 
-**外部記事**: [Zenn で読む](https://zenn.dev/buyselltech/articles/db14b7f21c28e7)
+**外部記事**: [記事を読む](https://zenn.dev/buyselltech/articles/db14b7f21c28e7)

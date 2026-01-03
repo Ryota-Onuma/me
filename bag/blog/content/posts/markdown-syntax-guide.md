@@ -199,6 +199,65 @@ Images should be responsive and centered.
 
 ---
 
+## Custom Markdown Extensions
+
+Our engine supports specialized markdown extensions for a richer writing experience.
+
+### Message Boxes
+Use `:::message` for notes and `:::message alert` for warnings.
+
+:::message
+This is a standard message box. Use it for helpful tips or additional context.
+:::
+
+:::message alert
+This is an alert message box. Use it for critical warnings or things to avoid.
+:::
+
+### Accordion (Directive)
+While we support HTML `<details>`, we also support the specialized `:::details` directive.
+
+:::details Click to see more
+This is the hidden content inside the accordion. It supports **markdown** too!
+:::
+
+### Rich Embeds
+
+Our engine supports shorthand `@[platform](id)` and leaf directives `::platform[id]`. Both will render premium, responsive embeds.
+
+#### YouTube
+You can use either shorthand or directive:
+- `@[youtube](dQw4w9WgXcQ)`
+- `::youtube[id=dQw4w9WgXcQ]`
+
+@[youtube](dQw4w9WgXcQ)
+
+#### Twitter (X)
+- `@[twitter](20)`
+- `::twitter[id=20]`
+
+@[twitter](20)
+
+#### GitHub Card (Real OGP)
+GitHub embeds now fetch the **official social preview (OGP)** from GitHub, providing a rich card with stars, description, and the repository's branding.
+- `@[github](Ryota-Onuma/me)`
+- `::github[id=Ryota-Onuma/me]`
+
+@[github](Ryota-Onuma/me)
+
+### Link Cards
+
+Simply place a URL on its own line to generate a rich, glassmorphic link card with Open Graph metadata.
+
+https://zenn.dev/zenn/articles/markdown-guide
+
+### Image Resizing
+Add `=width` at the end of the image title or URL to resize it.
+
+![Resized Thumbnail](/thumbnails/markdown-syntax-guide.png =300)
+
+---
+
 ## Conclusion
 
 If all elements above render correctly with beautiful spacing and crisp colors, the blog engine is ready for production-grade content!

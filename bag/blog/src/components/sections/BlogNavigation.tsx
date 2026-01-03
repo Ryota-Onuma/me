@@ -1,7 +1,9 @@
+'use client';
+
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { ContentItem } from '../../data/contents';
+import type { ContentItem } from '@/lib/posts';
 
 interface BlogNavigationProps {
     prevPost: ContentItem | null;
@@ -9,11 +11,11 @@ interface BlogNavigationProps {
 }
 
 export const BlogNavigation: React.FC<BlogNavigationProps> = ({ prevPost, nextPost }) => {
-    const navigate = useNavigate();
+    const router = useRouter();
 
     const handlePostClick = (targetPost: ContentItem) => {
         if (targetPost.type === 'internal' && targetPost.slug) {
-            navigate(`/blog/${targetPost.slug}`);
+            router.push(`/blog/${targetPost.slug}`);
         } else if (targetPost.url) {
             window.open(targetPost.url, '_blank', 'noopener,noreferrer');
         }

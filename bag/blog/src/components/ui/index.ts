@@ -1,4 +1,4 @@
-export * from './MagneticButton';
-export * from './ProgressBar';
-export * from './SectionHeading';
-export * from './WorkCard';
+export { ProgressBar } from './ProgressBar';
+export { SectionHeading } from './SectionHeading';
+export { WorkCard } from './WorkCard';
+export { MagneticButton } from './MagneticButton';

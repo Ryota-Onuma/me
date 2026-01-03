@@ -1,11 +1,18 @@
-import { Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { WorkCard } from '../ui/WorkCard';
-import { SectionHeading } from '../ui/SectionHeading';
-import { useBlogFilter } from '../../hooks/useBlogFilter';
+'use client';
 
-export const WorksSection = () => {
-    const navigate = useNavigate();
+import { Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { WorkCard, SectionHeading } from '../ui';
+import { useBlogFilter } from '@/hooks/useBlogFilter';
+import { BACKGROUND_COLOR_LIGHT } from '@/lib/constants';
+import type { ContentItem } from '@/lib/posts';
+
+interface WorksSectionProps {
+    contents: ContentItem[];
+}
+
+export const WorksSection = ({ contents }: WorksSectionProps) => {
+    const router = useRouter();
     const {
         searchQuery,
         setSearchQuery,
@@ -13,10 +20,10 @@ export const WorksSection = () => {
         setSelectedTag,
         allTags,
         filteredContents
-    } = useBlogFilter();
+    } = useBlogFilter(contents);
 
     return (
-        <section id="blog" className="pt-28 pb-20 md:py-32 px-6 md:px-16 lg:px-24 bg-[#fafafa]">
+        <section id="blog" className="pt-28 pb-20 md:py-32 px-6 md:px-16 lg:px-24" style={{ backgroundColor: BACKGROUND_COLOR_LIGHT }}>
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
                 <div>
@@ -74,7 +81,7 @@ export const WorksSection = () => {
                         key={item.id}
                         onClick={() => {
                             if (item.type === 'internal' && item.slug) {
-                                navigate(`/blog/${item.slug}`);
+                                router.push(`/blog/${item.slug}`);
                             } else if (item.url) {
                                 window.open(item.url, '_blank', 'noopener,noreferrer');
                             }

@@ -1,11 +1,13 @@
-import { useState } from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 
 interface CopyButtonProps {
     text: string;
 }
 
-export const CopyButton = ({ text }: CopyButtonProps): JSX.Element => {
+export const CopyButton = ({ text }: CopyButtonProps): React.ReactNode => {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = async (): Promise<void> => {

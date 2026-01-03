@@ -27,7 +27,7 @@ export const WorkCard = ({ title, category, description, date, tags, thumbnail, 
                     className={`w-full h-full object-contain group-hover:scale-105 transition-all duration-1000 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                     loading={isAboveFold ? "eager" : "lazy"}
                     onLoad={() => setIsLoaded(true)}
-                    {...(isAboveFold && { fetchpriority: "high" })}
+                    {...(isAboveFold && { fetchPriority: "high" })}
                 />
 
                 {/* Gradient overlay */}

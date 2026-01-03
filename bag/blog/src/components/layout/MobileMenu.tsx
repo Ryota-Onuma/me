@@ -1,5 +1,9 @@
+'use client';
+
+import React from 'react';
+
 import { X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 
 interface MobileMenuProps {
     isOpen: boolean;
@@ -15,7 +19,7 @@ const navLabels: Record<string, string> = {
 /**
  * MobileMenu - モバイルメニューオーバーレイ
  */
-export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps): JSX.Element | null => {
+export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps): React.ReactNode => {
     const handleLinkClick = (): void => {
         onClose();
     };
@@ -41,7 +45,7 @@ export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps): JSX.
                 {navLinks.map((item) => (
                     <Link
                         key={item}
-                        to={getLinkPath(item)}
+                        href={getLinkPath(item)}
                         onClick={handleLinkClick}
                         className="text-4xl md:text-6xl font-black uppercase tracking-[0.2em] text-black/40 hover:text-black transition-premium"
                     >
