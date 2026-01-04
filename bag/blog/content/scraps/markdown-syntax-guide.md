@@ -2,7 +2,7 @@
 title: 'Markdown記法テスト'
 date: 'Jan 04, 2026'
 status: 'open'
-tags: ['Markdown', 'Tutorial']
+tags: ['Tutorial']
 emoji: '📝'
 ---
 
