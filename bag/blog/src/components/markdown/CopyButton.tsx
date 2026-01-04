@@ -5,9 +5,10 @@ import { Copy, Check } from 'lucide-react';
 
 interface CopyButtonProps {
     text: string;
+    className?: string;
 }
 
-export const CopyButton = ({ text }: CopyButtonProps): React.ReactNode => {
+export const CopyButton = ({ text, className }: CopyButtonProps): React.ReactNode => {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = async (): Promise<void> => {
@@ -19,7 +20,7 @@ export const CopyButton = ({ text }: CopyButtonProps): React.ReactNode => {
     return (
         <button
             onClick={handleCopy}
-            className="p-1.5 rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
+            className={`cursor-pointer p-1.5 rounded-md transition-all duration-200 ${className || 'text-white/70 hover:text-white hover:bg-white/10'}`}
             title="Copy code"
         >
             {copied ? (

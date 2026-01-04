@@ -69,7 +69,10 @@ const MermaidInner = ({ chart }: MermaidProps): React.ReactNode => {
         <div className="relative my-12 group">
             <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                 <div className="bg-white/80 backdrop-blur-md rounded-xl border border-black/5 shadow-sm">
-                    <CopyButton text={chart} />
+                    <CopyButton
+                        text={chart}
+                        className="text-black/50 hover:text-black hover:bg-black/5"
+                    />
                 </div>
             </div>
             <div
