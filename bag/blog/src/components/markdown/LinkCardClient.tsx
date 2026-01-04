@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Globe, ArrowUpRight } from 'lucide-react';
 
 export interface OGPData {
@@ -20,7 +21,7 @@ interface LinkCardClientProps {
  * OGP data is passed from server-side via markdownComponents context
  * No external API calls needed
  */
-export function LinkCardClient({ url, ogpData }: LinkCardClientProps) {
+function LinkCardClientInner({ url, ogpData }: LinkCardClientProps) {
     let domain = '';
     try {
         domain = new URL(url).hostname;
@@ -79,3 +80,7 @@ export function LinkCardClient({ url, ogpData }: LinkCardClientProps) {
         </div>
     );
 }
+
+// Memoize to prevent re-renders when parent re-renders (e.g., scroll progress)
+export const LinkCardClient = memo(LinkCardClientInner);
+

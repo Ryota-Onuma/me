@@ -22,6 +22,9 @@ mermaid.initialize({
 // Global cache for rendered SVGs to persist across re-mounts
 const svgCache = new Map<string, string>();
 
+// Constants
+const DIAGRAM_CONTAINER_MIN_HEIGHT = '100px';
+
 interface MermaidProps {
     chart: string;
 }
@@ -70,7 +73,8 @@ const MermaidInner = ({ chart }: MermaidProps): React.ReactNode => {
                 </div>
             </div>
             <div
-                className="flex justify-center bg-white rounded-3xl border border-black/10 p-8 md:p-12 overflow-x-auto shadow-sm min-h-[100px]"
+                className="flex justify-center bg-white rounded-3xl border border-black/10 p-8 md:p-12 overflow-x-auto shadow-sm"
+                style={{ minHeight: DIAGRAM_CONTAINER_MIN_HEIGHT }}
             >
                 {svg ? (
                     <div dangerouslySetInnerHTML={{ __html: svg }} />

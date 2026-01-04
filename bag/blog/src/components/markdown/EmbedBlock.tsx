@@ -1,8 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import { Github, Twitter, ArrowUpRight } from 'lucide-react';
 
+// Constants
+const TWITTER_SCRIPT_LOAD_DELAY_MS = 500;
+
+export type EmbedType = 'youtube' | 'twitter' | 'github';
+
 interface EmbedBlockProps {
-    type: string;
+    type: EmbedType | string; // Accept string for forward compatibility
     id: string;
 }
 
@@ -24,22 +29,29 @@ declare global {
     }
 }
 
-export const EmbedBlock: React.FC<EmbedBlockProps> = ({ type, id }) => {
+const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
     const tweetRef = useRef<HTMLDivElement>(null);
+    const tweetMountedRef = useRef(false);
 
     useEffect(() => {
-        if (type === 'twitter' && tweetRef.current) {
+        if (type === 'twitter' && tweetRef.current && !tweetMountedRef.current) {
             const container = tweetRef.current;
 
             const createTweet = () => {
                 if (window.twttr && window.twttr.widgets && window.twttr.widgets.createTweet) {
-                    // Clear any existing content
-                    container.innerHTML = '';
-                    window.twttr.widgets.createTweet(id, container, {
-                        theme: 'light',
-                        align: 'center',
-                        dnt: true // Do Not Track
-                    });
+                    // Only create if not already mounted
+                    if (!tweetMountedRef.current) {
+                        container.innerHTML = '';
+                        window.twttr.widgets.createTweet(id, container, {
+                            theme: 'light',
+                            align: 'center',
+                            dnt: true // Do Not Track
+                        }).then(() => {
+                            tweetMountedRef.current = true;
+                        }).catch((err) => {
+                            console.error('Failed to create tweet:', err);
+                        });
+                    }
                 }
             };
 
@@ -55,7 +67,7 @@ export const EmbedBlock: React.FC<EmbedBlockProps> = ({ type, id }) => {
                     if (window.twttr && window.twttr.ready) {
                         window.twttr.ready(createTweet);
                     } else {
-                        setTimeout(createTweet, 500);
+                        setTimeout(createTweet, TWITTER_SCRIPT_LOAD_DELAY_MS);
                     }
                 };
                 document.body.appendChild(script);
@@ -65,7 +77,7 @@ export const EmbedBlock: React.FC<EmbedBlockProps> = ({ type, id }) => {
                 } else if (window.twttr && window.twttr.widgets) {
                     createTweet();
                 } else {
-                    setTimeout(createTweet, 500);
+                    setTimeout(createTweet, TWITTER_SCRIPT_LOAD_DELAY_MS);
                 }
             }
         }
@@ -146,3 +158,7 @@ export const EmbedBlock: React.FC<EmbedBlockProps> = ({ type, id }) => {
             );
     }
 };
+
+// Memoize to prevent re-renders when parent re-renders (e.g., scroll progress)
+export const EmbedBlock = memo(EmbedBlockInner);
+
