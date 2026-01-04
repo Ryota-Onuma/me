@@ -112,6 +112,12 @@
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
+    transition: all 0.2s ease;
+  }
+
+  & :where(li.task-list-item:has(input[type="checkbox"]:checked)):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    opacity: 0.5;
+    text-decoration: line-through;
   }
 
   & :where(li.task-list-item input[type="checkbox"]):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
@@ -131,18 +137,19 @@
   & :where(li.task-list-item input[type="checkbox"]:checked):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
     background-color: var(--color-accent);
     border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-light);
   }
 
   & :where(li.task-list-item input[type="checkbox"]:checked::after):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
     content: '';
     position: absolute;
     width: 0.35rem;
-    height: 0.65rem;
+    height: 0.6rem;
     border: solid white;
     border-width: 0 2px 2px 0;
-    top: 45%;
+    top: 40%;
     left: 50%;
-    transform: translate(-50%, -55%) rotate(45deg);
+    transform: translate(-50%, -50%) rotate(45deg);
   }
 
   /* GFM Tables */

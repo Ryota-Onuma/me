@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getScrapBySlug, getScrapSlugs } from '@/lib/scraps';
+import { prefetchOGPData } from '@/lib/prefetchOGP';
 import { ScrapDetailClient } from './ScrapDetailClient';
 
 interface PageProps {
@@ -19,5 +20,10 @@ export default async function ScrapDetailPage({ params }: PageProps) {
         notFound();
     }
 
-    return <ScrapDetailClient scrap={scrap} />;
+    // Collect all thread contents and pre-fetch OGP data
+    const allContent = scrap.threads.map(t => t.content).join('\n');
+    const ogpDataMap = await prefetchOGPData(allContent);
+
+    return <ScrapDetailClient scrap={scrap} ogpDataMap={ogpDataMap} />;
 }
+

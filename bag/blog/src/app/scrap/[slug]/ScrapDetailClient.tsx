@@ -12,6 +12,7 @@ import remarkDirective from 'remark-directive';
 import remarkGemoji from 'remark-gemoji';
 import { remarkCustomDirectives } from '@/lib/remark-custom-directives';
 import { createMarkdownComponents } from '@/lib/markdownComponents';
+import type { OGPData } from '@/lib/prefetchOGP';
 
 import { Header, Footer, MobileMenu } from '@/components/layout';
 import { NoiseOverlay, Spotlight } from '@/components/effects';
@@ -23,12 +24,12 @@ const NAV_LINKS = ['about', 'blog', 'scrap'];
 
 interface ScrapDetailClientProps {
     scrap: Scrap;
+    ogpDataMap?: Record<string, OGPData>;
 }
 
-// Create markdown components once
-const markdownComponents = createMarkdownComponents();
-
-export function ScrapDetailClient({ scrap }: ScrapDetailClientProps) {
+export function ScrapDetailClient({ scrap, ogpDataMap }: ScrapDetailClientProps) {
+    // Create markdown components with OGP data
+    const markdownComponents = createMarkdownComponents(ogpDataMap);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { isScrolled } = useHasScrolled();
 
@@ -41,8 +42,6 @@ export function ScrapDetailClient({ scrap }: ScrapDetailClientProps) {
                 isScrolled={isScrolled}
                 navLinks={NAV_LINKS}
                 onMobileMenuOpen={() => setIsMobileMenuOpen(true)}
-                backLink="/scrap"
-                backLabel="Scrap"
             />
 
             <div className="min-h-screen bg-[#fafafa] text-[#1a1a1a]">

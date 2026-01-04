@@ -6,6 +6,7 @@ import {
     Mermaid, AlertBlock, CodeBlock, getAlertType,
     DetailsBlock, EmbedBlock, LinkCardClient
 } from '@/components/markdown';
+import type { OGPData } from '@/lib/prefetchOGP';
 
 // Type definitions for custom markdown components
 interface HeadingComponentProps {
@@ -55,10 +56,12 @@ interface ParagraphComponentProps {
  * Create markdown components for ReactMarkdown.
  * Extracted from BlogDetailClient for better maintainability.
  * 
+ * @param ogpDataMap - Pre-fetched OGP data mapped by URL (optional)
+ * 
  * Note: Custom directive components (message, youtube, twitter, etc.) are not part
  * of react-markdown's standard Components type, so we use type assertion.
  */
-export const createMarkdownComponents = (): Partial<Components> => ({
+export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): Partial<Components> => ({
     // Override p to handle block elements (prevents hydration errors)
     p: ({ children }: ParagraphComponentProps) => {
         // Check if children contain block elements (figure, div, img, etc.)
@@ -176,6 +179,9 @@ export const createMarkdownComponents = (): Partial<Components> => ({
     codesandbox: ({ id }: EmbedComponentProps) => <EmbedBlock type="codesandbox" id={id ?? ''} />,
     stackblitz: ({ id }: EmbedComponentProps) => <EmbedBlock type="stackblitz" id={id ?? ''} />,
     figma: ({ id }: EmbedComponentProps) => <EmbedBlock type="figma" id={id ?? ''} />,
-    'link-card': ({ url }: LinkCardComponentProps) => <LinkCardClient url={url ?? ''} />
+    'link-card': ({ url }: LinkCardComponentProps) => (
+        <LinkCardClient url={url ?? ''} ogpData={ogpDataMap?.[url ?? '']} />
+    )
 } as Partial<Components>);
+
 

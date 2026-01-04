@@ -14,6 +14,7 @@ import remarkDirective from 'remark-directive';
 import remarkGemoji from 'remark-gemoji';
 import { remarkCustomDirectives } from '@/lib/remark-custom-directives';
 import { createMarkdownComponents } from '@/lib/markdownComponents';
+import type { OGPData } from '@/lib/prefetchOGP';
 
 import { Header, Footer, MobileMenu } from '@/components/layout';
 import { NoiseOverlay, Spotlight } from '@/components/effects';
@@ -39,12 +40,12 @@ interface BlogDetailClientProps {
     post: ParsedPost;
     prevPost: ContentItem | null;
     nextPost: ContentItem | null;
+    ogpDataMap?: Record<string, OGPData>;
 }
 
-// Create markdown components once (no dependencies, so no need for useMemo)
-const markdownComponents = createMarkdownComponents();
-
-export function BlogDetailClient({ post, prevPost, nextPost }: BlogDetailClientProps) {
+export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap }: BlogDetailClientProps) {
+    // Create markdown components with OGP data
+    const markdownComponents = createMarkdownComponents(ogpDataMap);
     const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { scrollProgress } = useScrollProgress();
@@ -75,8 +76,6 @@ export function BlogDetailClient({ post, prevPost, nextPost }: BlogDetailClientP
                 isScrolled={isScrolled}
                 navLinks={NAV_LINKS}
                 onMobileMenuOpen={() => setIsMobileMenuOpen(true)}
-                backLink="/blog"
-                backLabel="Blog"
             />
 
             <div className="min-h-screen bg-[#fafafa] text-[#1a1a1a]">

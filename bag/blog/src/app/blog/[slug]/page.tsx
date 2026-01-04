@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getPostBySlug, getPostSlugs, getAdjacentPosts } from '@/lib/posts';
+import { prefetchOGPData } from '@/lib/prefetchOGP';
 import { BlogDetailClient } from './BlogDetailClient';
 
 // Generate static paths for all posts at build time
@@ -33,6 +34,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
     const { prev, next } = getAdjacentPosts(slug);
 
+    // Pre-fetch OGP data for link cards at build time
+    const ogpDataMap = await prefetchOGPData(post.content);
+
     return (
         <BlogDetailClient
             post={{
@@ -44,6 +48,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             }}
             prevPost={prev}
             nextPost={next}
+            ogpDataMap={ogpDataMap}
         />
     );
 }
+
