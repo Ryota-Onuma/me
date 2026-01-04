@@ -4,11 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Ryota Onuma",
   description: "Ryota Onuma - Stay Curious. Keep Moving.",
-  icons: {
-    icon: [
-      { url: '/site-favicon.ico', sizes: 'any' },
-    ],
-  },
 };
 
 export default function RootLayout({

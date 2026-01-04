@@ -1,0 +1,21 @@
+{
+    "name": "Ryota Onuma",
+    "short_name": "Ryota Onuma",
+    "description": "Ryota Onuma - Stay Curious.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#fafafa",
+    "theme_color": "#fafafa",
+    "icons": [
+        {
+            "src": "/icon-192x192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "/icon-512x512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ]
+}
