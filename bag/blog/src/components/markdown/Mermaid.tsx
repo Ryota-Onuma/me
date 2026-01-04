@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useId } from 'react';
+import React, { useEffect, useState, useId, useMemo, useRef } from 'react';
 import mermaid from 'mermaid';
 import { CopyButton } from './CopyButton';
 
@@ -26,15 +26,22 @@ interface MermaidProps {
 export const Mermaid = ({ chart }: MermaidProps): React.ReactNode => {
     const [svg, setSvg] = useState<string | null>(null);
     const id = useId();
-    const containerId = `mermaid${id.replace(/:/g, '-')}`;
+    const containerId = useMemo(() => `mermaid${id.replace(/:/g, '-')}`, [id]);
+    const renderedChartRef = useRef<string | null>(null);
 
     useEffect(() => {
+        // Skip re-rendering if the chart content hasn't changed
+        if (renderedChartRef.current === chart && svg) {
+            return;
+        }
+
         let cancelled = false;
         const renderChart = async () => {
             try {
-                const { svg } = await mermaid.render(containerId, chart);
+                const { svg: renderedSvg } = await mermaid.render(containerId, chart);
                 if (!cancelled) {
-                    setSvg(svg);
+                    setSvg(renderedSvg);
+                    renderedChartRef.current = chart;
                 }
             } catch (err) {
                 console.error('Mermaid rendering failed:', err);
@@ -42,7 +49,7 @@ export const Mermaid = ({ chart }: MermaidProps): React.ReactNode => {
         };
         renderChart();
         return () => { cancelled = true; };
-    }, [chart, containerId]);
+    }, [chart, containerId, svg]);
 
     return (
         <div className="relative my-12 group">
