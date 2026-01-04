@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useId, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useId, memo } from 'react';
 import mermaid from 'mermaid';
 import { CopyButton } from './CopyButton';
 
@@ -19,37 +19,48 @@ mermaid.initialize({
     }
 });
 
+// Global cache for rendered SVGs to persist across re-mounts
+const svgCache = new Map<string, string>();
+
 interface MermaidProps {
     chart: string;
 }
 
-export const Mermaid = ({ chart }: MermaidProps): React.ReactNode => {
-    const [svg, setSvg] = useState<string | null>(null);
+const MermaidInner = ({ chart }: MermaidProps): React.ReactNode => {
+    // Initialize with cached value if available
+    const [svg, setSvg] = useState<string | null>(() => svgCache.get(chart) ?? null);
+    const [isRendering, setIsRendering] = useState(!svgCache.has(chart));
     const id = useId();
-    const containerId = useMemo(() => `mermaid${id.replace(/:/g, '-')}`, [id]);
-    const renderedChartRef = useRef<string | null>(null);
 
     useEffect(() => {
-        // Skip re-rendering if the chart content hasn't changed
-        if (renderedChartRef.current === chart && svg) {
+        // If already cached, no need to render
+        const cachedSvg = svgCache.get(chart);
+        if (cachedSvg) {
+            setSvg(cachedSvg);
+            setIsRendering(false);
             return;
         }
 
         let cancelled = false;
+        const containerId = `mermaid-${id.replace(/:/g, '-')}-${Date.now()}`;
+
         const renderChart = async () => {
             try {
                 const { svg: renderedSvg } = await mermaid.render(containerId, chart);
                 if (!cancelled) {
+                    svgCache.set(chart, renderedSvg);
                     setSvg(renderedSvg);
-                    renderedChartRef.current = chart;
+                    setIsRendering(false);
                 }
             } catch (err) {
                 console.error('Mermaid rendering failed:', err);
+                setIsRendering(false);
             }
         };
+
         renderChart();
         return () => { cancelled = true; };
-    }, [chart, containerId, svg]);
+    }, [chart, id]);
 
     return (
         <div className="relative my-12 group">
@@ -63,10 +74,13 @@ export const Mermaid = ({ chart }: MermaidProps): React.ReactNode => {
             >
                 {svg ? (
                     <div dangerouslySetInnerHTML={{ __html: svg }} />
-                ) : (
+                ) : isRendering ? (
                     <div className="text-black/30 text-sm">Loading diagram...</div>
-                )}
+                ) : null}
             </div>
         </div>
     );
 };
+
+// Memoize to prevent re-renders when parent re-renders
+export const Mermaid = memo(MermaidInner);
