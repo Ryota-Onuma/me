@@ -23,7 +23,8 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
         statusFilter,
         setStatusFilter,
         allTags,
-        filteredScraps
+        filteredScraps,
+        filteredCount
     } = useScrapFilter(scraps);
 
     return (
@@ -34,7 +35,7 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
                     <SectionHeading title="Scrap" />
                     <p className="text-black/50 text-base mt-4 max-w-2xl leading-relaxed">
                         Quick notes, experiments, and work-in-progress thoughts.<br />
-                        <span className="text-black font-semibold">{filteredScraps.length}</span> scraps
+                        <span className="text-black font-semibold">{filteredCount}</span> scraps
                         {selectedTag && <> filtered by <span className="text-black px-2 py-0.5 rounded bg-black/10 text-xs uppercase font-bold tracking-wider">{selectedTag}</span></>}
                     </p>
                 </div>
@@ -108,7 +109,7 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
                 ))}
             </div>
 
-            {filteredScraps.length === 0 && (
+            {filteredCount === 0 && (
                 <div className="text-center py-32 border border-dashed border-black/10 rounded-3xl">
                     <p className="text-black/40 text-sm">No scraps found matching your criteria</p>
                     <button

@@ -48,7 +48,8 @@ describe('useScrapFilter', () => {
         expect(result.current.statusFilter).toBe('all');
         expect(result.current.allTags).toEqual(['backend', 'frontend', 'legacy', 'react', 'testing']);
         expect(result.current.filteredScraps).toHaveLength(3);
-        expect(result.current.totalItems).toBe(3);
+        expect(result.current.totalCount).toBe(3);
+        expect(result.current.filteredCount).toBe(3);
     });
 
     it('should filter by search query', () => {
@@ -127,6 +128,7 @@ describe('useScrapFilter', () => {
 
         expect(result.current.allTags).toEqual([]);
         expect(result.current.filteredScraps).toHaveLength(0);
-        expect(result.current.totalItems).toBe(0);
+        expect(result.current.totalCount).toBe(0);
+        expect(result.current.filteredCount).toBe(0);
     });
 });

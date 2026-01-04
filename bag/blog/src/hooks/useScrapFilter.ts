@@ -14,7 +14,8 @@ export interface UseScrapFilterResult {
     setStatusFilter: (status: ScrapStatus) => void;
     allTags: string[];
     filteredScraps: ScrapItem[];
-    totalItems: number;
+    totalCount: number;
+    filteredCount: number;
 }
 
 /**
@@ -49,6 +50,7 @@ export const useScrapFilter = (scraps: ScrapItem[] = []): UseScrapFilterResult =
         setStatusFilter,
         allTags,
         filteredScraps,
-        totalItems: scraps.length
+        totalCount: scraps.length,
+        filteredCount: filteredScraps.length
     };
 };
