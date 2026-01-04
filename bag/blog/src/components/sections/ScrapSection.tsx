@@ -2,8 +2,8 @@
 
 import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useMemo } from 'react';
-import { ScrapCard, SectionHeading } from '../ui';
+import { ScrapCard, SectionHeading, TagFilterButton } from '../ui';
+import { useScrapFilter, type ScrapStatus } from '@/hooks/useScrapFilter';
 import { BACKGROUND_COLOR_LIGHT } from '@/lib/constants';
 import type { ScrapItem } from '@/lib/scraps';
 
@@ -11,26 +11,20 @@ interface ScrapSectionProps {
     scraps: ScrapItem[];
 }
 
+const STATUS_OPTIONS: ScrapStatus[] = ['all', 'open', 'closed'];
+
 export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
     const router = useRouter();
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedTag, setSelectedTag] = useState<string | null>(null);
-    const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'closed'>('all');
-
-    const allTags = useMemo(() => {
-        const tagSet = new Set<string>();
-        scraps.forEach(scrap => scrap.tags.forEach(tag => tagSet.add(tag)));
-        return Array.from(tagSet).sort();
-    }, [scraps]);
-
-    const filteredScraps = useMemo(() => {
-        return scraps.filter(scrap => {
-            const matchesSearch = scrap.title.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesTag = !selectedTag || scrap.tags.includes(selectedTag);
-            const matchesStatus = statusFilter === 'all' || scrap.status === statusFilter;
-            return matchesSearch && matchesTag && matchesStatus;
-        });
-    }, [scraps, searchQuery, selectedTag, statusFilter]);
+    const {
+        searchQuery,
+        setSearchQuery,
+        selectedTag,
+        setSelectedTag,
+        statusFilter,
+        setStatusFilter,
+        allTags,
+        filteredScraps
+    } = useScrapFilter(scraps);
 
     return (
         <section id="scrap" className="pt-28 pb-20 md:py-32 px-6 md:px-16 lg:px-24" style={{ backgroundColor: BACKGROUND_COLOR_LIGHT }}>
@@ -62,42 +56,33 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
 
                     {/* Status Filter */}
                     <div className="flex gap-2">
-                        {(['all', 'open', 'closed'] as const).map(status => (
-                            <button
+                        {STATUS_OPTIONS.map(status => (
+                            <TagFilterButton
                                 key={status}
+                                tag={status}
+                                label={status}
+                                isSelected={statusFilter === status}
                                 onClick={() => setStatusFilter(status)}
-                                className={`cursor-pointer px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all ${statusFilter === status
-                                        ? 'bg-accent text-white border-accent shadow-[0_0_20px_rgba(118,181,197,0.3)]'
-                                        : 'bg-transparent text-black/40 border-black/10 hover:border-accent/40 hover:text-accent'
-                                    }`}
-                            >
-                                {status}
-                            </button>
+                            />
                         ))}
                     </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                    <button
+                    <TagFilterButton
+                        tag={null}
+                        label="All Topics"
+                        isSelected={selectedTag === null}
                         onClick={() => setSelectedTag(null)}
-                        className={`cursor-pointer px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all ${!selectedTag
-                            ? 'bg-accent text-white border-accent shadow-[0_0_20px_rgba(118,181,197,0.3)]'
-                            : 'bg-transparent text-black/40 border-black/10 hover:border-accent/40 hover:text-accent'
-                            }`}
-                    >
-                        All Topics
-                    </button>
+                    />
                     {allTags.map(tag => (
-                        <button
+                        <TagFilterButton
                             key={tag}
+                            tag={tag}
+                            label={tag}
+                            isSelected={selectedTag === tag}
                             onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-                            className={`cursor-pointer px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all whitespace-nowrap ${selectedTag === tag
-                                ? 'bg-accent text-white border-accent shadow-[0_0_20px_rgba(118,181,197,0.3)]'
-                                : 'bg-transparent text-black/40 border-black/10 hover:border-accent/40 hover:text-accent'
-                                }`}
-                        >
-                            {tag}
-                        </button>
+                        />
                     ))}
                 </div>
             </div>

@@ -2,7 +2,7 @@
 
 import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { WorkCard, SectionHeading } from '../ui';
+import { WorkCard, SectionHeading, TagFilterButton } from '../ui';
 import { useBlogFilter } from '@/hooks/useBlogFilter';
 import { BACKGROUND_COLOR_LIGHT } from '@/lib/constants';
 import type { ContentItem } from '@/lib/posts';
@@ -50,26 +50,20 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                    <button
+                    <TagFilterButton
+                        tag={null}
+                        label="All Topics"
+                        isSelected={selectedTag === null}
                         onClick={() => setSelectedTag(null)}
-                        className={`cursor-pointer px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all ${!selectedTag
-                            ? 'bg-accent text-white border-accent shadow-[0_0_20px_rgba(118,181,197,0.3)]'
-                            : 'bg-transparent text-black/40 border-black/10 hover:border-accent/40 hover:text-accent'
-                            }`}
-                    >
-                        All Topics
-                    </button>
+                    />
                     {allTags.map(tag => (
-                        <button
+                        <TagFilterButton
                             key={tag}
+                            tag={tag}
+                            label={tag}
+                            isSelected={selectedTag === tag}
                             onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-                            className={`cursor-pointer px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all whitespace-nowrap ${selectedTag === tag
-                                ? 'bg-accent text-white border-accent shadow-[0_0_20px_rgba(118,181,197,0.3)]'
-                                : 'bg-transparent text-black/40 border-black/10 hover:border-accent/40 hover:text-accent'
-                                }`}
-                        >
-                            {tag}
-                        </button>
+                        />
                     ))}
                 </div>
             </div>
