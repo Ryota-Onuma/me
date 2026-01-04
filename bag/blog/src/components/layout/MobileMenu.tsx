@@ -14,6 +14,7 @@ interface MobileMenuProps {
 const navLabels: Record<string, string> = {
     about: 'About',
     blog: 'Blog',
+    scrap: 'Scrap',
 };
 
 /**
