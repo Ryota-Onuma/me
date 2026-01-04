@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { Info, Lightbulb, Zap, AlertTriangle, AlertCircle } from 'lucide-react';
 
 const ALERT_STYLES = {
@@ -46,7 +46,7 @@ const cleanChildren = (nodes: React.ReactNode): React.ReactNode => {
     });
 };
 
-const AlertBlockInner: React.FC<AlertBlockProps> = ({ type, children }) => {
+export const AlertBlock: React.FC<AlertBlockProps> = ({ type, children }) => {
     const styles = ALERT_STYLES[type];
     const Icon = styles.icon;
 
@@ -63,11 +63,9 @@ const AlertBlockInner: React.FC<AlertBlockProps> = ({ type, children }) => {
     );
 };
 
-// Memoize to prevent re-renders when parent re-renders
-export const AlertBlock = memo(AlertBlockInner);
-
 export const getAlertType = (children: React.ReactNode): AlertType | null => {
     const content = findText(children).trim();
     const match = content.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/);
     return match ? (match[1] as AlertType) : null;
 };
+

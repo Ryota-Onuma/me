@@ -6,7 +6,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 import remarkDirective from 'remark-directive';
 import remarkGemoji from 'remark-gemoji';
@@ -28,10 +28,14 @@ interface ScrapDetailClientProps {
 }
 
 export function ScrapDetailClient({ scrap, ogpDataMap }: ScrapDetailClientProps) {
-    // Create markdown components with OGP data
-    const markdownComponents = createMarkdownComponents(ogpDataMap);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { isScrolled } = useHasScrolled();
+
+    // Memoize markdown components to prevent re-mounting on scroll
+    const markdownComponents = useMemo(
+        () => createMarkdownComponents(ogpDataMap),
+        [ogpDataMap]
+    );
 
     return (
         <>

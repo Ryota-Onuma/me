@@ -8,7 +8,7 @@ import rehypeKatex from 'rehype-katex';
 import rehypeSlug from 'rehype-slug';
 import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 import remarkDirective from 'remark-directive';
 import remarkGemoji from 'remark-gemoji';
@@ -44,12 +44,16 @@ interface BlogDetailClientProps {
 }
 
 export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap }: BlogDetailClientProps) {
-    // Create markdown components with OGP data
-    const markdownComponents = createMarkdownComponents(ogpDataMap);
     const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { scrollProgress } = useScrollProgress();
     const { isScrolled } = useHasScrolled();
+
+    // Memoize markdown components to prevent re-mounting on scroll
+    const markdownComponents = useMemo(
+        () => createMarkdownComponents(ogpDataMap),
+        [ogpDataMap]
+    );
 
     if (!post) {
         return (

@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 
 interface DetailsBlockProps {
@@ -6,7 +6,7 @@ interface DetailsBlockProps {
     children: React.ReactNode;
 }
 
-const DetailsBlockInner: React.FC<DetailsBlockProps> = ({ title = 'Details', children }) => {
+export const DetailsBlock: React.FC<DetailsBlockProps> = ({ title = 'Details', children }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -33,5 +33,3 @@ const DetailsBlockInner: React.FC<DetailsBlockProps> = ({ title = 'Details', chi
     );
 };
 
-// Memoize to prevent re-renders when parent re-renders
-export const DetailsBlock = memo(DetailsBlockInner);
