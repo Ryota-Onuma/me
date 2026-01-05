@@ -12,7 +12,7 @@ import { useState, useMemo } from 'react';
 
 import remarkDirective from 'remark-directive';
 import remarkGemoji from 'remark-gemoji';
-import { remarkCustomDirectives } from '@/lib/remark-custom-directives';
+import { remarkCustomDirectives } from '@/lib/remarkCustomDirectives';
 import { createMarkdownComponents } from '@/lib/markdownComponents';
 import type { OGPData } from '@/lib/prefetchOGP';
 

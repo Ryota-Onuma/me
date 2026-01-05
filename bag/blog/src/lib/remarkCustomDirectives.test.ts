@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
-import { remarkCustomDirectives } from './remark-custom-directives';
+import { remarkCustomDirectives, type DirectiveNode, type ExtendedImage } from './remarkCustomDirectives';
 import type { Root, Node } from 'mdast';
 import type { Processor } from 'unified';
 
@@ -14,9 +14,9 @@ describe('remarkCustomDirectives', () => {
             .use(remarkCustomDirectives) as unknown as Processor<Root, Root, Root, Root, string>;
     };
 
-    const findNode = (node: any, type: string): any => {
+    const findNode = (node: Node, type: string): Node | null => {
         if (node.type === type) return node;
-        if (node.children) {
+        if ('children' in node && Array.isArray(node.children)) {
             for (const child of node.children) {
                 const found = findNode(child, type);
                 if (found) return found;
@@ -30,11 +30,11 @@ describe('remarkCustomDirectives', () => {
         const tree = getTransformer().parse(content);
         const transformedTree = getTransformer().runSync(tree);
 
-        const messageNode: any = transformedTree.children[0];
+        const messageNode = transformedTree.children[0] as DirectiveNode;
         expect(messageNode.type).toBe('containerDirective');
-        expect(messageNode.data.hName).toBe('message');
-        expect(messageNode.data.hProperties.type).toBe('warning');
-        expect(messageNode.data.hProperties.className).toContain('custom-message-warning');
+        expect(messageNode.data?.hName).toBe('message');
+        expect(messageNode.data?.hProperties?.type).toBe('warning');
+        expect(messageNode.data?.hProperties?.className).toContain('custom-message-warning');
     });
 
     it('should transform ::youtube leaf directive', () => {
@@ -42,10 +42,10 @@ describe('remarkCustomDirectives', () => {
         const tree = getTransformer().parse(content);
         const transformedTree = getTransformer().runSync(tree);
 
-        const youtubeNode = findNode(transformedTree, 'leafDirective');
+        const youtubeNode = findNode(transformedTree, 'leafDirective') as DirectiveNode | null;
         expect(youtubeNode).not.toBeNull();
-        expect(youtubeNode.data.hName).toBe('youtube');
-        expect(youtubeNode.data.hProperties.id).toBe('dQw4w9WgXcQ');
+        expect(youtubeNode?.data?.hName).toBe('youtube');
+        expect(youtubeNode?.data?.hProperties?.id).toBe('dQw4w9WgXcQ');
     });
 
     it('should transform shortcut @\\[youtube\\](id)', () => {
@@ -53,25 +53,25 @@ describe('remarkCustomDirectives', () => {
         const tree = getTransformer().parse(content);
         const transformedTree = getTransformer().runSync(tree);
 
-        const youtubeNode: any = transformedTree.children[0];
+        const youtubeNode = transformedTree.children[0] as DirectiveNode;
         expect(youtubeNode.type).toBe('youtube');
-        expect(youtubeNode.data.hName).toBe('youtube');
-        expect(youtubeNode.data.hProperties.id).toBe('dQw4w9WgXcQ');
+        expect(youtubeNode.data?.hName).toBe('youtube');
+        expect(youtubeNode.data?.hProperties?.id).toBe('dQw4w9WgXcQ');
     });
 
     it('should transform auto-link cards', () => {
         const contentLink = '[https://example.com](https://example.com)';
         const tree = getTransformer().parse(contentLink);
-        const transformedTree: any = getTransformer().runSync(tree);
+        const transformedTree = getTransformer().runSync(tree) as Root;
 
-        const pNode = transformedTree.children[0];
+        const pNode = transformedTree.children[0] as DirectiveNode;
         expect(pNode.type).toBe('link-card');
-        expect(pNode.data.hName).toBe('link-card');
-        expect(pNode.data.hProperties.url).toBe('https://example.com');
+        expect(pNode.data?.hName).toBe('link-card');
+        expect(pNode.data?.hProperties?.url).toBe('https://example.com');
     });
 
     it('should handle image resizing syntax', () => {
-        const tree: any = {
+        const tree: Root = {
             type: 'root',
             children: [
                 {
@@ -88,11 +88,11 @@ describe('remarkCustomDirectives', () => {
         };
 
         const transformedTree = getTransformer().runSync(tree);
-        const imgNode = findNode(transformedTree, 'image');
+        const imgNode = findNode(transformedTree, 'image') as ExtendedImage;
 
         expect(imgNode).not.toBeNull();
         expect(imgNode.type).toBe('image');
         expect(imgNode.url).toBe('/image.png');
-        expect(imgNode.data.hProperties.width).toBe('400');
+        expect(imgNode.data?.hProperties?.width).toBe('400');
     });
 });

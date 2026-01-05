@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { POSTS_DIRECTORY, DEFAULT_THUMBNAIL } from './constants';
-import { processMarkdownContent } from './markdown-processor';
+import { processMarkdownContent } from './markdownProcessor';
 
 export interface PostFrontmatter {
     id?: string;

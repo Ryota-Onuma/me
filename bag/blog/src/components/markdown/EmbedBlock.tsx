@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, memo } from 'react';
 import { Github, Twitter, ArrowUpRight } from 'lucide-react';
+import { assertNever } from '@/lib/assertNever';
 
 // Constants
 const TWITTER_SCRIPT_LOAD_DELAY_MS = 500;
@@ -151,9 +152,12 @@ const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
                 </div>
             );
         default:
+            // This case handles unsupported embeds safely while providing exhaustive checks for known types
             return (
                 <div className="my-8 p-6 rounded-2xl bg-black/5 border border-black/10 text-xs text-black/40 font-bold tracking-widest uppercase text-center italic">
                     Unsupported embed: {type} ({id})
+                    {/* Still perform exhaustive check for defined EmbedType */}
+                    {typeof type !== 'string' && assertNever(type as never)}
                 </div>
             );
     }

@@ -4,7 +4,7 @@ import React from 'react';
 import type { Components } from 'react-markdown';
 import {
     Mermaid, AlertBlock, CodeBlock, getAlertType,
-    DetailsBlock, EmbedBlock, LinkCardClient
+    DetailsBlock, EmbedBlock, LinkCardClient, type AlertType
 } from '@/components/markdown';
 import type { OGPData } from '@/lib/prefetchOGP';
 
@@ -159,7 +159,7 @@ export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): 
 
     // Support for custom markdown tags (via remarkCustomDirectives hName mapping)
     message: ({ children, type }: MessageComponentProps) => {
-        const typeMap: Record<string, any> = {
+        const typeMap: Record<string, AlertType> = {
             info: 'NOTE',
             tip: 'TIP',
             alert: 'WARNING',

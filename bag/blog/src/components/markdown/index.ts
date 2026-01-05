@@ -1,5 +1,5 @@
 // Markdown rendering components
-export { AlertBlock, getAlertType } from './AlertBlock';
+export { AlertBlock, getAlertType, type AlertType } from './AlertBlock';
 export { CodeBlock } from './CodeBlock';
 export { CopyButton } from './CopyButton';
 export { DetailsBlock } from './DetailsBlock';

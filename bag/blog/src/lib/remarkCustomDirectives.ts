@@ -6,12 +6,12 @@ import type { Node, Data } from 'unist';
 /**
  * Directive node types from remark-directive
  */
-interface DirectiveData extends Data {
+export interface DirectiveData extends Data {
     hName?: string;
     hProperties?: Record<string, string | number | boolean>;
 }
 
-interface DirectiveNode extends Node {
+export interface DirectiveNode extends Node {
     name: string;
     attributes?: Record<string, string | null | undefined> | null;
     children?: Node[];
@@ -30,7 +30,7 @@ type ExtendedParagraph = Omit<Paragraph, 'type'> & {
 };
 
 // Extended image node with data
-interface ExtendedImage extends Image {
+export interface ExtendedImage extends Image {
     data?: DirectiveData;
 }
 
