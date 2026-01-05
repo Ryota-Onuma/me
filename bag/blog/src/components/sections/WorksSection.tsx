@@ -51,7 +51,6 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
 
                 <div className="flex flex-wrap gap-2">
                     <TagFilterButton
-                        tag={null}
                         label="All Topics"
                         isSelected={selectedTag === null}
                         onClick={() => setSelectedTag(null)}
@@ -59,7 +58,6 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
                     {allTags.map(tag => (
                         <TagFilterButton
                             key={tag}
-                            tag={tag}
                             label={tag}
                             isSelected={selectedTag === tag}
                             onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}

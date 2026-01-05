@@ -185,7 +185,7 @@ graph TD
 ## Details and Summary
 
 <details>
-<summary>Click to see more</summary>
+<summary>Details</summary>
 
 This is hidden content inside a details tag. It supports markdown too!
 - Item 1
@@ -214,7 +214,7 @@ Our engine supports specialized markdown extensions for a richer writing experie
 ### Accordion (Directive)
 While we support HTML `<details>`, we also support the specialized `:::details` directive.
 
-:::details Click to see more
+:::details Accordion Details
 This is the hidden content inside the accordion. It supports **markdown** too!
 :::
 

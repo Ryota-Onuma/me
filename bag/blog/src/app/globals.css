@@ -63,137 +63,221 @@
   section {
     scroll-margin-top: 80px;
   }
+
+  summary {
+    cursor: pointer;
+  }
 }
 
 /* Custom Typography Overrides for Light Theme */
-@utility prose-light {
-  & :where(h1, h2, h3, h4, h5, h6, th):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    color: #000;
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    margin-top: 2em;
-    margin-bottom: 0.8em;
-  }
-
-  & :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    margin-top: 1.25em;
-    margin-bottom: 1.25em;
-    line-height: 1.8;
-    color: rgba(0, 0, 0, 0.85);
-  }
-
-  & :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    color: #000;
-    text-decoration: none;
-    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8));
-    background-size: 100% 1px;
-    background-position: 0 100%;
-    background-repeat: no-repeat;
-    transition: background-size 0.3s;
-
-    &:hover {
-      background-size: 0% 1px;
-      color: rgba(0, 0, 0, 0.6);
+@layer components {
+  .prose-light {
+    & :where(h1, h2, h3, h4, h5, h6, th):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+      color: #000;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-top: 2em;
+      margin-bottom: 0.8em;
     }
-  }
 
-  & :where(li):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
-  }
+    & :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+      margin-top: 1.25em;
+      margin-bottom: 1.25em;
+      line-height: 1.8;
+      color: rgba(0, 0, 0, 0.85);
+    }
 
-  /* GFM Task Lists */
-  & :where(ul.contains-task-list):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    list-style-type: none;
-    padding-left: 0;
-  }
+    & :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+      color: #000;
+      text-decoration: none;
+      background-image: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8));
+      background-size: 100% 1px;
+      background-position: 0 100%;
+      background-repeat: no-repeat;
+      transition: background-size 0.3s;
 
-  & :where(li.task-list-item):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    transition: all 0.2s ease;
-  }
+      &:hover {
+        background-size: 0% 1px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
 
-  & :where(li.task-list-item:has(input[type="checkbox"]:checked)):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    opacity: 0.5;
-    text-decoration: line-through;
-  }
+    & li {
+      margin-top: 0.5em;
+      margin-bottom: 0.5em;
+    }
 
-  & :where(li.task-list-item input[type="checkbox"]):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    margin-top: 0.4rem;
-    appearance: none;
-    width: 1.1rem;
-    height: 1.1rem;
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-    background-color: transparent;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    flex-shrink: 0;
-  }
+    & li::marker {
+      color: rgba(0, 0, 0, 0.7) !important;
+    }
 
-  & :where(li.task-list-item input[type="checkbox"]:checked):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    background-color: var(--color-accent);
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 2px var(--color-accent-light);
-  }
+    /* Override Tailwind Typography marker colors */
+    &:where(.prose, .prose-sm) li::marker {
+      color: rgba(0, 0, 0, 0.7) !important;
+    }
 
-  & :where(li.task-list-item input[type="checkbox"]:checked::after):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    content: '';
-    position: absolute;
-    width: 0.35rem;
-    height: 0.6rem;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(45deg);
-  }
+    & ul {
+      list-style-type: disc !important;
+      padding-left: 2.5rem !important;
+      margin-top: 1.25em;
+      margin-bottom: 1.25em;
+    }
 
-  /* GFM Tables */
-  & table:not(.not-prose) {
-    width: 100%;
-    table-layout: auto;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin: 2rem 0;
-    overflow: hidden;
-    border: 1px solid var(--color-accent-dim);
-    border-radius: 12px;
-    background: white;
-    box-shadow: 0 4px 20px -5px rgba(118, 181, 197, 0.1);
-  }
+    & ol {
+      list-style-type: decimal !important;
+      padding-left: 2.5rem !important;
+      margin-top: 1.25em;
+      margin-bottom: 1.25em;
+    }
 
-  & table:not(.not-prose) thead {
-    background: var(--color-accent-light);
-  }
+    /* Native HTML details element styles */
+    & details {
+      margin: 1.5em 0;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
 
-  & table:not(.not-prose) th {
-    padding: 1rem 1.5rem;
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-accent-hover);
-    border-bottom: 1.5px solid var(--color-accent-dim);
-  }
+    & details summary {
+      display: block !important;
+      list-style: none !important;
+      list-style-type: none !important;
+      padding: 1rem 1.5rem;
+      font-weight: 700;
+      font-size: 0.875rem;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.02);
+    }
 
-  & table:not(.not-prose) td {
-    padding: 1rem 1.5rem;
-    font-size: 0.875rem;
-    color: rgba(0, 0, 0, 0.7);
-    border-bottom: 1px solid var(--color-accent-light);
-  }
+    & details summary::-webkit-details-marker {
+      display: none !important;
+    }
 
-  & table:not(.not-prose) tr:last-child td {
-    border-bottom: none;
-  }
+    & details summary::marker {
+      display: none !important;
+      content: none !important;
+      font-size: 0 !important;
+    }
 
-  & table:not(.not-prose) tbody tr:hover {
-    background: rgba(118, 181, 197, 0.03);
+    & summary::marker {
+      display: none !important;
+      content: none !important;
+    }
+
+    & details>*:not(summary) {
+      padding: 0 1.5rem;
+    }
+
+    & details ul,
+    & details ol {
+      margin-top: 1em !important;
+      margin-bottom: 1em !important;
+      padding-left: 2.5rem !important;
+    }
+
+    & details ul {
+      list-style-type: disc !important;
+    }
+
+    & details ol {
+      list-style-type: decimal !important;
+    }
+
+    /* GFM Task Lists */
+    & :where(ul.contains-task-list):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    & :where(li.task-list-item):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    & :where(li.task-list-item:has(input[type="checkbox"]:checked)):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+
+    & :where(li.task-list-item input[type="checkbox"]):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+      margin-top: 0.4rem;
+      appearance: none;
+      width: 1.1rem;
+      height: 1.1rem;
+      border: 2px solid rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      background-color: transparent;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      flex-shrink: 0;
+    }
+
+    & :where(li.task-list-item input[type="checkbox"]:checked):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+      background-color: var(--color-accent);
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 2px var(--color-accent-light);
+    }
+
+    & :where(li.task-list-item input[type="checkbox"]:checked::after):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+      content: '';
+      position: absolute;
+      width: 0.35rem;
+      height: 0.6rem;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    /* GFM Tables */
+    & table:not(.not-prose) {
+      width: 100%;
+      table-layout: auto;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 2rem 0;
+      overflow: hidden;
+      border: 1px solid var(--color-accent-dim);
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 4px 20px -5px rgba(118, 181, 197, 0.1);
+    }
+
+    & table:not(.not-prose) thead {
+      background: var(--color-accent-light);
+    }
+
+    & table:not(.not-prose) th {
+      padding: 1rem 1.5rem !important;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-accent-hover);
+      border-bottom: 1.5px solid var(--color-accent-dim);
+    }
+
+    & table:not(.not-prose) td {
+      padding: 1rem 1.5rem !important;
+      font-size: 0.875rem;
+      color: rgba(0, 0, 0, 0.7);
+      border-bottom: 1px solid var(--color-accent-light);
+    }
+
+    & table:not(.not-prose) tr:last-child td {
+      border-bottom: none;
+    }
+
+    & table:not(.not-prose) tbody tr:hover {
+      background: rgba(118, 181, 197, 0.03);
+    }
   }
 }
 

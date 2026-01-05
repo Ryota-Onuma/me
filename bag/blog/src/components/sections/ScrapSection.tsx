@@ -60,7 +60,6 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
                         {STATUS_OPTIONS.map(status => (
                             <TagFilterButton
                                 key={status}
-                                tag={status}
                                 label={status}
                                 isSelected={statusFilter === status}
                                 onClick={() => setStatusFilter(status)}
@@ -71,7 +70,6 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
 
                 <div className="flex flex-wrap gap-2">
                     <TagFilterButton
-                        tag={null}
                         label="All Topics"
                         isSelected={selectedTag === null}
                         onClick={() => setSelectedTag(null)}
@@ -79,7 +77,6 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
                     {allTags.map(tag => (
                         <TagFilterButton
                             key={tag}
-                            tag={tag}
                             label={tag}
                             isSelected={selectedTag === tag}
                             onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
