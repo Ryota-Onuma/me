@@ -1,5 +1,5 @@
 import { visit } from 'unist-util-visit';
-import type { Root, Paragraph, Text, Image } from 'mdast';
+import type { Root, Paragraph, Text, Image, Table, Parent } from 'mdast';
 import type { Plugin } from 'unified';
 import type { Node, Data } from 'unist';
 
@@ -144,6 +144,25 @@ export const remarkCustomDirectives: Plugin<[], Root> = () => {
                 extendedNode.data.hProperties = extendedNode.data.hProperties || {};
                 extendedNode.data.hProperties.width = width;
                 extendedNode.data.hProperties.style = `width: ${width}px; max-width: 100%; height: auto;`;
+            }
+        });
+
+        // 5. Wrap Tables in a scrollable container for horizontal overflow
+        visit(tree, 'table', (node: Table, index: number | undefined, parent: Parent | undefined) => {
+            if (parent && typeof index === 'number') {
+                // Create wrapper node
+                const wrapper = {
+                    type: 'tableWrapper',
+                    data: {
+                        hName: 'div',
+                        hProperties: {
+                            className: 'table-wrapper',
+                        },
+                    },
+                    children: [node],
+                };
+                // Replace table with wrapped version
+                parent.children[index] = wrapper as unknown as Table;
             }
         });
     };

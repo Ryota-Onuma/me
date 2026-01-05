@@ -33,8 +33,8 @@ export const Footer = () => {
 
                 {/* Info */}
                 <div className="flex flex-col items-center text-center gap-1">
-                    <p className="text-[12px] uppercase tracking-[0.4em] text-black/60 font-bold">
-                        © Ryota Onuma <span className="mx-4 md:mx-6 opacity-30">/</span> 2025 Edition
+                    <p className="text-[10px] md:text-[12px] uppercase tracking-[0.15em] md:tracking-[0.4em] text-black/60 font-bold whitespace-nowrap">
+                        © Ryota Onuma <span className="mx-2 md:mx-6 opacity-30">/</span> 2025 Edition
                     </p>
                 </div>
             </div>

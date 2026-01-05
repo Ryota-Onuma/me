@@ -39,12 +39,12 @@ You can use **bold text** for emphasis, *italicized text* for subtle highlights,
 3. Third item
 
 ### Data Tables
-| Feature | Supported | Notes |
-| :--- | :---: | :--- |
-| GitHub Flavored Markdown | Yes | Including tables and task lists |
-| Syntax Highlighting | Yes | Powered by Prism.js |
-| Mermaid Diagrams | Yes | Flowcharts, sequence diagrams |
-| KaTeX Math | Yes | Inline and block equations |
+| Feature | Supported | Notes | Is enabled |
+| :--- | :---: | :---: | :--- |
+| GitHub Flavored Markdown | Yes | Including tables and task lists | True | 
+| Syntax Highlighting | Yes | Powered by Prism.js | True |
+| Mermaid Diagrams | Yes | Flowcharts, sequence diagrams | True |
+| KaTeX Math | Yes | Inline and block equations | True |
 
 ---
 
