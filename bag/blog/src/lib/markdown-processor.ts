@@ -4,8 +4,8 @@
 export function processMarkdownContent(content: string): string {
     let processedContent = content;
 
-    // 1. Convert :::message alert to :::message{type="alert"}
-    processedContent = processedContent.replace(/:::message\s+alert\s*([\s\S]*?):::/g, ':::message{type="alert"}\n$1\n:::');
+    // 1. Convert :::message [type] to :::message{type="[type]"}
+    processedContent = processedContent.replace(/:::message\s+([a-z]+)\s*([\s\S]*?):::/g, ':::message{type="$1"}\n$2\n:::');
 
     // 2. Convert :::details Title to :::details{title="Title"}
     processedContent = processedContent.replace(/:::details\s+(.*?)\n([\s\S]*?):::/g, ':::details{title="$1"}\n$2\n:::');

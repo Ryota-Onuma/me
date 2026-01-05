@@ -48,22 +48,29 @@ You can use **bold text** for emphasis, *italicized text* for subtle highlights,
 
 ---
 
-## GitHub-style Alerts
+## Messages & Alerts
 
-> [!NOTE]
-> This is a note alert. It should have a blue theme and an info icon.
+Our engine supports specialized markdown containers for high-visibility messages. While standard GitHub-style blockquotes are supported, we recommend using the `:::message` directive for a more consistent look.
 
-> [!TIP]
-> This is a tip alert. It should have a green theme and a lightbulb icon.
+:::message
+**Note**: This is a standard message box. It uses our Bianchi Celeste brand color.
+:::
 
-> [!IMPORTANT]
-> This is an important alert. It should have a purple theme and a zap icon.
+:::message tip
+**Tip**: This is a tip alert with a fresh look and a lightbulb icon.
+:::
 
-> [!WARNING]
-> This is a warning alert. It should have an amber theme and a triangle icon.
+:::message important
+**Important**: This is an important alert with a violet theme and a zap icon.
+:::
 
-> [!CAUTION]
-> This is a caution alert. It should have a red theme and a circle-x icon.
+:::message warning
+**Warning**: This is a warning alert with an amber theme and a triangle icon.
+:::
+
+:::message caution
+**Caution**: This is a caution alert with a rose theme and a circle-x icon.
+:::
 
 ---
 
@@ -203,16 +210,6 @@ Images should be responsive and centered.
 
 Our engine supports specialized markdown extensions for a richer writing experience.
 
-### Message Boxes
-Use `:::message` for notes and `:::message alert` for warnings.
-
-:::message
-This is a standard message box. Use it for helpful tips or additional context.
-:::
-
-:::message alert
-This is an alert message box. Use it for critical warnings or things to avoid.
-:::
 
 ### Accordion (Directive)
 While we support HTML `<details>`, we also support the specialized `:::details` directive.

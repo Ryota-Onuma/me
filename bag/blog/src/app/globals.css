@@ -153,44 +153,47 @@
   }
 
   /* GFM Tables */
-  & :where(table):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  & table:not(.not-prose) {
     width: 100%;
+    table-layout: auto;
     border-collapse: separate;
     border-spacing: 0;
     margin: 2rem 0;
     overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--color-accent-dim);
     border-radius: 12px;
     background: white;
+    box-shadow: 0 4px 20px -5px rgba(118, 181, 197, 0.1);
   }
 
-  & :where(thead):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    background: rgba(0, 0, 0, 0.02);
+  & table:not(.not-prose) thead {
+    background: var(--color-accent-light);
   }
 
-  & :where(th):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    padding: 0.75rem 1rem;
+  & table:not(.not-prose) th {
+    padding: 1rem 1.5rem;
     text-align: left;
     font-size: 0.75rem;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--color-accent-hover);
+    border-bottom: 1.5px solid var(--color-accent-dim);
   }
 
-  & :where(td):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    padding: 1rem;
+  & table:not(.not-prose) td {
+    padding: 1rem 1.5rem;
     font-size: 0.875rem;
     color: rgba(0, 0, 0, 0.7);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--color-accent-light);
   }
 
-  & :where(tr:last-child td):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  & table:not(.not-prose) tr:last-child td {
     border-bottom: none;
   }
 
-  & :where(tbody tr:hover):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    background: rgba(0, 0, 0, 0.01);
+  & table:not(.not-prose) tbody tr:hover {
+    background: rgba(118, 181, 197, 0.03);
   }
 }
 

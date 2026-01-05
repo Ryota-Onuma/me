@@ -2,11 +2,41 @@ import React from 'react';
 import { Info, Lightbulb, Zap, AlertTriangle, AlertCircle } from 'lucide-react';
 
 const ALERT_STYLES = {
-    NOTE: { icon: Info, color: 'text-blue-500', bg: 'bg-blue-50/50', border: 'border-blue-200', label: 'Note' },
-    TIP: { icon: Lightbulb, color: 'text-green-500', bg: 'bg-green-50/50', border: 'border-green-200', label: 'Tip' },
-    IMPORTANT: { icon: Zap, color: 'text-purple-500', bg: 'bg-purple-50/50', border: 'border-purple-200', label: 'Important' },
-    WARNING: { icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-50/50', border: 'border-amber-200', label: 'Warning' },
-    CAUTION: { icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-50/50', border: 'border-red-200', label: 'Caution' },
+    NOTE: {
+        icon: Info,
+        color: 'text-[#76b5c5]', // Bianchi Celeste
+        bg: 'bg-[#76b5c5]/5',
+        border: 'border-[#76b5c5]/20',
+        label: 'Note'
+    },
+    TIP: {
+        icon: Lightbulb,
+        color: 'text-emerald-600',
+        bg: 'bg-emerald-50',
+        border: 'border-emerald-200',
+        label: 'Tip'
+    },
+    IMPORTANT: {
+        icon: Zap,
+        color: 'text-violet-600',
+        bg: 'bg-violet-50',
+        border: 'border-violet-200',
+        label: 'Important'
+    },
+    WARNING: {
+        icon: AlertTriangle,
+        color: 'text-amber-600',
+        bg: 'bg-amber-50',
+        border: 'border-amber-200',
+        label: 'Warning'
+    },
+    CAUTION: {
+        icon: AlertCircle,
+        color: 'text-rose-600',
+        bg: 'bg-rose-50',
+        border: 'border-rose-200',
+        label: 'Caution'
+    },
 } as const;
 
 export type AlertType = keyof typeof ALERT_STYLES;
@@ -37,7 +67,7 @@ const cleanChildren = (nodes: React.ReactNode): React.ReactNode => {
         }
         if (React.isValidElement<PropsWithChildren>(node) && node.props.children) {
             return React.cloneElement(
-                node,
+                node as React.ReactElement,
                 undefined,
                 cleanChildren(node.props.children)
             );
@@ -51,12 +81,12 @@ export const AlertBlock: React.FC<AlertBlockProps> = ({ type, children }) => {
     const Icon = styles.icon;
 
     return (
-        <div className={`my-6 p-4 rounded-xl border-l-4 ${styles.bg} ${styles.border} transition-all duration-300`}>
-            <div className={`flex items-center gap-2 mb-2 ${styles.color} font-bold uppercase tracking-widest text-[10px]`}>
-                <Icon size={14} />
+        <div className={`my-8 p-5 rounded-2xl border ${styles.bg} ${styles.border} shadow-sm transition-all duration-300`}>
+            <div className={`flex items-center gap-2 mb-3 ${styles.color} font-black uppercase tracking-[0.2em] text-[11px]`}>
+                <Icon size={16} strokeWidth={3} />
                 <span>{styles.label}</span>
             </div>
-            <div className="text-black/80 prose-sm md:prose-base leading-relaxed">
+            <div className="text-black/80 prose-sm md:prose-base leading-[1.8]">
                 {cleanChildren(children)}
             </div>
         </div>

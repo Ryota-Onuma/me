@@ -13,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className="bg-[#fafafa] text-[#1a1a1a] font-sans overflow-x-hidden min-h-screen">
+      <body className="bg-[#fafafa] text-[#1a1a1a] font-sans overflow-x-hidden min-h-screen" suppressHydrationWarning>
         {children}
       </body>
     </html>

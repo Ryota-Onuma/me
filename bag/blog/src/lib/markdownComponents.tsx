@@ -159,7 +159,15 @@ export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): 
 
     // Support for custom markdown tags (via remarkCustomDirectives hName mapping)
     message: ({ children, type }: MessageComponentProps) => {
-        const alertType = type === 'alert' ? 'WARNING' : 'NOTE';
+        const typeMap: Record<string, any> = {
+            info: 'NOTE',
+            tip: 'TIP',
+            alert: 'WARNING',
+            warning: 'WARNING',
+            important: 'IMPORTANT',
+            caution: 'CAUTION'
+        };
+        const alertType = typeMap[type || 'info'] || 'NOTE';
         return <AlertBlock type={alertType}>{children}</AlertBlock>;
     },
 
