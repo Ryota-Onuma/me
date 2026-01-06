@@ -157,6 +157,14 @@ export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): 
         );
     }) as Components['img'],
 
+    th: ({ children }: { children?: React.ReactNode }) => (
+        <th>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100%' }}>
+                {children}
+            </div>
+        </th>
+    ),
+
     // Support for custom markdown tags (via remarkCustomDirectives hName mapping)
     message: ({ children, type }: MessageComponentProps) => {
         const typeMap: Record<string, AlertType> = {
