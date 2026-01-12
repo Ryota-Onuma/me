@@ -1,5 +1,18 @@
 {
   "enabledPlugins": {
     "example-skills@anthropic-agent-skills": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./.claude/hooks/gh-setup.sh"
+          }
+        ]
+      }
+    ]
   }
 }
