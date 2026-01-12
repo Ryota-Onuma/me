@@ -121,12 +121,12 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                             <div className="flex flex-col md:flex-row gap-12">
                                 {/* Cover Image */}
                                 {book.cover && (
-                                    <div className="flex-shrink-0">
-                                        <div className="w-64 aspect-[2/3] rounded-2xl overflow-hidden border border-black/10 shadow-2xl">
+                                    <div className="flex-shrink-0 mx-auto md:mx-0">
+                                        <div className="w-60 md:w-64 aspect-[2/3] rounded-2xl overflow-hidden border border-black/10 shadow-2xl">
                                             <img
                                                 src={book.cover}
                                                 alt={book.title}
-                                                className="w-full h-full object-contain"
+                                                className="w-full h-full object-cover"
                                             />
                                         </div>
                                     </div>
