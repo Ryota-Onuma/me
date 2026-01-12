@@ -36,6 +36,7 @@ interface ParsedBook {
     readDate?: string;
     rating?: number;
     content: string;
+    externalLabel?: string;
 }
 
 interface BookDetailClientProps {
@@ -44,15 +45,15 @@ interface BookDetailClientProps {
 }
 
 const STATUS_LABELS: Record<'yet' | 'reading' | 'completed', string> = {
-    yet: '積読',
-    reading: '読書中',
-    completed: '読了',
+    yet: 'Yet',
+    reading: 'Reading',
+    completed: 'Completed',
 };
 
 const STATUS_STYLES: Record<'yet' | 'reading' | 'completed', string> = {
-    yet: 'bg-gray-100 text-gray-600',
+    yet: 'bg-slate-500 text-white',
     reading: 'bg-yellow-100 text-yellow-700',
-    completed: 'bg-accent/10 text-accent',
+    completed: 'bg-accent text-white shadow-sm',
 };
 
 export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
@@ -89,11 +90,10 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                 {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                         key={star}
-                        className={`w-5 h-5 ${
-                            star <= rating
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-black/20'
-                        }`}
+                        className={`w-5 h-5 ${star <= rating
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-black/20'
+                            }`}
                     />
                 ))}
             </div>
@@ -126,7 +126,7 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                                             <img
                                                 src={book.cover}
                                                 alt={book.title}
-                                                className="w-full h-full object-cover"
+                                                className="w-full h-full object-contain"
                                             />
                                         </div>
                                     </div>
@@ -141,21 +141,10 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                                         </span>
                                     </div>
 
-                                    {/* Title with External Link */}
-                                    <div className="flex items-start gap-3 mb-4">
-                                        <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight text-black">
-                                            {book.title}
-                                        </h1>
-                                        <a
-                                            href={book.externalUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-black/5 hover:bg-accent hover:text-white rounded-full transition-all hover:scale-110"
-                                            title="View on external site"
-                                        >
-                                            <ExternalLink className="w-5 h-5" />
-                                        </a>
-                                    </div>
+                                    {/* Title */}
+                                    <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight text-black mb-4">
+                                        {book.title}
+                                    </h1>
 
                                     {/* Author */}
                                     <p className="text-xl text-black/60 mb-6">by {book.author}</p>
@@ -203,7 +192,33 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-full font-bold hover:bg-accent-dark transition-all hover:scale-105 shadow-lg hover:shadow-xl"
                                     >
-                                        View on Amazon
+                                        {(() => {
+                                            if (book.externalLabel) return book.externalLabel;
+                                            try {
+                                                const url = new URL(book.externalUrl);
+
+                                                if (url.hostname.includes('amazon') || url.hostname.includes('amzn')) {
+                                                    return 'View on Amazon';
+                                                }
+
+                                                if (url.hostname.includes('gihyo')) {
+                                                    return 'View on Gihyo.jp';
+                                                }
+
+                                                if (url.hostname.includes('impress')) {
+                                                    return 'View on Impress';
+                                                }
+
+
+                                                if (url.hostname.includes('oreilly')) {
+                                                    return "View on O'Reilly";
+                                                }
+
+                                                return `View on ${url.hostname}`;
+                                            } catch (e) {
+                                                return 'View Details';
+                                            }
+                                        })()}
                                         <ExternalLink className="w-4 h-4" />
                                     </a>
                                 </div>

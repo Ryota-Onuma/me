@@ -13,6 +13,7 @@ export interface BookFrontmatter {
     cover?: string;          // Optional
     readDate?: string;       // Optional
     rating?: number;         // Optional (1-5)
+    externalLabel?: string;  // Optional
 }
 
 export interface Book {
@@ -32,6 +33,7 @@ export interface BookItem {
     cover: string;
     readDate?: string;
     rating?: number;
+    externalLabel?: string;
 }
 
 const booksPath = path.join(process.cwd(), BOOKS_DIRECTORY);
@@ -81,6 +83,7 @@ export function getBookBySlug(slug: string): Book | null {
             cover: data.cover || DEFAULT_BOOK_COVER,
             readDate: data.readDate,
             rating: data.rating ? Math.min(Math.max(data.rating, 1), 5) : undefined,
+            externalLabel: data.externalLabel,
         },
         content: processedContent,
     };
@@ -120,5 +123,6 @@ export function getAllBookItems(): BookItem[] {
         cover: book.frontmatter.cover || DEFAULT_BOOK_COVER,
         readDate: book.frontmatter.readDate,
         rating: book.frontmatter.rating,
+        externalLabel: book.frontmatter.externalLabel,
     }));
 }

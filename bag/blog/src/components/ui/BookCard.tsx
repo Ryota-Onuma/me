@@ -1,6 +1,6 @@
 'use client';
 
-import { Star, Calendar } from 'lucide-react';
+import { Star, Calendar, CheckCircle2, BookOpen, Clock } from 'lucide-react';
 import { useState } from 'react';
 
 interface BookCardProps {
@@ -15,15 +15,21 @@ interface BookCardProps {
 }
 
 const STATUS_LABELS: Record<'yet' | 'reading' | 'completed', string> = {
-    yet: '積読',
-    reading: '読書中',
-    completed: '読了',
+    yet: 'Yet',
+    reading: 'Reading',
+    completed: 'Completed',
 };
 
 const STATUS_STYLES: Record<'yet' | 'reading' | 'completed', string> = {
-    yet: 'bg-gray-100 text-gray-600',
-    reading: 'bg-yellow-100 text-yellow-700',
-    completed: 'bg-accent/10 text-accent',
+    yet: 'bg-slate-500 text-white',
+    reading: 'bg-amber-500 text-white',
+    completed: 'bg-emerald-600 text-white',
+};
+
+const STATUS_ICONS: Record<'yet' | 'reading' | 'completed', React.ComponentType<{ className?: string }>> = {
+    yet: Clock,
+    reading: BookOpen,
+    completed: CheckCircle2,
 };
 
 export const BookCard = ({ title, author, status, cover, readDate, rating, tags, index = 0 }: BookCardProps) => {
@@ -38,11 +44,10 @@ export const BookCard = ({ title, author, status, cover, readDate, rating, tags,
                 {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                         key={star}
-                        className={`w-3 h-3 ${
-                            star <= rating
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-black/20'
-                        }`}
+                        className={`w-3 h-3 ${star <= rating
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-black/20'
+                            }`}
                     />
                 ))}
             </div>
@@ -50,13 +55,13 @@ export const BookCard = ({ title, author, status, cover, readDate, rating, tags,
     };
 
     return (
-        <article className="group relative flex flex-col h-full bg-black/[0.02] border border-black/10 rounded-2xl overflow-hidden hover:bg-black/[0.04] hover:border-accent-dim hover:shadow-2xl hover:shadow-accent/5 transition-premium ease-out hover:-translate-y-1">
+        <article className="group relative flex flex-col h-full bg-black/[0.02] border border-black/10 rounded-xl overflow-hidden hover:bg-black/[0.04] hover:border-accent-dim hover:shadow-xl hover:shadow-accent/5 transition-premium ease-out hover:-translate-y-0.5">
             {/* Cover Image */}
-            <div className={`relative aspect-[2/3] overflow-hidden bg-gray-100 ${!isLoaded ? 'shimmer' : ''}`}>
+            <div className={`relative aspect-[3/4] overflow-hidden bg-gray-100 ${!isLoaded ? 'shimmer' : ''}`}>
                 <img
                     src={cover || "/books/default_cover.png"}
                     alt={title}
-                    className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-1000 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    className={`w-full h-full object-contain group-hover:scale-105 transition-all duration-1000 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                     loading={isAboveFold ? "eager" : "lazy"}
                     onLoad={() => setIsLoaded(true)}
                     {...(isAboveFold && { fetchPriority: "high" })}
@@ -65,16 +70,16 @@ export const BookCard = ({ title, author, status, cover, readDate, rating, tags,
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#fafafa] via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
 
-                {/* Status badge */}
-                <div className="absolute top-4 left-4">
-                    <span className={`inline-flex items-center gap-1.5 backdrop-blur-md border border-black/10 text-[10px] px-3 py-1.5 rounded-full font-bold uppercase tracking-wider shadow-lg ${STATUS_STYLES[status]}`}>
+                {/* Status ribbon badge */}
+                <div className="absolute top-0 right-0 overflow-hidden w-28 h-28 pointer-events-none">
+                    <div className={`absolute transform rotate-45 text-[10px] font-bold uppercase tracking-wider py-1.5 w-36 top-6 -right-8 shadow-lg flex items-center justify-center ${STATUS_STYLES[status]}`}>
                         {STATUS_LABELS[status]}
-                    </span>
+                    </div>
                 </div>
             </div>
 
             {/* Content */}
-            <div className="p-5 flex flex-col flex-1 relative">
+            <div className="p-3 flex flex-col flex-1 relative">
                 {/* Read Date or Status */}
                 {readDate ? (
                     <div className="flex items-center gap-2 mb-3">

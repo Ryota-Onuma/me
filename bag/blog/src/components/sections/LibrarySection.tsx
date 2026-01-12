@@ -13,9 +13,9 @@ interface LibrarySectionProps {
 
 const STATUS_OPTIONS: { value: BookStatus; label: string }[] = [
     { value: 'all', label: 'All' },
-    { value: 'yet', label: '積読' },
-    { value: 'reading', label: '読書中' },
-    { value: 'completed', label: '読了' },
+    { value: 'yet', label: 'Yet' },
+    { value: 'reading', label: 'Reading' },
+    { value: 'completed', label: 'Completed' },
 ];
 
 export const LibrarySection = ({ books }: LibrarySectionProps) => {
@@ -99,7 +99,7 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
             </div>
 
             {/* Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8">
                 {filteredBooks.map((book, idx) => (
                     <div
                         key={book.id}
