@@ -27,7 +27,23 @@ The site uses a custom markdown processing pipeline with extended syntax for emb
 ### Code quality
 - `npm run lint` - Run ESLint
 
-## GitHub CLI
+## Git Workflow
+
+### Branch Naming Convention
+
+**IMPORTANT:** All development branches must follow this naming format:
+```
+develop/claude/{session-id}
+```
+
+**Examples:**
+- `develop/claude/test-gh-cli-access-ExqDL`
+- `develop/claude/add-new-feature-Ab12C`
+- `develop/claude/fix-navigation-bug-Xy34Z`
+
+Always create branches with the `develop/claude/` prefix followed by a descriptive name and session ID.
+
+### GitHub CLI
 
 This repository uses a local proxy for git operations, so when using `gh` commands, you need to explicitly specify the repository name.
 
