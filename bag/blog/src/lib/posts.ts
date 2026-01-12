@@ -3,37 +3,11 @@ import path from 'path';
 import matter from 'gray-matter';
 import { POSTS_DIRECTORY, DEFAULT_THUMBNAIL } from './constants';
 import { processMarkdownContent } from './markdownProcessor';
+import { ContentLoadError, FrontmatterParseError, handleContentError } from './errors';
+import type { Post, PostFrontmatter, ContentItem } from '@/types';
 
-export interface PostFrontmatter {
-    id?: string;
-    title: string;
-    category?: string;
-    description?: string;
-    date: string;
-    tags: string[];
-    thumbnail?: string;
-    url?: string;
-    external_url?: string;
-}
-
-export interface Post {
-    slug: string;
-    frontmatter: PostFrontmatter;
-    content: string;
-}
-
-export interface ContentItem {
-    id: string;
-    type: 'external' | 'internal';
-    title: string;
-    category: string;
-    description: string;
-    date: string;
-    tags: string[];
-    thumbnail: string;
-    url?: string;
-    slug?: string;
-}
+// Re-export types for backward compatibility
+export type { Post, PostFrontmatter, ContentItem };
 
 const postsPath = path.join(process.cwd(), POSTS_DIRECTORY);
 
@@ -59,26 +33,43 @@ export function getPostBySlug(slug: string): Post | null {
         return null;
     }
 
-    const fileContents = fs.readFileSync(fullPath, 'utf8');
-    const { data, content } = matter(fileContents);
+    try {
+        const fileContents = fs.readFileSync(fullPath, 'utf8');
 
-    // Process custom markdown syntax
-    const processedContent = processMarkdownContent(content);
+        let data: Record<string, unknown>;
+        let content: string;
 
-    return {
-        slug,
-        frontmatter: {
-            title: data.title || 'Untitled',
-            date: data.date || '',
-            tags: Array.isArray(data.tags) ? data.tags : (data.tags ? [data.tags] : []),
-            category: data.category || 'Blog',
-            description: data.description || '',
-            thumbnail: data.thumbnail || DEFAULT_THUMBNAIL,
-            url: data.url || data.external_url,
-            id: data.id,
-        },
-        content: processedContent,
-    };
+        try {
+            const parsed = matter(fileContents);
+            data = parsed.data as Record<string, unknown>;
+            content = parsed.content;
+        } catch (error) {
+            throw new FrontmatterParseError(`${slug}.md`, error);
+        }
+
+        // Process custom markdown syntax
+        const processedContent = processMarkdownContent(content);
+
+        return {
+            slug,
+            frontmatter: {
+                title: typeof data.title === 'string' ? data.title : 'Untitled',
+                date: typeof data.date === 'string' ? data.date : '',
+                tags: Array.isArray(data.tags) ? data.tags as string[] : (typeof data.tags === 'string' ? [data.tags] : []),
+                category: typeof data.category === 'string' ? data.category : 'Blog',
+                description: typeof data.description === 'string' ? data.description : '',
+                thumbnail: typeof data.thumbnail === 'string' ? data.thumbnail : DEFAULT_THUMBNAIL,
+                url: typeof data.url === 'string' ? data.url : (typeof data.external_url === 'string' ? data.external_url : undefined),
+                id: typeof data.id === 'string' ? data.id : undefined,
+            },
+            content: processedContent,
+        };
+    } catch (error) {
+        if (error instanceof FrontmatterParseError) {
+            return handleContentError(error, `${slug}.md`, 'post');
+        }
+        throw new ContentLoadError(`${slug}.md`, 'post', error);
+    }
 }
 
 /**
@@ -87,7 +78,13 @@ export function getPostBySlug(slug: string): Post | null {
 export function getAllPosts(): Post[] {
     const slugs = getPostSlugs();
     return slugs
-        .map(slug => getPostBySlug(slug))
+        .map(slug => {
+            try {
+                return getPostBySlug(slug);
+            } catch (error) {
+                return handleContentError(error, `${slug}.md`, 'post');
+            }
+        })
         .filter((post): post is Post => post !== null)
         .sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
 }

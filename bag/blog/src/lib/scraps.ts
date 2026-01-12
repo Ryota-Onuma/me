@@ -1,41 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import { SCRAPS_DIRECTORY } from './constants';
+import { SCRAPS_DIRECTORY, TIMESTAMP_PATTERN } from './constants';
 import { processMarkdownContent } from './markdownProcessor';
+import { ContentLoadError, FrontmatterParseError, handleContentError } from './errors';
+import type { Scrap, ScrapFrontmatter, ScrapThread, ScrapItem } from '@/types';
 
-export interface ScrapFrontmatter {
-    title: string;
-    date: string;
-    status: 'open' | 'closed';
-    tags: string[];
-    emoji?: string;
-}
-
-export interface ScrapThread {
-    id: string;
-    timestamp?: string;
-    content: string;
-}
-
-export interface Scrap {
-    slug: string;
-    frontmatter: ScrapFrontmatter;
-    threads: ScrapThread[];
-    rawContent: string;
-}
-
-export interface ScrapItem {
-    id: string;
-    slug: string;
-    title: string;
-    emoji: string;
-    status: 'open' | 'closed';
-    date: string;
-    tags: string[];
-    threadCount: number;
-    lastUpdated: string;
-}
+// Re-export types for backward compatibility
+export type { Scrap, ScrapFrontmatter, ScrapThread, ScrapItem };
 
 const scrapsPath = path.join(process.cwd(), SCRAPS_DIRECTORY);
 
@@ -62,7 +34,7 @@ function parseScrapThreads(content: string): ScrapThread[] {
         const trimmedSection = section.trim();
 
         // Try to extract timestamp from heading (e.g., "## 2026-01-04 10:30")
-        const timestampMatch = trimmedSection.match(/^##\s*(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})/);
+        const timestampMatch = trimmedSection.match(TIMESTAMP_PATTERN);
 
         return {
             id: `thread-${index}`,
@@ -82,23 +54,40 @@ export function getScrapBySlug(slug: string): Scrap | null {
         return null;
     }
 
-    const fileContents = fs.readFileSync(fullPath, 'utf8');
-    const { data, content } = matter(fileContents);
+    try {
+        const fileContents = fs.readFileSync(fullPath, 'utf8');
 
-    const threads = parseScrapThreads(content);
+        let data: Record<string, unknown>;
+        let content: string;
 
-    return {
-        slug,
-        frontmatter: {
-            title: data.title || 'Untitled Scrap',
-            date: data.date || '',
-            status: data.status === 'closed' ? 'closed' : 'open',
-            tags: Array.isArray(data.tags) ? data.tags : (data.tags ? [data.tags] : []),
-            emoji: data.emoji || '📝',
-        },
-        threads,
-        rawContent: content,
-    };
+        try {
+            const parsed = matter(fileContents);
+            data = parsed.data as Record<string, unknown>;
+            content = parsed.content;
+        } catch (error) {
+            throw new FrontmatterParseError(`${slug}.md`, error);
+        }
+
+        const threads = parseScrapThreads(content);
+
+        return {
+            slug,
+            frontmatter: {
+                title: typeof data.title === 'string' ? data.title : 'Untitled Scrap',
+                date: typeof data.date === 'string' ? data.date : '',
+                status: data.status === 'closed' ? 'closed' : 'open',
+                tags: Array.isArray(data.tags) ? data.tags as string[] : (typeof data.tags === 'string' ? [data.tags] : []),
+                emoji: typeof data.emoji === 'string' ? data.emoji : '📝',
+            },
+            threads,
+            rawContent: content,
+        };
+    } catch (error) {
+        if (error instanceof FrontmatterParseError) {
+            return handleContentError(error, `${slug}.md`, 'scrap');
+        }
+        throw new ContentLoadError(`${slug}.md`, 'scrap', error);
+    }
 }
 
 /**
@@ -107,7 +96,13 @@ export function getScrapBySlug(slug: string): Scrap | null {
 export function getAllScraps(): Scrap[] {
     const slugs = getScrapSlugs();
     return slugs
-        .map(slug => getScrapBySlug(slug))
+        .map(slug => {
+            try {
+                return getScrapBySlug(slug);
+            } catch (error) {
+                return handleContentError(error, `${slug}.md`, 'scrap');
+            }
+        })
         .filter((scrap): scrap is Scrap => scrap !== null)
         .sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
 }

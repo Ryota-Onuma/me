@@ -58,6 +58,7 @@ export const Header = ({
                         <button
                             onClick={() => router.push(backLink)}
                             className="flex items-center gap-2 text-black/40 hover:text-black transition-premium group"
+                            aria-label={`Go back to ${backLabel || 'previous page'}`}
                         >
                             <div className="p-1.5 rounded-full bg-black/5 border border-black/10 group-hover:border-black/20 transition-premium">
                                 <ArrowLeft size={12} className="group-hover:-translate-x-1 transition-transform" />
