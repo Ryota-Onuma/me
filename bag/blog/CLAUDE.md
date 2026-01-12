@@ -27,6 +27,20 @@ The site uses a custom markdown processing pipeline with extended syntax for emb
 ### Code quality
 - `npm run lint` - Run ESLint
 
+## GitHub CLI
+
+This repository uses a local proxy for git operations, so when using `gh` commands, you need to explicitly specify the repository name.
+
+**Example:**
+```bash
+# Instead of just `gh repo view`
+gh repo view Ryota-Onuma/me
+
+# For issues and PRs, also specify the repo
+gh issue list --repo Ryota-Onuma/me
+gh pr list --repo Ryota-Onuma/me
+```
+
 ## Architecture
 
 ### Content System
