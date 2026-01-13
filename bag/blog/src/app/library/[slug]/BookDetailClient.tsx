@@ -23,8 +23,7 @@ import { useScrollProgress } from '@/hooks/useScrollProgress';
 import { useHasScrolled } from '@/hooks/useHasScrolled';
 
 import { ExternalLink, Star, Calendar } from 'lucide-react';
-
-const NAV_LINKS = ['about', 'blog', 'scrap', 'library'];
+import { NAV_LINKS } from '@/constants/navigation';
 
 interface ParsedBook {
     title: string;

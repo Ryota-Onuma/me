@@ -19,8 +19,7 @@ import { NoiseOverlay, Spotlight } from '@/components/effects';
 import { useHasScrolled } from '@/hooks/useHasScrolled';
 
 import type { Scrap } from '@/lib/scraps';
-
-const NAV_LINKS = ['about', 'blog', 'scrap', 'library'];
+import { NAV_LINKS } from '@/constants/navigation';
 
 interface ScrapDetailClientProps {
     scrap: Scrap;
