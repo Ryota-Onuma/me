@@ -5,4 +5,5 @@ status: "completed"
 cover: "/books/clean-architecture-hands-on.png"
 externalUrl: "https://book.impress.co.jp/books/1123101096"
 tags: ["Book"]
+rating: 4
 ---
