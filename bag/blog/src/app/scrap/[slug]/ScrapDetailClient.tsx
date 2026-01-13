@@ -20,7 +20,7 @@ import { useHasScrolled } from '@/hooks/useHasScrolled';
 
 import type { Scrap } from '@/lib/scraps';
 
-const NAV_LINKS = ['about', 'blog', 'scrap'];
+const NAV_LINKS = ['about', 'blog', 'scrap', 'library'];
 
 interface ScrapDetailClientProps {
     scrap: Scrap;

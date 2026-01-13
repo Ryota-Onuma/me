@@ -26,7 +26,7 @@ import { TableOfContents } from '@/components/markdown';
 import { BlogHero, BlogNavigation } from '@/components/sections';
 import type { ContentItem } from '@/lib/posts';
 
-const NAV_LINKS = ['about', 'blog', 'scrap'];
+const NAV_LINKS = ['about', 'blog', 'scrap', 'library'];
 
 interface ParsedPost {
     title: string;
