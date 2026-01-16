@@ -64,5 +64,3 @@ if command -v mise 1>/dev/null 2>&1; then
 fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-eval "$(git wt --init zsh)"

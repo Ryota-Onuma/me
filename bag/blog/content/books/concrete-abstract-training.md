@@ -6,6 +6,7 @@ cover: "/books/concrete-abstract-training.png"
 externalUrl: "https://amzn.asia/d/0kkCVi5"
 tags: ["Audible"]
 readDate: "2026/01/07"
+rating: 5
 ---
 
 ## 読んで得られた学び
