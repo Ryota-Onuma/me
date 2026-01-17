@@ -50,6 +50,10 @@ export const useLibraryFilter = (books: BookItem[] = []): UseLibraryFilterResult
 
         // Sort
         filtered = filtered.sort((a, b) => {
+            // Always keep 'reading' status at the top
+            if (a.status === 'reading' && b.status !== 'reading') return -1;
+            if (a.status !== 'reading' && b.status === 'reading') return 1;
+
             switch (sortOption) {
                 case 'readDate-newest': {
                     const dateA = a.readDate ? new Date(a.readDate).getTime() : 0;

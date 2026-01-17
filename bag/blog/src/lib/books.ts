@@ -98,8 +98,11 @@ export function getAllBooks(): Book[] {
         .map(slug => getBookBySlug(slug))
         .filter((book): book is Book => book !== null)
         .sort((a, b) => {
-            // Sort by readDate (newest first)
-            // Books without readDate go to the end
+            // Sort by status: 'reading' first
+            if (a.frontmatter.status === 'reading' && b.frontmatter.status !== 'reading') return -1;
+            if (a.frontmatter.status !== 'reading' && b.frontmatter.status === 'reading') return 1;
+
+            // Then sort by readDate (newest first)
             const dateA = a.frontmatter.readDate ? new Date(a.frontmatter.readDate).getTime() : 0;
             const dateB = b.frontmatter.readDate ? new Date(b.frontmatter.readDate).getTime() : 0;
             return dateB - dateA;

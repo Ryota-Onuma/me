@@ -5,4 +5,5 @@ status: "completed"
 cover: "/books/database-design-and-implementation.png"
 externalUrl: "https://a.co/d/bSYo65B"
 tags: ["Book"]
+readDate: "2025/12/10"
 ---

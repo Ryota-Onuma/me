@@ -5,4 +5,5 @@ status: "completed"
 cover: "/books/functional-programming-basics.png"
 externalUrl: "https://amzn.asia/d/ch6d9Bl"
 tags: ["Book"]
+readDate: "2025/11/01"
 ---

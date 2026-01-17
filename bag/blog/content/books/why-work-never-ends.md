@@ -6,7 +6,7 @@ cover: "/books/why-work-never-ends.png"
 rating: 5
 externalUrl: "https://amzn.asia/d/6kX1PAn"
 tags: ["Audible"]
-readDate: "2026/01/12"
+readDate: "2026/01/13"
 ---
 
 ## 読んで得られた学び
