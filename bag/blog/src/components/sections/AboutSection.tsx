@@ -5,9 +5,9 @@ import { SOCIAL_LINKS } from '@/data/socialLinks';
 export const AboutSection = () => (
     <section
         id="about"
-        className="pt-28 pb-20 md:py-32 px-6 md:px-24 bg-[#fafafa] overflow-hidden"
+        className="pt-28 pb-16 md:pt-32 md:pb-20 px-6 md:px-16 lg:px-24 bg-[#fafafa] overflow-hidden"
     >
-        <div className="max-w-7xl mx-auto w-full">
+        <div className="w-full">
             <SectionHeading title="About" />
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-12 md:gap-24 items-start">

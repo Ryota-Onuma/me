@@ -35,7 +35,7 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
     } = useLibraryFilter(books);
 
     return (
-        <section id="library" className="pt-28 pb-20 md:py-32 px-6 md:px-16 lg:px-24" style={{ backgroundColor: BACKGROUND_COLOR_LIGHT }}>
+        <section id="library" className="pt-28 pb-16 md:pt-32 md:pb-20 px-6 md:px-16 lg:px-24" style={{ backgroundColor: BACKGROUND_COLOR_LIGHT }}>
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
                 <div>

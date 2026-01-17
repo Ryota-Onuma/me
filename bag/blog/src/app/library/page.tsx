@@ -8,7 +8,7 @@ export default function LibraryPage() {
 
     return (
         <ClientLayout>
-            <main className="pt-24">
+            <main>
                 <Suspense fallback={<div className="min-h-screen bg-[#fafafa]" />}>
                     <LibrarySection books={books} />
                 </Suspense>

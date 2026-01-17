@@ -9,7 +9,7 @@ export default function BlogListPage() {
 
     return (
         <ClientLayout>
-            <main className="pt-24">
+            <main>
                 <Suspense fallback={<div className="min-h-screen bg-[#fafafa]" />}>
                     <WorksSection contents={contents} />
                 </Suspense>
