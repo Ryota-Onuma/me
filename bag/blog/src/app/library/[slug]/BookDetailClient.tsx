@@ -122,11 +122,18 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                                 {/* Cover Image */}
                                 {book.cover && (
                                     <div className="flex-shrink-0 mx-auto md:mx-0">
-                                        <div className="w-60 md:w-64 aspect-[2/3] rounded-2xl overflow-hidden border border-black/10 shadow-2xl">
+                                        <div className="w-60 md:w-64 aspect-[2/3] rounded-2xl overflow-hidden border border-black/10 shadow-2xl relative bg-black/5">
+                                            {/* Blurred background */}
+                                            <img
+                                                src={book.cover}
+                                                alt=""
+                                                className="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-50"
+                                            />
+                                            {/* Main cover image */}
                                             <img
                                                 src={book.cover}
                                                 alt={book.title}
-                                                className="w-full h-full object-cover"
+                                                className="relative w-full h-full object-contain"
                                             />
                                         </div>
                                     </div>

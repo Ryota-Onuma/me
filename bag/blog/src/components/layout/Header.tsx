@@ -49,7 +49,7 @@ export const Header = ({
                     {/* Logo */}
                     <Link
                         href="/"
-                        className="text-xl md:text-2xl font-black tracking-tighter text-black hover:text-black/80 transition-premium"
+                        className="text-xl md:text-2xl font-black tracking-tighter text-black hover:text-black/80 transition-premium cursor-pointer"
                     >
                         ryota.onuma<span className="text-[#76b5c5]">.dev</span>
                     </Link>
@@ -74,7 +74,7 @@ export const Header = ({
                         <Link
                             key={item}
                             href={getLinkPath(item)}
-                            className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.3em] transition-premium ${isActive(item)
+                            className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.3em] transition-premium cursor-pointer ${isActive(item)
                                 ? 'text-black'
                                 : 'text-black/30 hover:text-black hover:bg-black/5'
                                 }`}
