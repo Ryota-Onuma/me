@@ -32,7 +32,7 @@ test.describe('Navigation', () => {
     test('should navigate back to Home using logo', async ({ page }) => {
         await page.goto('/blog');
 
-        await page.click('header >> text=Ryota Onuma');
+        await page.click('header >> text=ryota.onuma');
 
         await expect(page).toHaveURL('/');
     });

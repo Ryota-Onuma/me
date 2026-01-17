@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Ryota Onuma",
-  description: "Ryota Onuma - Stay Curious. Keep Moving.",
+  metadataBase: new URL("https://ryota.onuma.dev"),
+  title: "ryota.onuma.dev",
+  description: "ryota.onuma.dev - Stay Curious. Keep Moving.",
 };
 
 export default function RootLayout({

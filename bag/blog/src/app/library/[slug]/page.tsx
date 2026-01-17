@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return {
-        title: `${book.frontmatter.title} by ${book.frontmatter.author} | Ryota Onuma`,
+        title: `${book.frontmatter.title} by ${book.frontmatter.author} | ryota.onuma.dev`,
         description: `Book learnings: ${book.frontmatter.title} by ${book.frontmatter.author}`,
     };
 }

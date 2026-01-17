@@ -51,7 +51,7 @@ export const Header = ({
                         href="/"
                         className="text-xl md:text-2xl font-black tracking-tighter text-black hover:text-black/80 transition-premium"
                     >
-                        Ryota Onuma
+                        ryota.onuma<span className="text-[#76b5c5]">.dev</span>
                     </Link>
 
                     {backLink && (

@@ -6,7 +6,7 @@ test.describe('Homepage', () => {
     });
 
     test('should have the correct page title', async ({ page }) => {
-        await expect(page).toHaveTitle(/Ryota Onuma/);
+        await expect(page).toHaveTitle(/ryota\.onuma\.dev/);
     });
 
     test('should display the main heading', async ({ page }) => {
