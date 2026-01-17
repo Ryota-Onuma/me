@@ -4,7 +4,7 @@ author: "澤 円"
 status: "completed"
 rating: 1
 cover: "/books/meta-thinking.png"
-externalUrl: "https://amzn.asia/d/4StFhJI"
+externalUrl: "https://amzn.asia/d/7Ppbmfs"
 tags: ["Audible"]
 readDate: "2025/08/30"
 ---

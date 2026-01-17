@@ -3,6 +3,7 @@ title: "仕事に追われない仕事術 マニャーナの法則・完全版"
 author: "マーク・フォースター"
 status: "completed"
 cover: "/books/manana-law.png"
+rating: 4
 externalUrl: "https://www.amazon.co.jp/dp/479931996X"
 tags: ["Audible"]
 readDate: "2026/01/16"
