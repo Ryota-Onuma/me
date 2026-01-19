@@ -6,8 +6,7 @@ import { NoiseOverlay, Spotlight } from '@/components/effects';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useScrollProgress } from '@/hooks/useScrollProgress';
 import { useHasScrolled } from '@/hooks/useHasScrolled';
-
-const NAV_LINKS = ['about', 'blog', 'scrap', 'library'];
+import { NAV_LINKS } from '@/constants/navigation';
 
 interface ClientLayoutProps {
     children: React.ReactNode;

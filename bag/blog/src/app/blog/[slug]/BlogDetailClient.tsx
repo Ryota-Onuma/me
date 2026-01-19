@@ -25,8 +25,7 @@ import { useHasScrolled } from '@/hooks/useHasScrolled';
 import { TableOfContents } from '@/components/markdown';
 import { BlogHero, BlogNavigation } from '@/components/sections';
 import type { ContentItem } from '@/lib/posts';
-
-const NAV_LINKS = ['about', 'blog', 'scrap'];
+import { NAV_LINKS } from '@/constants/navigation';
 
 interface ParsedPost {
     title: string;
