@@ -41,7 +41,7 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
                 <div>
                     <SectionHeading title="Library" />
                     <p className="text-black/50 text-base mt-4 max-w-2xl leading-relaxed">
-                        Books I've read and the learnings gained from them.<br />
+                        Books I&apos;ve read and the learnings gained from them.<br />
                         <span className="text-black font-semibold">{filteredCount}</span> books
                         {selectedTag && <> filtered by <span className="text-black px-2 py-0.5 rounded bg-black/10 text-xs uppercase font-bold tracking-wider">{selectedTag}</span></>}
                     </p>

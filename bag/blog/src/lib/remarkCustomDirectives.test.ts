@@ -67,7 +67,8 @@ describe('remarkCustomDirectives', () => {
         const pNode = transformedTree.children[0] as DirectiveNode;
         expect(pNode.type).toBe('link-card');
         expect(pNode.data?.hName).toBe('link-card');
-        expect(pNode.data?.hProperties?.url).toBe('https://example.com');
+        // URL.toString() adds trailing slash for domain-only URLs
+        expect(pNode.data?.hProperties?.url).toBe('https://example.com/');
     });
 
     it('should handle image resizing syntax', () => {

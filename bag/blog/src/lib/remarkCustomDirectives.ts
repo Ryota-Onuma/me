@@ -2,6 +2,7 @@ import { visit } from 'unist-util-visit';
 import type { Root, Paragraph, Text, Image, Table, Parent } from 'mdast';
 import type { Plugin } from 'unified';
 import type { Node, Data } from 'unist';
+import { SUPPORTED_EMBED_TYPES, EMBED_SHORTCUT_PATTERN, IMAGE_WIDTH_PATTERN } from './constants';
 
 /**
  * Directive node types from remark-directive
@@ -34,18 +35,33 @@ export interface ExtendedImage extends Image {
     data?: DirectiveData;
 }
 
-// Supported embed types
-const SUPPORTED_EMBEDS = [
-    'youtube', 'twitter', 'github', 'gist', 'codepen',
-    'slideshare', 'speakerdeck', 'docswell', 'jsfiddle',
-    'codesandbox', 'stackblitz', 'figma'
-] as const;
+/**
+ * Sanitizes a URL to prevent XSS attacks
+ * Only allows http and https protocols
+ */
+function sanitizeUrl(url: string): string | null {
+    if (!url || typeof url !== 'string') {
+        return null;
+    }
 
-// Embed shortcut pattern: @[type](id)
-const EMBED_SHORTCUT_PATTERN = /^@\[(youtube|twitter|github)\]\(([^)]+)\)$/;
+    const trimmedUrl = url.trim();
+    if (trimmedUrl.length === 0) {
+        return null;
+    }
 
-// Image width pattern: =123
-const IMAGE_WIDTH_PATTERN = /=([0-9]+)$/;
+    try {
+        const parsed = new URL(trimmedUrl);
+        // Only allow http and https protocols
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+            console.warn(`[remarkCustomDirectives] Invalid protocol in URL: ${trimmedUrl}`);
+            return null;
+        }
+        return parsed.toString();
+    } catch {
+        console.warn(`[remarkCustomDirectives] Invalid URL: ${trimmedUrl}`);
+        return null;
+    }
+}
 
 /**
  * Handler for container directives (:::message, :::details)
@@ -82,7 +98,7 @@ function handleLeafDirective(node: Node): void {
 
     const { name, attributes } = node;
 
-    if (SUPPORTED_EMBEDS.includes(name as typeof SUPPORTED_EMBEDS[number])) {
+    if (SUPPORTED_EMBED_TYPES.includes(name as typeof SUPPORTED_EMBED_TYPES[number])) {
         node.data = {
             hName: name,
             hProperties: {
@@ -90,10 +106,15 @@ function handleLeafDirective(node: Node): void {
             },
         };
     } else if (name === 'link-card') {
+        const sanitizedUrl = sanitizeUrl(attributes?.url || '');
+        if (!sanitizedUrl) {
+            console.warn('[remarkCustomDirectives] Skipping link-card with invalid URL');
+            return;
+        }
         node.data = {
             hName: 'link-card',
             hProperties: {
-                url: attributes?.url || '',
+                url: sanitizedUrl,
             },
         };
     }
@@ -112,11 +133,17 @@ function handleAutoLinkCard(node: Paragraph): boolean {
     const textNode = child.children[0] as Text;
     if (textNode.value !== child.url) return false;
 
+    const sanitizedUrl = sanitizeUrl(child.url);
+    if (!sanitizedUrl) {
+        console.warn('[remarkCustomDirectives] Skipping auto-link card with invalid URL');
+        return false;
+    }
+
     const extendedNode = node as ExtendedParagraph;
     extendedNode.type = 'link-card';
     extendedNode.data = {
         hName: 'link-card',
-        hProperties: { url: child.url }
+        hProperties: { url: sanitizedUrl }
     };
 
     return true;
