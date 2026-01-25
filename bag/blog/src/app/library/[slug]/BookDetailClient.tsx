@@ -16,15 +16,15 @@ import { remarkCustomDirectives } from '@/lib/remarkCustomDirectives';
 import { createMarkdownComponents } from '@/lib/markdownComponents';
 import type { OGPData } from '@/lib/prefetchOGP';
 
-import { Header, Footer, MobileMenu } from '@/components/layout';
+import { Header, Footer } from '@/components/layout';
 import { NoiseOverlay, Spotlight } from '@/components/effects';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useScrollProgress } from '@/hooks/useScrollProgress';
-import { useHasScrolled } from '@/hooks/useHasScrolled';
 
 import { ExternalLink, Star, Calendar } from 'lucide-react';
 
-const NAV_LINKS = ['about', 'blog', 'scrap', 'library'];
+
+
 
 interface ParsedBook {
     title: string;
@@ -58,9 +58,7 @@ const STATUS_STYLES: Record<'yet' | 'reading' | 'completed', string> = {
 
 export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
     const router = useRouter();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { scrollProgress } = useScrollProgress();
-    const { isScrolled } = useHasScrolled();
 
     // Memoize markdown components to prevent re-mounting on scroll
     const markdownComponents = useMemo(
@@ -107,11 +105,7 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
 
             <ProgressBar scrollProgress={scrollProgress} />
 
-            <Header
-                isScrolled={isScrolled}
-                navLinks={NAV_LINKS}
-                onMobileMenuOpen={() => setIsMobileMenuOpen(true)}
-            />
+            <Header />
 
             <div className="min-h-screen bg-[#fafafa] text-[#1a1a1a]">
                 <main className="min-h-screen animate-fade-in relative z-10">
@@ -252,11 +246,6 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
 
             <Footer />
 
-            <MobileMenu
-                isOpen={isMobileMenuOpen}
-                onClose={() => setIsMobileMenuOpen(false)}
-                navLinks={NAV_LINKS}
-            />
         </>
     );
 }

@@ -14,13 +14,13 @@ import { remarkCustomDirectives } from '@/lib/remarkCustomDirectives';
 import { createMarkdownComponents } from '@/lib/markdownComponents';
 import type { OGPData } from '@/lib/prefetchOGP';
 
-import { Header, Footer, MobileMenu } from '@/components/layout';
+import { Header, Footer } from '@/components/layout';
 import { NoiseOverlay, Spotlight } from '@/components/effects';
-import { useHasScrolled } from '@/hooks/useHasScrolled';
 
 import type { Scrap } from '@/lib/scraps';
 
-const NAV_LINKS = ['about', 'blog', 'scrap'];
+
+
 
 interface ScrapDetailClientProps {
     scrap: Scrap;
@@ -28,8 +28,6 @@ interface ScrapDetailClientProps {
 }
 
 export function ScrapDetailClient({ scrap, ogpDataMap }: ScrapDetailClientProps) {
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { isScrolled } = useHasScrolled();
 
     // Memoize markdown components to prevent re-mounting on scroll
     const markdownComponents = useMemo(
@@ -42,11 +40,7 @@ export function ScrapDetailClient({ scrap, ogpDataMap }: ScrapDetailClientProps)
             <NoiseOverlay />
             <Spotlight />
 
-            <Header
-                isScrolled={isScrolled}
-                navLinks={NAV_LINKS}
-                onMobileMenuOpen={() => setIsMobileMenuOpen(true)}
-            />
+            <Header />
 
             <div className="min-h-screen bg-[#fafafa] text-[#1a1a1a]">
                 <main className="min-h-screen animate-fade-in relative z-10 pt-32">
@@ -123,11 +117,6 @@ export function ScrapDetailClient({ scrap, ogpDataMap }: ScrapDetailClientProps)
 
             <Footer />
 
-            <MobileMenu
-                isOpen={isMobileMenuOpen}
-                onClose={() => setIsMobileMenuOpen(false)}
-                navLinks={NAV_LINKS}
-            />
         </>
     );
 }

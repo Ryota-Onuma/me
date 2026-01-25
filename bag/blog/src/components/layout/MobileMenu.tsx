@@ -4,11 +4,11 @@ import React from 'react';
 
 import { X } from 'lucide-react';
 import Link from 'next/link';
+import { NAV_LINKS } from '@/lib/navigation';
 
 interface MobileMenuProps {
     isOpen: boolean;
     onClose: () => void;
-    navLinks: string[];
 }
 
 const navLabels: Record<string, string> = {
@@ -21,7 +21,7 @@ const navLabels: Record<string, string> = {
 /**
  * MobileMenu - モバイルメニューオーバーレイ
  */
-export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps): React.ReactNode => {
+export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps): React.ReactNode => {
     const handleLinkClick = (): void => {
         onClose();
     };
@@ -44,7 +44,7 @@ export const MobileMenu = ({ isOpen, onClose, navLinks }: MobileMenuProps): Reac
                 <X className="w-8 h-8 md:w-10 md:h-10" />
             </button>
             <div className="flex flex-col items-center gap-8">
-                {navLinks.map((item) => (
+                {NAV_LINKS.map((item) => (
                     <Link
                         key={item}
                         href={getLinkPath(item)}

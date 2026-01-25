@@ -16,17 +16,17 @@ import { remarkCustomDirectives } from '@/lib/remarkCustomDirectives';
 import { createMarkdownComponents } from '@/lib/markdownComponents';
 import type { OGPData } from '@/lib/prefetchOGP';
 
-import { Header, Footer, MobileMenu } from '@/components/layout';
+import { Header, Footer } from '@/components/layout';
 import { NoiseOverlay, Spotlight } from '@/components/effects';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useScrollProgress } from '@/hooks/useScrollProgress';
-import { useHasScrolled } from '@/hooks/useHasScrolled';
 
 import { TableOfContents } from '@/components/markdown';
 import { BlogHero, BlogNavigation } from '@/components/sections';
 import type { ContentItem } from '@/lib/posts';
 
-const NAV_LINKS = ['about', 'blog', 'scrap'];
+
+
 
 interface ParsedPost {
     title: string;
@@ -45,9 +45,7 @@ interface BlogDetailClientProps {
 
 export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap }: BlogDetailClientProps) {
     const router = useRouter();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { scrollProgress } = useScrollProgress();
-    const { isScrolled } = useHasScrolled();
 
     // Memoize markdown components to prevent re-mounting on scroll
     const markdownComponents = useMemo(
@@ -76,11 +74,7 @@ export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap }: BlogD
 
             <ProgressBar scrollProgress={scrollProgress} />
 
-            <Header
-                isScrolled={isScrolled}
-                navLinks={NAV_LINKS}
-                onMobileMenuOpen={() => setIsMobileMenuOpen(true)}
-            />
+            <Header />
 
             <div className="min-h-screen bg-[#fafafa] text-[#1a1a1a]">
                 <main className="min-h-screen animate-fade-in relative z-10">
@@ -108,11 +102,6 @@ export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap }: BlogD
 
             <Footer />
 
-            <MobileMenu
-                isOpen={isMobileMenuOpen}
-                onClose={() => setIsMobileMenuOpen(false)}
-                navLinks={NAV_LINKS}
-            />
         </>
     );
 }
