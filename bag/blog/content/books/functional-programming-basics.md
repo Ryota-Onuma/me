@@ -6,6 +6,7 @@ cover: "/books/functional-programming-basics.png"
 externalUrl: "https://amzn.asia/d/ch6d9Bl"
 tags: ["Book"]
 readDate: "2025/11/01"
+rating: 5
 ---
 
 ## 概要
@@ -228,7 +229,7 @@ enum YearsActive {
 | **スレッド** | メモリ空間を共有するOS管理の実行単位 |
 | **ファイバ** | 軽量な仮想スレッド。言語のランタイムが管理し、一つのスレッド上で動く |
 
-goroutineやcoroutineがファイバにあたる。M:Nモデルでは、複数のスレッドに対して複数のファイバをうまく割り当てて並行処理できる。
+goroutineやcoroutineがファイバにあたる。`M:N`モデルでは、複数のスレッドに対して複数のファイバをうまく割り当てて並行処理できる。
 
 ---
 
