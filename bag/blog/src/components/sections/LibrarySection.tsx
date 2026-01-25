@@ -103,7 +103,7 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
                 {filteredBooks.map((book, idx) => (
                     <div
                         key={book.id}
-                        onClick={() => window.open(`/library/${book.slug}`, '_blank')}
+                        onClick={() => router.push(`/library/${book.slug}`)}
                         className="cursor-pointer"
                     >
                         <BookCard
