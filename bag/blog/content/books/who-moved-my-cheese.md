@@ -2,6 +2,7 @@
 title: "チーズはどこへ消えた?"
 author: "スペンサー・ジョンソン"
 status: "completed"
+rating: 3
 cover: "/books/who-moved-my-cheese.png"
 externalUrl: "https://amzn.asia/d/1Bd38Za"
 tags: ["Audible"]
