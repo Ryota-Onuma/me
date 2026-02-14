@@ -35,10 +35,10 @@ checklists/dependencies.local.md
 
 ### 4. 自動ロード
 
-`@architecture-reviewer` を使用すると、該当する `.local.md` ファイルが自動的にロードされます：
+`architecture-reviewer` チームメンバーがレビューを実行すると、該当する `.local.md` ファイルが自動的にロードされます：
 
 ```
-@architecture-reviewer src/features/auth/
+architecture-reviewer に src/features/auth/ のレビューを依頼
 ```
 
 上記は以下をロード：

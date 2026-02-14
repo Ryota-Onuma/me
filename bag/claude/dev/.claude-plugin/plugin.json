@@ -1,0 +1,8 @@
+{
+    "name": "dev",
+    "description": "dev tools",
+    "version": "1.0.0",
+    "author": {
+        "name": "Ryota Onuma"
+    }
+}

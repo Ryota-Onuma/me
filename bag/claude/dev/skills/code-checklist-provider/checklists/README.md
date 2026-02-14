@@ -45,10 +45,10 @@ checklists/react.local.md
 
 ### 4. 自動ロード
 
-`@code-reviewer` を使用すると、該当する `.local.md` ファイルが自動的にロードされます：
+`code-reviewer` チームメンバーがレビューを実行すると、該当する `.local.md` ファイルが自動的にロードされます：
 
 ```
-@code-reviewer src/components/UserProfile.tsx
+code-reviewer に src/components/UserProfile.tsx のレビューを依頼
 ```
 
 上記は以下をロード：

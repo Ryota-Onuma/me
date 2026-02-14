@@ -1,6 +1,7 @@
 ---
 name: code-checklist-provider
 description: Provides technology-specific code review checklists. Analyzes target files and returns relevant checklists, enforcing single-item sequential evaluation.
+user-invocable: false
 ---
 
 # Code Checklist Provider

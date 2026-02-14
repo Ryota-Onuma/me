@@ -1,6 +1,7 @@
 ---
 name: architecture-checklist-provider
 description: Provides architecture-specific checklists for structural and dependency analysis. Enforces single-item sequential evaluation.
+user-invocable: false
 ---
 
 # Architecture Checklist Provider
