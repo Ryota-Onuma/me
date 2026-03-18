@@ -171,6 +171,7 @@ require('lazy').setup({
     config = function()
       require('nvim-treesitter').setup({
         install_dir = vim.fn.stdpath('data') .. '/site',
+        ensure_installed = { 'kotlin' },
       })
 
       -- Parsers are installed via :TSUpdate (run by lazy.nvim on install)
@@ -229,7 +230,10 @@ require('lazy').setup({
           'bashls',       -- Bash
         },
         -- Automatically enable installed servers via vim.lsp.enable()
-        automatic_enable = true,
+        -- kotlin_lsp is excluded because kotlin.nvim manages it directly
+        automatic_enable = {
+          exclude = { 'kotlin_lsp' },
+        },
       })
     end,
   },
@@ -321,6 +325,34 @@ require('lazy').setup({
           vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, vim.tbl_extend('force', opts, { desc = 'Show Diagnostic' }))
           vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, vim.tbl_extend('force', opts, { desc = 'Diagnostic List' }))
         end,
+      })
+    end,
+  },
+
+  -- ---------------------------------------------------------------------------
+  -- Kotlin LSP (JetBrains Official kotlin-lsp via kotlin.nvim)
+  -- ---------------------------------------------------------------------------
+  {
+    'AlexandrosAlexiou/kotlin.nvim',
+    ft = { 'kotlin' },
+    dependencies = {
+      'williamboman/mason.nvim',
+      'williamboman/mason-lspconfig.nvim',
+      'stevearc/oil.nvim',
+      'folke/trouble.nvim',
+    },
+    config = function()
+      require('kotlin').setup({
+        root_markers = { 'gradlew', 'mvnw', '.git' },
+        inlay_hints = {
+          enabled = true,
+          parameters = true,
+          types_property = true,
+          types_variable = true,
+          function_return = true,
+          function_parameter = true,
+          lambda_return = true,
+        },
       })
     end,
   },
