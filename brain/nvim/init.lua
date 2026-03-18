@@ -228,11 +228,7 @@ require('lazy').setup({
           'html',         -- HTML
           'cssls',        -- CSS
           'bashls',       -- Bash
-        },
-        -- Automatically enable installed servers via vim.lsp.enable()
-        -- kotlin_lsp is excluded because kotlin.nvim manages it directly
-        automatic_enable = {
-          exclude = { 'kotlin_lsp' },
+          'kotlin_lsp',   -- Kotlin (JetBrains official, Mason package: kotlin-lsp)
         },
       })
     end,
@@ -324,35 +320,12 @@ require('lazy').setup({
           vim.keymap.set('n', ']d', vim.diagnostic.goto_next, vim.tbl_extend('force', opts, { desc = 'Next Diagnostic' }))
           vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, vim.tbl_extend('force', opts, { desc = 'Show Diagnostic' }))
           vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, vim.tbl_extend('force', opts, { desc = 'Diagnostic List' }))
+          -- Inlay hints (enable for servers that support it)
+          local client = vim.lsp.get_client_by_id(ev.data.client_id)
+          if client and client.server_capabilities.inlayHintProvider then
+            vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
+          end
         end,
-      })
-    end,
-  },
-
-  -- ---------------------------------------------------------------------------
-  -- Kotlin LSP (JetBrains Official kotlin-lsp via kotlin.nvim)
-  -- ---------------------------------------------------------------------------
-  {
-    'AlexandrosAlexiou/kotlin.nvim',
-    ft = { 'kotlin' },
-    dependencies = {
-      'williamboman/mason.nvim',
-      'williamboman/mason-lspconfig.nvim',
-      'stevearc/oil.nvim',
-      'folke/trouble.nvim',
-    },
-    config = function()
-      require('kotlin').setup({
-        root_markers = { 'gradlew', 'mvnw', '.git' },
-        inlay_hints = {
-          enabled = true,
-          parameters = true,
-          types_property = true,
-          types_variable = true,
-          function_return = true,
-          function_parameter = true,
-          lambda_return = true,
-        },
       })
     end,
   },
