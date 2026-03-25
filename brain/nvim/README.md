@@ -93,22 +93,28 @@ On first launch, **lazy.nvim** will automatically download and install all plugi
 | `Space fw` | Find word under cursor / カーソル下の単語を検索 |
 | `Space fd` | Find diagnostics / 診断一覧 |
 | `Space fs` | Document symbols / ドキュメントシンボル |
+| `Space fS` | Workspace symbols / ワークスペースシンボル |
+| `Space fh` | Help tags / ヘルプタグ |
 | `Space ft` | Find TODOs / TODO 検索 |
 
 ### LSP / 言語サーバー
 
 | Key | Action |
 |---|---|
-| `gd` | Go to definition / 定義へジャンプ |
+| `gd` / `F12` | Go to definition / 定義へジャンプ |
 | `gD` | Go to declaration / 宣言へジャンプ |
 | `gi` | Go to implementation / 実装へジャンプ |
-| `gr` | Find references / 参照一覧 |
-| `K` | Hover documentation / ホバー情報 |
+| `gr` / `Shift+F12` | Find references / 参照一覧 |
+| `gt` | Go to type definition / 型定義へジャンプ |
+| `K` / `H` | Hover documentation / ホバー情報 |
+| `Ctrl+K` | Signature help / シグネチャヘルプ |
 | `Space ca` | Code action / コードアクション |
-| `Space rn` | Rename symbol / リネーム |
+| `Space rn` / `F2` | Rename symbol / リネーム |
 | `Space f` | Format file / フォーマット |
 | `[d` / `]d` | Previous / next diagnostic / 前後の診断 |
 | `Space e` | Show diagnostic float / 診断詳細 |
+| `Space q` | Diagnostic list (loclist) / 診断リスト |
+| `gb` | Jump back / 前の場所へ戻る |
 
 ### Git
 
@@ -127,9 +133,10 @@ On first launch, **lazy.nvim** will automatically download and install all plugi
 
 | Key | Action |
 |---|---|
-| `Shift+L` | Next buffer / 次のバッファ |
-| `Shift+H` | Previous buffer / 前のバッファ |
-| `Space x` | Close buffer / バッファを閉じる |
+| `Shift+L` / `Cmd+]` | Next buffer / 次のバッファ |
+| `Shift+H` / `Cmd+[` | Previous buffer / 前のバッファ |
+| `Space x` / `Cmd+W` | Close buffer / バッファを閉じる |
+| `Space bx` | Pick buffer to close / バッファを選んで閉じる |
 | `Space bp` | Pin buffer / ピン留め |
 | `Space bo` | Close other buffers / 他を閉じる |
 
@@ -149,6 +156,29 @@ On first launch, **lazy.nvim** will automatically download and install all plugi
 |---|---|
 | `Ctrl+H/J/K/L` | Move between windows / ウィンドウ間移動 |
 | `Ctrl+↑/↓/←/→` | Resize windows / ウィンドウサイズ変更 |
+
+### Ghostty → Neovim (Cmd+key) / Ghostty 経由の Cmd キー
+
+Ghostty が Cmd+key を CSI u シーケンス (`\x1b[<code>;9u`) に変換して Neovim に転送します。
+
+| Key | Action |
+|---|---|
+| `Cmd+P` | Find files / ファイル検索 (= Ctrl+P) |
+| `Cmd+Shift+P` | Command palette / コマンドパレット |
+| `Cmd+Shift+F` | Global search / 全文検索 (Live Grep) |
+| `Cmd+Shift+O` | Go to symbol / シンボルへジャンプ |
+| `Cmd+S` | Save file / ファイル保存 |
+| `Cmd+W` | Close buffer / バッファを閉じる |
+| `Cmd+Z` | Undo / 元に戻す |
+| `Cmd+Shift+Z` | Redo / やり直し |
+| `Cmd+A` | Select all / 全選択 |
+| `Cmd+Shift+K` | Delete line / 行を削除 |
+| `Cmd+/` | Toggle comment / コメント切替 |
+| `Cmd+B` | Toggle file tree / ファイルツリー切替 |
+| `Cmd+J` | Toggle terminal / ターミナル切替 |
+| `Cmd+.` | Code action / コードアクション |
+| `Cmd+]` | Next buffer / 次のバッファ |
+| `Cmd+[` | Previous buffer / 前のバッファ |
 
 ---
 

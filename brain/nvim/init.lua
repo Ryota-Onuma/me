@@ -58,7 +58,7 @@ vim.opt.undofile = true
 vim.opt.updatetime = 250
 vim.opt.hidden = true
 vim.opt.wrap = false
-vim.opt.timeoutlen = 300 -- Faster which-key popup
+vim.opt.timeoutlen = 500
 
 -- [Keymap Leader Setting (Using Space)]
 vim.g.mapleader = ' '
@@ -149,6 +149,10 @@ require('lazy').setup({
 
       -- Keymaps (Cursor-like)
       vim.keymap.set('n', '<C-p>', builtin.find_files, { desc = 'Find Files (Ctrl+P)' })
+      vim.keymap.set('n', '<D-p>', builtin.find_files, { desc = 'Find Files (Cmd+P)' })
+      vim.keymap.set('n', '<D-F>', builtin.live_grep, { desc = 'Global Search (Cmd+Shift+F)' })
+      vim.keymap.set('n', '<D-O>', builtin.lsp_document_symbols, { desc = 'Go to Symbol (Cmd+Shift+O)' })
+      vim.keymap.set('n', '<D-P>', builtin.commands, { desc = 'Command Palette (Cmd+Shift+P)' })
       vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Find Files' })
       vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Live Grep (Global Search)' })
       vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Find Buffers' })
@@ -304,16 +308,21 @@ require('lazy').setup({
           local opts = { buffer = ev.buf, noremap = true, silent = true }
           -- Navigation
           vim.keymap.set('n', 'gd', vim.lsp.buf.definition, vim.tbl_extend('force', opts, { desc = 'Go to Definition' }))
+          vim.keymap.set('n', '<F12>', vim.lsp.buf.definition, vim.tbl_extend('force', opts, { desc = 'Go to Definition (F12)' }))
+          vim.keymap.set('n', '<S-F12>', vim.lsp.buf.references, vim.tbl_extend('force', opts, { desc = 'Find References (Shift+F12)' }))
           vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, vim.tbl_extend('force', opts, { desc = 'Go to Declaration' }))
           vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, vim.tbl_extend('force', opts, { desc = 'Go to Implementation' }))
           vim.keymap.set('n', 'gr', vim.lsp.buf.references, vim.tbl_extend('force', opts, { desc = 'Find References' }))
           vim.keymap.set('n', 'gt', vim.lsp.buf.type_definition, vim.tbl_extend('force', opts, { desc = 'Type Definition' }))
           -- Info
           vim.keymap.set('n', 'K', vim.lsp.buf.hover, vim.tbl_extend('force', opts, { desc = 'Hover Documentation' }))
+          vim.keymap.set('n', 'H', vim.lsp.buf.hover, vim.tbl_extend('force', opts, { desc = 'Hover Documentation' }))
           vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, vim.tbl_extend('force', opts, { desc = 'Signature Help' }))
           -- Actions
           vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, vim.tbl_extend('force', opts, { desc = 'Code Action' }))
+          vim.keymap.set('n', '<D-.>', vim.lsp.buf.code_action, vim.tbl_extend('force', opts, { desc = 'Code Action (Cmd+.)' }))
           vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, vim.tbl_extend('force', opts, { desc = 'Rename Symbol' }))
+          vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, vim.tbl_extend('force', opts, { desc = 'Rename Symbol (F2)' }))
           vim.keymap.set('n', '<leader>f', function() vim.lsp.buf.format({ async = true }) end, vim.tbl_extend('force', opts, { desc = 'Format File' }))
           -- Diagnostics
           vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, vim.tbl_extend('force', opts, { desc = 'Previous Diagnostic' }))
@@ -766,6 +775,9 @@ require('lazy').setup({
     dependencies = { 'JoosepAlviste/nvim-ts-context-commentstring', 'nvim-treesitter/nvim-treesitter' },
     config = function()
       require('Comment').setup({
+        -- gb をジャンプバックに使うため、ブロックコメントは gB に変更
+        opleader = { line = 'gc', block = 'gB' },
+        toggler  = { line = 'gcc', block = 'gBc' },
         -- TSX/JSX aware commenting
         pre_hook = function(ctx)
           -- Use ts_context_commentstring for JSX/TSX
@@ -799,6 +811,7 @@ require('lazy').setup({
     config = function()
       local wk = require('which-key')
       wk.setup({
+        delay = 500,
         win = {
           border = 'rounded',
         },
@@ -976,3 +989,33 @@ vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>', { desc = 'Save File', silent = true 
 
 -- Select all
 vim.keymap.set('n', '<C-a>', 'ggVG', { desc = 'Select All' })
+
+-- Jump back in jumplist (go back after gd/gr/etc.)
+vim.keymap.set('n', 'gb', '<C-o>', { desc = 'Jump Back' })
+
+-- =============================================================================
+-- 5. VSCODE-LIKE SHORTCUTS (Cmd+key)
+-- =============================================================================
+
+-- File operations
+vim.keymap.set('n', '<D-s>', ':w<CR>', { desc = 'Save File', silent = true })
+vim.keymap.set('i', '<D-s>', '<Esc>:w<CR>', { desc = 'Save File', silent = true })
+vim.keymap.set('n', '<D-w>', ':bdelete<CR>', { desc = 'Close Buffer', silent = true })
+
+-- Edit operations
+vim.keymap.set('n', '<D-z>', 'u', { desc = 'Undo' })
+vim.keymap.set('n', '<D-Z>', '<C-r>', { desc = 'Redo' })
+vim.keymap.set('n', '<D-a>', 'ggVG', { desc = 'Select All' })
+vim.keymap.set('n', '<D-K>', 'dd', { desc = 'Delete Line (Cmd+Shift+K)', silent = true })
+
+-- Comment toggle (Cmd+/)
+vim.keymap.set('n', '<D-/>', function() require('Comment.api').toggle.linewise.current() end, { desc = 'Toggle Comment' })
+vim.keymap.set('v', '<D-/>', '<ESC><cmd>lua require("Comment.api").toggle.linewise(vim.fn.visualmode())<CR>', { desc = 'Toggle Comment' })
+
+-- Sidebar and terminal
+vim.keymap.set('n', '<D-b>', ':NvimTreeToggle<CR>', { desc = 'Toggle File Tree', silent = true })
+vim.keymap.set('n', '<D-j>', ':ToggleTerm<CR>', { desc = 'Toggle Terminal', silent = true })
+
+-- Tab / buffer navigation
+vim.keymap.set('n', '<D-]>', ':BufferLineCycleNext<CR>', { desc = 'Next Buffer', silent = true })
+vim.keymap.set('n', '<D-[>', ':BufferLineCyclePrev<CR>', { desc = 'Previous Buffer', silent = true })

@@ -3,6 +3,28 @@
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
+# 0. キーバインド設定 (Neovim への Cmd+key 転送)
+# -----------------------------------------------------------------------------
+
+# Cmd+key を kitty keyboard protocol の CSI u シーケンスとして Neovim に送信
+# 書式: \x1b[<ASCIIコード>;<修飾子>u  (修飾子 9 = Super/Cmd)
+keybind = super+p=text:\x1b[112;9u
+keybind = super+shift+p=text:\x1b[80;9u
+keybind = super+f=text:\x1b[102;9u
+keybind = super+shift+f=text:\x1b[70;9u
+keybind = super+shift+o=text:\x1b[79;9u
+keybind = super+s=text:\x1b[115;9u
+keybind = super+w=text:\x1b[119;9u
+keybind = super+z=text:\x1b[122;9u
+keybind = super+shift+z=text:\x1b[90;9u
+keybind = super+a=text:\x1b[97;9u
+keybind = super+shift+k=text:\x1b[75;9u
+keybind = super+slash=text:\x1b[47;9u
+keybind = super+b=text:\x1b[98;9u
+keybind = super+j=text:\x1b[106;9u
+keybind = super+period=text:\x1b[46;9u
+
+# -----------------------------------------------------------------------------
 # 1. フォント設定
 # -----------------------------------------------------------------------------
 font-family = CaskaydiaCove NF Regular
