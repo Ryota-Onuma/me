@@ -1,5 +1,23 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 公開型パーソナルプラットフォーム
+
+このサイトは、完成したBlogだけでなく、学習途中のScrapと読書ログも残していく個人アーカイブです。3種類の記録は共通のテーマ（`Database`、`English`、`Thinking` など）で横断できます。テーマ一覧は `/themes` です。
+
+Markdownのfrontmatterでは、既存の`tags`を残したまま、必要な記録だけ`themes`を明示できます。明示しない場合は既存タグとタイトルから安全に推測されます。
+
+```yaml
+themes: ["Database"]
+updated: "2026-09-02"              # 作成日とは別の最終更新日（任意）
+sourceScraps: ["query-notes"]      # Blogの場合
+sourceBooks: ["sql-practice-guide"]
+related: ["other-record-slug"]
+```
+
+Scrapの状態は既存の`open`/`closed`を後方互換で扱い、必要になった記録だけ`growing`、`evergreen`、`archived`、`published`へ移行できます。すべて同じ状態のときは状態フィルターを表示しません。
+
+メモのない書籍もLibraryの一覧には残りますが、空の詳細ページは生成せず、書籍情報の外部ページへリンクします。
+
 ## Getting Started
 
 First, run the development server:

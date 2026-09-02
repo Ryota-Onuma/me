@@ -1,70 +1,65 @@
 'use client';
 
-import { Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { BookCard, SectionHeading, TagFilterButton, SortDropdown } from '../ui';
 import { useLibraryFilter, type BookStatus } from '@/hooks/useLibraryFilter';
-import { BACKGROUND_COLOR_LIGHT } from '@/lib/constants';
 import type { BookItem } from '@/lib/books';
+import { getThemeLabel, isMediaTag } from '@/lib/themes';
 
 interface LibrarySectionProps {
     books: BookItem[];
 }
 
 const STATUS_OPTIONS: { value: BookStatus; label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'yet', label: 'Yet' },
-    { value: 'reading', label: 'Reading' },
-    { value: 'completed', label: 'Completed' },
+    { value: 'all', label: 'すべて' },
+    { value: 'yet', label: '未読' },
+    { value: 'reading', label: '読書中' },
+    { value: 'completed', label: '読了' },
 ];
 
 export const LibrarySection = ({ books }: LibrarySectionProps) => {
-    const router = useRouter();
     const {
         searchQuery,
         setSearchQuery,
         selectedTag,
         setSelectedTag,
+        selectedTheme,
+        setSelectedTheme,
         statusFilter,
         setStatusFilter,
         sortOption,
         setSortOption,
         allTags,
+        allThemes,
         filteredBooks,
         filteredCount
     } = useLibraryFilter(books);
 
     return (
-        <section id="library" className="pt-28 pb-16 md:pt-32 md:pb-20 px-6 md:px-16 lg:px-24" style={{ backgroundColor: BACKGROUND_COLOR_LIGHT }}>
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-                <div>
-                    <SectionHeading title="Library" />
-                    <p className="text-black/50 text-base mt-4 max-w-2xl leading-relaxed">
-                        Books I&apos;ve read and the learnings gained from them.<br />
-                        <span className="text-black font-semibold">{filteredCount}</span> books
-                        {selectedTag && <> filtered by <span className="text-black px-2 py-0.5 rounded bg-black/10 text-xs uppercase font-bold tracking-wider">{selectedTag}</span></>}
-                    </p>
-                </div>
-            </div>
+        <section id="library" className="retro-page">
+            <SectionHeading title="読書記録" />
+            <p className="retro-lead" role="status" aria-live="polite">
+                読んだ本と、そこから得た学びの記録。現在 {filteredCount} 冊
+                {selectedTheme && <>（テーマ：{getThemeLabel(selectedTheme)} で絞り込み中）</>}
+                {selectedTag && <>（タグ：{selectedTag} で絞り込み中）</>}
+            </p>
 
-            {/* Filters */}
-            <div className="flex flex-col gap-8 mb-16">
-                <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-                    {/* Search Input */}
-                    <div className="relative w-full md:w-96 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 group-focus-within:text-accent transition-colors" />
+            {/* Design intent: omit `open`; discovery controls are secondary to the archive. */}
+            <details className="retro-filter-panel">
+                <summary>本を検索・絞り込む</summary>
+                <fieldset className="retro-filter-box">
+                    <legend>本を探す</legend>
+                    <label className="retro-search-label">
+                        キーワード：
                         <input
-                            type="text"
-                            placeholder="Search by title or author..."
+                            type="search"
+                            placeholder="書名・著者名を検索"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3.5 bg-black/[0.02] backdrop-blur-xl border border-black/10 rounded-2xl text-sm text-black placeholder-black/30 focus:outline-none focus:border-accent focus:bg-accent-light transition-all"
                         />
-                    </div>
+                    </label>
 
-                    {/* Status Filter */}
-                    <div className="flex gap-2">
+                    <div className="retro-filter-row">
+                        <span>読書状況：</span>
                         {STATUS_OPTIONS.map(option => (
                             <TagFilterButton
                                 key={option.value}
@@ -75,15 +70,29 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
                         ))}
                     </div>
 
-                    {/* Sort Dropdown */}
-                    <div className="md:ml-auto">
-                        <SortDropdown value={sortOption} onChange={setSortOption} />
-                    </div>
+                    <SortDropdown value={sortOption} onChange={setSortOption} />
+
+                <div className="retro-filter-row">
+                    <span>テーマ：</span>
+                    <TagFilterButton
+                        label="全テーマ"
+                        isSelected={selectedTheme === null}
+                        onClick={() => setSelectedTheme(null)}
+                    />
+                    {allThemes.map(theme => (
+                        <TagFilterButton
+                            key={theme}
+                                label={getThemeLabel(theme)}
+                            isSelected={selectedTheme === theme}
+                            onClick={() => setSelectedTheme(selectedTheme === theme ? null : theme)}
+                        />
+                    ))}
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="retro-filter-row">
+                    <span>分類：</span>
                     <TagFilterButton
-                        label="All Topics"
+                        label="すべて"
                         isSelected={selectedTag === null}
                         onClick={() => setSelectedTag(null)}
                     />
@@ -96,38 +105,36 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
                         />
                     ))}
                 </div>
-            </div>
+                </fieldset>
+            </details>
 
-            {/* Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8">
+            <ul className="retro-list">
                 {filteredBooks.map((book, idx) => (
-                    <div
+                    <BookCard
                         key={book.id}
-                        onClick={() => router.push(`/library/${book.slug}`)}
-                        className="cursor-pointer"
-                    >
-                        <BookCard
-                            title={book.title}
-                            author={book.author}
-                            status={book.status}
-                            cover={book.cover}
-                            readDate={book.readDate}
-                            rating={book.rating}
-                            tags={book.tags}
-                            index={idx}
-                        />
-                    </div>
+                        href={book.hasNotes ? `/library/${book.slug}` : book.externalUrl}
+                        title={book.title}
+                        author={book.author}
+                        status={book.status}
+                        cover={book.cover}
+                        readDate={book.readDate}
+                        updated={book.updated}
+                        rating={book.rating}
+                        tags={book.tags.filter(tag => !isMediaTag(tag))}
+                        themes={book.themes}
+                        hasNotes={book.hasNotes}
+                        index={idx}
+                    />
                 ))}
-            </div>
+            </ul>
 
             {filteredCount === 0 && (
-                <div className="text-center py-32 border border-dashed border-black/10 rounded-3xl">
-                    <p className="text-black/40 text-sm">No books found matching your criteria</p>
+                <div className="retro-empty">
+                    <p>条件に合う本はありません。</p>
                     <button
-                        onClick={() => { setSearchQuery(''); setSelectedTag(null); setStatusFilter('all'); }}
-                        className="mt-4 text-black/60 hover:text-black text-xs underline underline-offset-4"
+                        onClick={() => { setSearchQuery(''); setSelectedTag(null); setSelectedTheme(null); setStatusFilter('all'); }}
                     >
-                        Clear filters
+                        絞り込みを解除
                     </button>
                 </div>
             )}

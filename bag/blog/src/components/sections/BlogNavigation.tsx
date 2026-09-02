@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import type { ContentItem } from '@/lib/posts';
 
 interface BlogNavigationProps {
@@ -11,45 +10,42 @@ interface BlogNavigationProps {
 }
 
 export const BlogNavigation: React.FC<BlogNavigationProps> = ({ prevPost, nextPost }) => {
-    const router = useRouter();
+    const renderPostLink = (targetPost: ContentItem, direction: 'prev' | 'next') => {
+        const label = direction === 'prev'
+            ? `← 前の記事：${targetPost.title}`
+            : `次の記事：${targetPost.title} →`;
 
-    const handlePostClick = (targetPost: ContentItem) => {
         if (targetPost.type === 'internal' && targetPost.slug) {
-            router.push(`/blog/${targetPost.slug}`);
-        } else if (targetPost.url) {
-            window.open(targetPost.url, '_blank', 'noopener,noreferrer');
+            return (
+                <Link href={`/blog/${targetPost.slug}`} className={`retro-post-link is-${direction}`}>
+                    {label}
+                </Link>
+            );
         }
+
+        if (targetPost.url) {
+            return (
+                <a
+                    href={targetPost.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`retro-post-link is-${direction}`}
+                >
+                    {label} <small>（外部・新しいタブ）</small>
+                </a>
+            );
+        }
+
+        return null;
     };
 
     return (
-        <div className="max-w-3xl mx-auto mt-20 pt-10 border-t border-black/10 flex flex-col md:flex-row justify-between gap-6">
+        <nav className="retro-post-navigation" aria-label="記事間の移動">
             {prevPost ? (
-                <button
-                    onClick={() => handlePostClick(prevPost)}
-                    className="group flex flex-col items-start gap-2 text-left w-full md:w-1/2 p-4 rounded-2xl hover:bg-black/5 transition-all border border-transparent hover:border-black/5 cursor-pointer"
-                >
-                    <span className="flex items-center gap-2 text-xs uppercase tracking-widest text-black/40 group-hover:text-black/60 transition-colors">
-                        <ArrowLeft size={12} /> Previous
-                    </span>
-                    <span className="text-lg font-bold text-black group-hover:text-black/90 line-clamp-2">
-                        {prevPost.title}
-                    </span>
-                </button>
-            ) : <div className="w-full md:w-1/2" />}
+                renderPostLink(prevPost, 'prev')
+            ) : <span />}
 
-            {nextPost && (
-                <button
-                    onClick={() => handlePostClick(nextPost)}
-                    className="group flex flex-col items-end gap-2 text-right w-full md:w-1/2 p-4 rounded-2xl hover:bg-black/5 transition-all border border-transparent hover:border-black/5 cursor-pointer"
-                >
-                    <span className="flex items-center gap-2 text-xs uppercase tracking-widest text-black/40 group-hover:text-black/60 transition-colors">
-                        Next <ArrowRight size={12} />
-                    </span>
-                    <span className="text-lg font-bold text-black group-hover:text-black/90 line-clamp-2">
-                        {nextPost.title}
-                    </span>
-                </button>
-            )}
-        </div>
+            {nextPost && renderPostLink(nextPost, 'next')}
+        </nav>
     );
 };

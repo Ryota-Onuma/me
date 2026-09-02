@@ -5,28 +5,28 @@ test.describe('Navigation', () => {
         await page.goto('/');
     });
 
-    test('should navigate to Blog page and update URL', async ({ page }) => {
-        await page.click('nav >> text=Blog');
+    test('should navigate to the technical notes page and update URL', async ({ page }) => {
+        await page.getByRole('navigation', { name: '主なページ' }).getByRole('link', { name: '技術ノート' }).click();
 
         await expect(page).toHaveURL(/\/blog/);
     });
 
-    test('should display Blog page heading after navigation', async ({ page }) => {
-        await page.click('nav >> text=Blog');
+    test('should display the technical notes heading after navigation', async ({ page }) => {
+        await page.getByRole('navigation', { name: '主なページ' }).getByRole('link', { name: '技術ノート' }).click();
 
-        await expect(page.getByRole('heading', { name: 'Blog' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: '技術ノート' })).toBeVisible();
     });
 
-    test('should navigate to Scrap page and update URL', async ({ page }) => {
-        await page.click('nav >> text=Scrap');
+    test('should navigate to the notes page and update URL', async ({ page }) => {
+        await page.getByRole('navigation', { name: '主なページ' }).getByRole('link', { name: '雑記帳' }).click();
 
         await expect(page).toHaveURL(/\/scrap/);
     });
 
-    test('should display Scrap page heading after navigation', async ({ page }) => {
-        await page.click('nav >> text=Scrap');
+    test('should display the notes page heading after navigation', async ({ page }) => {
+        await page.getByRole('navigation', { name: '主なページ' }).getByRole('link', { name: '雑記帳' }).click();
 
-        await expect(page.getByRole('heading', { name: 'Scrap' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: '雑記帳' })).toBeVisible();
     });
 
     test('should navigate back to Home using logo', async ({ page }) => {

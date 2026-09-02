@@ -1,12 +1,24 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import type { Components } from 'react-markdown';
-import {
-    Mermaid, AlertBlock, CodeBlock, getAlertType,
-    DetailsBlock, EmbedBlock, LinkCardClient, type AlertType
-} from '@/components/markdown';
+import { AlertBlock, getAlertType, type AlertType } from '@/components/markdown/AlertBlock';
+import { DetailsBlock } from '@/components/markdown/DetailsBlock';
+import { EmbedBlock } from '@/components/markdown/EmbedBlock';
+import { LinkCardClient } from '@/components/markdown/LinkCardClient';
 import type { OGPData } from '@/lib/prefetchOGP';
+
+// Syntax highlighting and diagram rendering are the two heaviest widgets on a
+// detail page. Keep them out of the initial bundle unless the Markdown uses them.
+const CodeBlock = dynamic(
+    () => import('@/components/markdown/CodeBlock').then(module => module.CodeBlock),
+    { loading: () => <p className="retro-widget-loading">コードを読み込み中...</p> }
+);
+const Mermaid = dynamic(
+    () => import('@/components/markdown/Mermaid').then(module => module.Mermaid),
+    { loading: () => <p className="retro-widget-loading">図を読み込み中...</p> }
+);
 
 // Type definitions for custom markdown components
 interface HeadingComponentProps {
@@ -52,6 +64,11 @@ interface ParagraphComponentProps {
     children?: React.ReactNode;
 }
 
+interface MarkdownComponentOptions {
+    /** Offset article headings when the page title already owns h1. */
+    headingOffset?: boolean;
+}
+
 /**
  * Create markdown components for ReactMarkdown.
  * Extracted from BlogDetailClient for better maintainability.
@@ -61,7 +78,10 @@ interface ParagraphComponentProps {
  * Note: Custom directive components (message, youtube, twitter, etc.) are not part
  * of react-markdown's standard Components type, so we use type assertion.
  */
-export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): Partial<Components> => ({
+export const createMarkdownComponents = (
+    ogpDataMap?: Record<string, OGPData>,
+    options: MarkdownComponentOptions = {}
+): Partial<Components> => ({
     // Override p to handle block elements (prevents hydration errors)
     p: ({ children }: ParagraphComponentProps) => {
         // Check if children contain block elements (figure, div, img, etc.)
@@ -83,20 +103,38 @@ export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): 
 
     pre: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 
-    h1: ({ children }: HeadingComponentProps) => (
-        <h1 className="scroll-mt-24">{children}</h1>
+    h1: ({ children, id }: HeadingComponentProps) => options.headingOffset ? (
+        <h2 id={id} className="scroll-mt-24">{children}</h2>
+    ) : (
+        <h1 id={id} className="scroll-mt-24">{children}</h1>
     ),
 
-    h2: ({ children, id }: HeadingComponentProps) => (
+    h2: ({ children, id }: HeadingComponentProps) => options.headingOffset ? (
+        <h3 id={id} className="scroll-mt-24">{children}</h3>
+    ) : (
         <h2 id={id} className="scroll-mt-24">{children}</h2>
     ),
 
-    h3: ({ children, id }: HeadingComponentProps) => (
+    h3: ({ children, id }: HeadingComponentProps) => options.headingOffset ? (
+        <h4 id={id} className="scroll-mt-24">{children}</h4>
+    ) : (
         <h3 id={id} className="scroll-mt-24">{children}</h3>
     ),
 
-    h4: ({ children, id }: HeadingComponentProps) => (
+    h4: ({ children, id }: HeadingComponentProps) => options.headingOffset ? (
+        <h5 id={id} className="scroll-mt-24">{children}</h5>
+    ) : (
         <h4 id={id} className="scroll-mt-24">{children}</h4>
+    ),
+
+    h5: ({ children, id }: HeadingComponentProps) => options.headingOffset ? (
+        <h6 id={id} className="scroll-mt-24">{children}</h6>
+    ) : (
+        <h5 id={id} className="scroll-mt-24">{children}</h5>
+    ),
+
+    h6: ({ children, id }: HeadingComponentProps) => (
+        <h6 id={id} className="scroll-mt-24">{children}</h6>
     ),
 
     code({ inline, className, children }: CodeComponentProps) {
@@ -119,7 +157,7 @@ export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): 
         }
 
         return (
-            <code className={`${className ?? ''} bg-black/10 px-1.5 py-0.5 rounded font-mono text-sm font-bold text-accent`}>
+            <code className={`${className ?? ''} retro-inline-code`}>
                 {children}
             </code>
         );
@@ -132,24 +170,21 @@ export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): 
             return <AlertBlock type={alertType}>{children}</AlertBlock>;
         }
 
-        return (
-            <blockquote className="border-l-4 border-black/10 pl-6 my-8 italic text-black/60">
-                {children}
-            </blockquote>
-        );
+        return <blockquote>{children}</blockquote>;
     },
 
     img: (({ src, alt, width }: ImageComponentProps) => {
         return (
-            <figure className="my-8 flex flex-col items-center">
+            <figure className="retro-figure">
+                {/* Markdown content may reference arbitrary external image hosts. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={src}
                     alt={alt || ''}
                     width={width}
-                    className="rounded-2xl border border-black/10 shadow-sm transition-transform hover:scale-[1.01]"
                 />
                 {alt && alt !== '' && (
-                    <figcaption className="mt-4 text-xs font-medium text-black/40 tracking-wider uppercase">
+                    <figcaption>
                         {alt}
                     </figcaption>
                 )}
@@ -163,6 +198,12 @@ export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): 
                 {children}
             </div>
         </th>
+    ),
+
+    table: ({ children, ...props }) => (
+        <div className="table-wrapper" role="region" aria-label="横にスクロールできる表" tabIndex={0}>
+            <table {...props}>{children}</table>
+        </div>
     ),
 
     // Support for custom markdown tags (via remarkCustomDirectives hName mapping)
@@ -199,5 +240,3 @@ export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): 
         <LinkCardClient url={url ?? ''} ogpData={ogpDataMap?.[url ?? '']} />
     )
 } as Partial<Components>);
-
-

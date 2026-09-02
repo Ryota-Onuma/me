@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import GithubSlugger from 'github-slugger';
 
 interface Heading {
     text: string;
@@ -13,28 +14,33 @@ interface TableOfContentsProps {
 
 export const TableOfContents = ({ content }: TableOfContentsProps): React.ReactNode => {
     const headings = useMemo((): Heading[] => {
-        const matches = Array.from(content.matchAll(/^## (.*)$/gm));
-        return matches.map(match => ({
-            text: match[1],
-            id: match[1].toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')
-        }));
+        const matches = Array.from(content.matchAll(/^(#{1,6})[\t ]+(.+?)[\t ]*#*[\t ]*$/gm));
+        const slugger = new GithubSlugger();
+
+        return matches.reduce<Heading[]>((items, match) => {
+            const depth = match[1].length;
+            const text = match[2]
+                .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+                .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+                .replace(/[`*_~]/g, '');
+            // rehype-slug processes every heading with github-slugger. Running
+            // every level through the same slugger keeps duplicate suffixes in sync.
+            const id = slugger.slug(text);
+
+            if (depth === 2) items.push({ text, id });
+            return items;
+        }, []);
     }, [content]);
 
     if (headings.length === 0) return null;
 
     return (
-        <nav className="mb-12 p-6 bg-white border border-black/5 rounded-2xl shadow-sm">
-            <p className="text-xs font-black uppercase tracking-[0.2em] mb-4 text-black/40">Contents</p>
-            <ul className="space-y-3">
+        <nav className="retro-toc" aria-label="目次">
+            <p>目次</p>
+            <ul>
                 {headings.map(h => (
                     <li key={h.id}>
-                        <a
-                            href={`#${h.id}`}
-                            className="text-sm font-bold text-black/60 hover:text-black transition-colors flex items-center gap-2 group"
-                        >
-                            <span className="w-1 h-1 bg-black/20 rounded-full group-hover:bg-black transition-colors" />
-                            {h.text}
-                        </a>
+                        <a href={`#${h.id}`}>{h.text}</a>
                     </li>
                 ))}
             </ul>

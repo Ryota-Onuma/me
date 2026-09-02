@@ -15,20 +15,20 @@ export async function fetchOGP(url: string): Promise<OGPData> {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        const response = await fetch(url, {
-            signal: controller.signal,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; OGPFetcher/1.0)',
-            },
-        });
+        try {
+            const response = await fetch(url, {
+                signal: controller.signal,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (compatible; OGPFetcher/1.0)',
+                },
+            });
 
-        clearTimeout(timeoutId);
+            if (!response.ok) {
+                return {};
+            }
 
-        if (!response.ok) {
-            return {};
-        }
-
-        const html = await response.text();
+            // Keep the abort timer active until the body has finished streaming.
+            const html = await response.text();
 
         // Helper to extract meta content
         const getMetaContent = (property: string): string | undefined => {
@@ -68,13 +68,16 @@ export async function fetchOGP(url: string): Promise<OGPData> {
             }
         };
 
-        return {
-            title: getMetaContent('og:title') || getMetaContent('twitter:title') || getTitleFromHTML(html),
-            description: getMetaContent('og:description') || getMetaContent('twitter:description') || getMetaContent('description'),
-            image: getMetaContent('og:image') || getMetaContent('twitter:image'),
-            siteName: getMetaContent('og:site_name'),
-            logo: getFavicon(),
-        };
+            return {
+                title: getMetaContent('og:title') || getMetaContent('twitter:title') || getTitleFromHTML(html),
+                description: getMetaContent('og:description') || getMetaContent('twitter:description') || getMetaContent('description'),
+                image: getMetaContent('og:image') || getMetaContent('twitter:image'),
+                siteName: getMetaContent('og:site_name'),
+                logo: getFavicon(),
+            };
+        } finally {
+            clearTimeout(timeoutId);
+        }
     } catch (error) {
         console.warn(`Failed to fetch OGP for ${url}:`, error);
         return {};

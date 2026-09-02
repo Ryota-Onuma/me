@@ -6,6 +6,8 @@ category: 'Thinking'
 description: 'コミュニケーションのズレの正体は「具体」と「抽象」というレベルの違いにある。知性の本質である往復運動のメカニズムと実践方法を解説。'
 date: 'Jan 07, 2026'
 tags: ['思考法', 'コミュニケーション', '抽象化']
+themes: ['Thinking']
+sourceBooks: ['concrete-and-abstract', 'concrete-abstract-training']
 thumbnail: '/thumbnails/default_blog.png'
 ---
 

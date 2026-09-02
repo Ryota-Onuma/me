@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
 
 interface CopyButtonProps {
     text: string;
@@ -19,15 +18,12 @@ export const CopyButton = ({ text, className }: CopyButtonProps): React.ReactNod
 
     return (
         <button
+            type="button"
             onClick={handleCopy}
-            className={`cursor-pointer p-1.5 rounded-md transition-all duration-200 ${className || 'text-white/70 hover:text-white hover:bg-white/10'}`}
-            title="Copy code"
+            className={`retro-copy-button${className ? ` ${className}` : ''}`}
+            title="コードをコピー"
         >
-            {copied ? (
-                <Check size={14} className="text-green-400" />
-            ) : (
-                <Copy size={14} />
-            )}
+            {copied ? 'コピー済み' : 'コピー'}
         </button>
     );
 };

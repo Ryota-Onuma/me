@@ -15,6 +15,12 @@ export type { Scrap, ScrapFrontmatter, ScrapThread, ScrapItem } from './scraps';
 export { getAllBooks, getBookBySlug, getBookSlugs, getAllBookItems } from './books';
 export type { Book, BookFrontmatter, BookItem } from './books';
 
+// Shared theme graph and cross-content helpers
+export { THEME_DEFINITIONS, getThemeDefinition, getThemeLabel, getThemeSlug, normalizeTheme, resolveThemes, isMediaTag } from './themes';
+export { getUnifiedContent, getThemeEntries, getThemeBySlug, getThemeContent, getAllThemeSlugs, getRelatedContent, getHomeThemes } from './content';
+export type { ThemeDefinition } from './themes';
+export type { UnifiedContent, UnifiedType, ThemeEntry } from './content';
+
 // Constants
 export {
     POSTS_DIRECTORY,

@@ -16,6 +16,16 @@ export interface PostFrontmatter {
     thumbnail?: string;
     url?: string;
     external_url?: string;
+    /** Shared vocabulary used to connect posts, scraps, and books. */
+    themes?: string[];
+    /** Slugs of scraps/books that informed this post. */
+    sourceScraps?: string[];
+    sourceBooks?: string[];
+    /** Slugs of related content, regardless of type. */
+    related?: string[];
+    derivedFrom?: string[];
+    /** Last meaningful edit (date is the original publication date). */
+    updated?: string;
 }
 
 export interface Post {
@@ -32,9 +42,16 @@ export interface ContentItem {
     description: string;
     date: string;
     tags: string[];
+    themes?: string[];
     thumbnail: string;
     url?: string;
     slug?: string;
+    updated?: string;
+    sourceScraps?: string[];
+    sourceBooks?: string[];
+    related?: string[];
+    derivedFrom?: string[];
+    hasContent?: boolean;
 }
 
 // ============================================================================
@@ -44,8 +61,12 @@ export interface ContentItem {
 export interface ScrapFrontmatter {
     title: string;
     date: string;
-    status: 'open' | 'closed';
+    status: 'open' | 'closed' | 'growing' | 'evergreen' | 'archived' | 'published';
     tags: string[];
+    themes?: string[];
+    updated?: string;
+    related?: string[];
+    sourceBooks?: string[];
     emoji?: string;
 }
 
@@ -59,7 +80,9 @@ export interface Scrap {
     slug: string;
     frontmatter: ScrapFrontmatter;
     threads: ScrapThread[];
+    isThreaded: boolean;
     rawContent: string;
+    updatedAt?: string;
 }
 
 export interface ScrapItem {
@@ -67,11 +90,15 @@ export interface ScrapItem {
     slug: string;
     title: string;
     emoji: string;
-    status: 'open' | 'closed';
+    status: 'open' | 'closed' | 'growing' | 'evergreen' | 'archived' | 'published';
     date: string;
     tags: string[];
+    themes?: string[];
     threadCount: number;
+    isThreaded: boolean;
     lastUpdated: string;
+    related?: string[];
+    sourceBooks?: string[];
 }
 
 // ============================================================================

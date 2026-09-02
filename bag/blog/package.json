@@ -16,9 +16,9 @@
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
     "katex": "^0.16.27",
-    "lucide-react": "^0.562.0",
     "mermaid": "^11.12.2",
     "next": "16.1.1",
     "react": "19.2.3",

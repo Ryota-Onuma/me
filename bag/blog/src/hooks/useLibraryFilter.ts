@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import type { BookItem } from '@/lib/books';
+import { isMediaTag, normalizeTheme } from '@/lib/themes';
 
 export type BookStatus = 'all' | 'yet' | 'reading' | 'completed';
 export type SortOption = 'readDate-newest' | 'readDate-oldest' | 'rating-high' | 'rating-low';
@@ -11,11 +12,14 @@ export interface UseLibraryFilterResult {
     setSearchQuery: (query: string) => void;
     selectedTag: string | null;
     setSelectedTag: (tag: string | null) => void;
+    selectedTheme: string | null;
+    setSelectedTheme: (theme: string | null) => void;
     statusFilter: BookStatus;
     setStatusFilter: (status: BookStatus) => void;
     sortOption: SortOption;
     setSortOption: (option: SortOption) => void;
     allTags: string[];
+    allThemes: string[];
     filteredBooks: BookItem[];
     totalCount: number;
     filteredCount: number;
@@ -29,12 +33,29 @@ export const useLibraryFilter = (books: BookItem[] = []): UseLibraryFilterResult
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState<BookStatus>('all');
     const [sortOption, setSortOption] = useState<SortOption>('readDate-newest');
+    const [selectedTheme, setSelectedThemeState] = useState<string | null>(() => {
+        if (typeof window === 'undefined') return null;
+        const value = new URLSearchParams(window.location.search).get('theme');
+        return value ? (normalizeTheme(value) || value) : null;
+    });
+
+    const setSelectedTheme = (theme: string | null) => {
+        setSelectedThemeState(theme);
+        if (typeof window === 'undefined') return;
+        const newParams = new URLSearchParams(window.location.search);
+        if (theme) newParams.set('theme', theme);
+        else newParams.delete('theme');
+        const query = newParams.toString();
+        window.history.pushState({}, '', query ? `?${query}` : window.location.pathname);
+    };
 
     const allTags = useMemo(() => {
         const tagSet = new Set<string>();
-        books.forEach(book => book.tags.forEach(tag => tagSet.add(tag)));
+        books.forEach(book => book.tags.filter(tag => !isMediaTag(tag) && !normalizeTheme(tag)).forEach(tag => tagSet.add(tag)));
         return Array.from(tagSet).sort();
     }, [books]);
+
+    const allThemes = useMemo(() => Array.from(new Set(books.flatMap(book => book.themes || []))).sort(), [books]);
 
     const filteredBooks = useMemo(() => {
         // Filter
@@ -44,16 +65,13 @@ export const useLibraryFilter = (books: BookItem[] = []): UseLibraryFilterResult
                 book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 book.author.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesTag = selectedTag === null || book.tags.includes(selectedTag);
+            const matchesTheme = selectedTheme === null || book.themes?.includes(selectedTheme);
             const matchesStatus = statusFilter === 'all' || book.status === statusFilter;
-            return matchesSearch && matchesTag && matchesStatus;
+            return matchesSearch && matchesTag && matchesTheme && matchesStatus;
         });
 
         // Sort
         filtered = filtered.sort((a, b) => {
-            // Always keep 'reading' status at the top
-            if (a.status === 'reading' && b.status !== 'reading') return -1;
-            if (a.status !== 'reading' && b.status === 'reading') return 1;
-
             switch (sortOption) {
                 case 'readDate-newest': {
                     const dateA = a.readDate ? new Date(a.readDate).getTime() : 0;
@@ -81,18 +99,21 @@ export const useLibraryFilter = (books: BookItem[] = []): UseLibraryFilterResult
         });
 
         return filtered;
-    }, [books, searchQuery, selectedTag, statusFilter, sortOption]);
+    }, [books, searchQuery, selectedTag, selectedTheme, statusFilter, sortOption]);
 
     return {
         searchQuery,
         setSearchQuery,
         selectedTag,
         setSelectedTag,
+        selectedTheme,
+        setSelectedTheme,
         statusFilter,
         setStatusFilter,
         sortOption,
         setSortOption,
         allTags,
+        allThemes,
         filteredBooks,
         totalCount: books.length,
         filteredCount: filteredBooks.length

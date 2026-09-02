@@ -1,5 +1,7 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPostBySlug, getPostSlugs, getAdjacentPosts } from '@/lib/posts';
+import { getRelatedContent } from '@/lib/content';
 import { prefetchOGPData } from '@/lib/prefetchOGP';
 import { BlogDetailClient } from './BlogDetailClient';
 
@@ -10,7 +12,7 @@ export async function generateStaticParams() {
 }
 
 // Generate metadata for SEO
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
     const post = getPostBySlug(slug);
 
@@ -18,9 +20,27 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         return { title: 'Post Not Found' };
     }
 
+    const title = `${post.frontmatter.title} | ryota.onuma.dev`;
+    const description = post.frontmatter.description || post.frontmatter.title;
+    const url = `/blog/${slug}`;
     return {
-        title: `${post.frontmatter.title} | ryota.onuma.dev`,
-        description: post.frontmatter.description || post.frontmatter.title,
+        title,
+        description,
+        alternates: { canonical: url },
+        openGraph: {
+            title,
+            description,
+            url,
+            type: 'article',
+            tags: post.frontmatter.tags,
+            images: ['/og.png'],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: ['/og.png'],
+        },
     };
 }
 
@@ -43,13 +63,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 title: post.frontmatter.title,
                 date: post.frontmatter.date,
                 tags: post.frontmatter.tags,
+                themes: post.frontmatter.themes,
+                updated: post.frontmatter.updated || post.frontmatter.date,
                 thumbnail: post.frontmatter.thumbnail,
                 content: post.content,
             }}
             prevPost={prev}
             nextPost={next}
+            relatedContent={getRelatedContent('post', slug)}
             ogpDataMap={ogpDataMap}
         />
     );
 }
-

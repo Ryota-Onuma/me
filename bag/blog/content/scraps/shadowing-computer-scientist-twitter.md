@@ -3,6 +3,7 @@ title: 'Shadowing Practice: Computer Scientist Answers Computer Questions From T
 date: 'Jan 17, 2026'
 status: 'open'
 tags: ['English', 'Shadowing', 'Computer Science']
+themes: ['English', 'Learning']
 emoji: '🎤'
 ---
 

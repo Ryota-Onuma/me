@@ -5,5 +5,7 @@ status: "completed"
 cover: "/books/concrete-and-abstract.png"
 externalUrl: "https://amzn.asia/d/0cpx2t4"
 tags: ["Audible"]
+themes: ['Thinking']
+sourcePosts: ['concrete-abstract-thinking']
 readDate: "2026/01/09"
 ---

@@ -1,11 +1,11 @@
 {
     "name": "ryota.onuma.dev",
     "short_name": "ryota.onuma.dev",
-    "description": "ryota.onuma.dev - Stay Curious.",
+    "description": "Ryota Onumaの、ソフトウェアと読書の個人ページ。",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#fafafa",
-    "theme_color": "#fafafa",
+    "background_color": "#c0c0c0",
+    "theme_color": "#000080",
     "icons": [
         {
             "src": "/icon-192x192.png",

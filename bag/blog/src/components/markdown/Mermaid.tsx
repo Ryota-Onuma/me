@@ -8,13 +8,13 @@ mermaid.initialize({
     startOnLoad: false,
     theme: 'neutral',
     securityLevel: 'strict', // Use strict mode for security
-    fontFamily: 'Inter, system-ui, sans-serif',
+    fontFamily: 'MS PGothic, Osaka, sans-serif',
     themeVariables: {
-        primaryColor: '#76b5c5',
-        primaryTextColor: '#1a1a1a',
-        primaryBorderColor: '#76b5c5',
-        lineColor: '#1a1a1a',
-        secondaryColor: '#f0f9fa',
+        primaryColor: '#eeeeee',
+        primaryTextColor: '#000000',
+        primaryBorderColor: '#000066',
+        lineColor: '#333333',
+        secondaryColor: '#ffffdd',
         tertiaryColor: '#ffffff',
     }
 });
@@ -101,34 +101,26 @@ const MermaidInner = ({ chart }: MermaidProps): React.ReactNode => {
     }, [validationResult, svg, id]);
 
     return (
-        <div className="relative my-12 group">
+        <figure className="not-prose retro-mermaid">
             {!error && (
-                <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="bg-white/80 backdrop-blur-md rounded-xl border border-black/5 shadow-sm">
-                        <CopyButton
-                            text={chart}
-                            className="text-black/50 hover:text-black hover:bg-black/5"
-                        />
-                    </div>
+                <div className="retro-mermaid-tools">
+                    <CopyButton text={chart} />
                 </div>
             )}
             <div
-                className="flex justify-center bg-white rounded-3xl border border-black/10 p-8 md:p-12 overflow-x-auto shadow-sm"
+                className="retro-mermaid-canvas"
                 style={{ minHeight: DIAGRAM_CONTAINER_MIN_HEIGHT }}
             >
                 {error ? (
-                    <div className="flex items-center justify-center w-full">
-                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-red-700 text-sm">{error}</p>
-                        </div>
-                    </div>
+                    <p className="retro-mermaid-error">{error}</p>
                 ) : svg ? (
                     <div dangerouslySetInnerHTML={{ __html: svg }} />
                 ) : isRendering ? (
-                    <div className="text-black/30 text-sm">Loading diagram...</div>
+                    <p>Loading diagram...</p>
                 ) : null}
             </div>
-        </div>
+            <figcaption>Diagram</figcaption>
+        </figure>
     );
 };
 

@@ -13,6 +13,7 @@ const mockScraps: ScrapItem[] = [
         date: '2026-01-01',
         tags: ['react', 'frontend'],
         threadCount: 2,
+        isThreaded: true,
         lastUpdated: '2026-01-01'
     },
     {
@@ -24,6 +25,7 @@ const mockScraps: ScrapItem[] = [
         date: '2026-01-02',
         tags: ['testing'],
         threadCount: 1,
+        isThreaded: true,
         lastUpdated: '2026-01-02'
     },
     {
@@ -35,6 +37,7 @@ const mockScraps: ScrapItem[] = [
         date: '2025-12-31',
         tags: ['legacy', 'backend'],
         threadCount: 5,
+        isThreaded: true,
         lastUpdated: '2025-12-31'
     }
 ];
@@ -67,6 +70,17 @@ describe('useScrapFilter', () => {
         });
 
         expect(result.current.filteredScraps).toHaveLength(0);
+    });
+
+    it('should find scraps by a partial tag query', () => {
+        const { result } = renderHook(() => useScrapFilter(mockScraps));
+
+        act(() => {
+            result.current.setSearchQuery('BACK');
+        });
+
+        expect(result.current.filteredScraps).toHaveLength(1);
+        expect(result.current.filteredScraps[0].title).toBe('Legacy Project');
     });
 
     it('should filter by tag', () => {

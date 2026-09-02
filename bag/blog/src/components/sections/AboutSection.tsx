@@ -1,70 +1,147 @@
-import { ArrowUpRight } from 'lucide-react';
-import { SectionHeading } from '../ui/SectionHeading';
+import Link from 'next/link';
+import Image from 'next/image';
 import { SOCIAL_LINKS } from '@/data/socialLinks';
+import type { ScrapItem } from '@/lib/scraps';
+import type { BookItem } from '@/lib/books';
+import type { ThemeEntry } from '@/lib/content';
 
-export const AboutSection = () => (
-    <section
-        id="about"
-        className="pt-28 pb-16 md:pt-32 md:pb-20 px-6 md:px-16 lg:px-24 bg-[#fafafa] overflow-hidden"
-    >
-        <div className="w-full">
-            <SectionHeading title="About" />
+interface UpdateItem {
+    id: string;
+    type: string;
+    title: string;
+    date: string;
+    href?: string;
+    isExternal: boolean;
+}
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-12 md:gap-24 items-start">
+interface AboutSectionProps {
+    updates: UpdateItem[];
+    scraps: ScrapItem[];
+    books: BookItem[];
+    blogs: Array<{ id: string; title: string; href: string; isExternal: boolean }>;
+    themes: ThemeEntry[];
+}
 
-                {/* Bio Text - Left Side (Asymmetric priority) */}
-                <div className="space-y-10 order-2 lg:order-1">
-                    <div className="animate-fade-in-up">
-                        <p className="text-xs uppercase tracking-[0.4em] text-accent font-black mb-4">
-                            Software Engineer
-                        </p>
-                        <h3 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">
-                            Ryota Onuma
-                        </h3>
-                    </div>
+const isRecent = (date: string): boolean => {
+    const timestamp = new Date(date).getTime();
+    if (Number.isNaN(timestamp)) return false;
+    const age = Date.now() - timestamp;
+    return age >= 0 && age <= 30 * 24 * 60 * 60 * 1000;
+};
 
-                    <div className="space-y-8 max-w-2xl">
-                        <p className="text-black/50 leading-relaxed text-lg md:text-xl font-medium italic">
-                            Stay curious.
-                        </p>
-                    </div>
+const formatDate = (date: string): string => {
+    const dateOnly = date.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+    if (dateOnly) {
+        return `${dateOnly[1]}-${dateOnly[2].padStart(2, '0')}-${dateOnly[3].padStart(2, '0')}`;
+    }
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) return date.slice(0, 10);
+    return parsed.toISOString().slice(0, 10);
+};
 
-                    {/* Social Links */}
-                    <div className="pt-6 flex flex-wrap gap-4">
-                        {SOCIAL_LINKS.map((link) => (
-                            <a
-                                key={link.label}
-                                href={link.href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group/link flex items-center gap-4 px-8 py-4 rounded-full bg-black/[0.02] border border-black/10 text-black/60 transition-premium hover:text-accent hover:border-accent/40 hover:bg-accent/5 hover:scale-105"
-                            >
-                                <link.icon className="w-5 h-5" />
-                                <span className="text-sm font-black uppercase tracking-widest">{link.label}</span>
-                                <ArrowUpRight className="w-4 h-4 opacity-0 -ml-2 group-hover/link:opacity-100 group-hover/link:ml-0 transition-premium" />
-                            </a>
+const updateTypeLabel: Record<string, string> = {
+    Blog: '技術',
+    Scrap: '雑記',
+    Library: '読書',
+};
+
+export const AboutSection = ({ updates, scraps, books, blogs, themes }: AboutSectionProps) => (
+    <section id="about" className="retro-home">
+        <div className="retro-home-layout">
+            <figure className="retro-profile">
+                <Image src="/profile.jpg" alt="自転車に乗る手描きキャラクター" width={320} height={400} priority />
+                <figcaption>作者の絵</figcaption>
+            </figure>
+
+            <div className="retro-main-column">
+                <h1><span lang="en">Ryota Onuma</span>のホームページ</h1>
+                <p className="retro-welcome">Welcome to my homepage!</p>
+                <p>ソフトウェアエンジニアの<span lang="en">Ryota Onuma</span>です。日々考えたこと、学んだこと、読んだ本を少しずつ置いています。</p>
+
+                <h2>目次</h2>
+                <ul className="retro-index">
+                    <li>
+                        <Link href="/blog">技術ノート</Link> ― 実装の記録と、少し長めの文章です。
+                        {updates.some(item => item.type === 'Blog' && isRecent(item.date)) && <span className="new-badge"> NEW</span>}
+                    </li>
+                    <li><Link href="/scrap">雑記帳</Link> ― 小さな発見や考え途中のメモです。</li>
+                    <li><Link href="/library">読書記録</Link> ― 読んだ本と感想をまとめています。</li>
+                </ul>
+
+                <h2>いま気になっているテーマ</h2>
+                <ul className="retro-theme-picks">
+                    {themes.map(theme => (
+                        <li key={theme.slug}>
+                            <Link href={`/themes/${theme.slug}`}>{theme.label}</Link>
+                            <span className="retro-card-meta">（{theme.count} 件）</span>
+                        </li>
+                    ))}
+                </ul>
+
+                <h2>最近の活動</h2>
+                <table className="retro-updates">
+                    <tbody>
+                        {updates.map((item) => (
+                            <tr key={item.id}>
+                                <td><time dateTime={formatDate(item.date)}>{formatDate(item.date)}</time></td>
+                                <td>[{updateTypeLabel[item.type] || item.type}]</td>
+                                <td>
+                                {!item.isExternal && item.href ? (
+                                    <Link href={item.href}>{item.title}</Link>
+                                ) : (
+                                    <a href={item.href} target="_blank" rel="noopener noreferrer">{item.title}</a>
+                                )}
+                                {isRecent(item.date) && <span className="new-badge"> NEW!</span>}
+                                </td>
+                            </tr>
                         ))}
-                    </div>
+                    </tbody>
+                </table>
+
+                <div className="retro-mini-columns">
+                    <section>
+                        <h2>育てているScrap</h2>
+                        <ul>
+                            {scraps.filter(scrap => ['open', 'growing', 'evergreen'].includes(scrap.status)).map(scrap => (
+                                <li key={scrap.id}><Link href={`/scrap/${scrap.slug}`}>{scrap.title}</Link></li>
+                            ))}
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>整理したBlog</h2>
+                        <ul>
+                            {blogs.map(blog => (
+                                <li key={blog.id}>
+                                    {blog.isExternal ? <a href={blog.href} target="_blank" rel="noopener noreferrer">{blog.title}</a> : <Link href={blog.href}>{blog.title}</Link>}
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>最近読んだ本</h2>
+                        <ul>
+                            {books.map(book => (
+                                <li key={book.id}>
+                                    {book.hasNotes ? <Link href={`/library/${book.slug}`}>{book.title}</Link> : <a href={book.externalUrl} target="_blank" rel="noopener noreferrer">{book.title}</a>}
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
                 </div>
 
-                {/* Profile Image - Right Side (Tilted/Offset) */}
-                <div className="relative group flex justify-center lg:justify-end order-1 lg:order-2">
-                    <div className="aspect-[4/5] w-full max-w-[400px] relative lg:rotate-2 group-hover:rotate-0 transition-premium duration-1000">
-                        {/* Glow effect */}
-                        <div className="absolute -inset-4 bg-accent/20 rounded-3xl blur-3xl opacity-0 group-hover:opacity-40 transition-premium duration-1000" />
+                <h2>外へのリンク</h2>
+                <ul>
+                    {SOCIAL_LINKS.map((link) => (
+                        <li key={link.label}>
+                            <a href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a>
+                        </li>
+                    ))}
+                </ul>
 
-                        {/* Image container */}
-                        <div className="relative w-full h-full rounded-2xl overflow-hidden border border-black/10 group-hover:border-accent/30 shadow-2xl transition-premium duration-1000">
-                            <img
-                                src="/profile.jpg"
-                                alt="Ryota Onuma"
-                                className="w-full h-full object-cover transition-premium duration-1000 ease-out group-hover:scale-105"
-                                loading="lazy"
-                            />
-                        </div>
-                    </div>
+                <div className="retro-notice">
+                    <b>お知らせ</b><br />
+                    このページは画像を控えめに、なるべく軽く作っています。外部サイトは別のウィンドウで開きます。
                 </div>
-
             </div>
         </div>
     </section>
