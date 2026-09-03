@@ -39,6 +39,7 @@ export async function LinkCard({ url }: LinkCardProps) {
                     <b>{displayTitle}</b><br />
                     {displayDescription && <em>{displayDescription}</em>}
                 </span>
+                <span className="sr-only">（外部ページ・新しいタブで開きます）</span>
             </a>
         </div>
     );

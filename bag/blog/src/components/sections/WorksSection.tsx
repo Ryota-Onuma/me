@@ -19,32 +19,35 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
         setSelectedTheme,
         allTags,
         allThemes,
-        filteredContents
+        filteredContents,
+        totalItems,
+        resetFilters
     } = useBlogFilter(contents);
+    const hasActiveFilters = Boolean(searchQuery || selectedTag || selectedTheme);
 
     return (
         <section id="blog" className="retro-page">
             <SectionHeading title="技術ノート" />
             <p className="retro-lead" role="status" aria-live="polite">
-                技術記事、仕事の記録、考えたこと。現在 {filteredContents.length} 件
+                技術記事、仕事の記録、考えたこと。全{totalItems}件中{filteredContents.length}件
                 {selectedTheme && <>（テーマ：{getThemeLabel(selectedTheme)} で絞り込み中）</>}
                 {selectedTag && <>（タグ：{selectedTag} で絞り込み中）</>}
             </p>
 
-            {/* Design intent: omit `open`; discovery controls are secondary to the archive. */}
+            <label className="retro-search-label">
+                キーワード：
+                <input
+                    type="search"
+                    placeholder="タイトル・概要・タグを検索"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </label>
+
             <details className="retro-filter-panel">
                 <summary>記事を検索・絞り込む</summary>
                 <fieldset className="retro-filter-box">
-                    <legend>記事を探す</legend>
-                    <label className="retro-search-label">
-                        キーワード：
-                        <input
-                            type="search"
-                            placeholder="タイトル・概要・タグを検索"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </label>
+                    <legend>記事の詳細条件</legend>
 
                     <div className="retro-filter-row">
                         <span>テーマ：</span>
@@ -82,9 +85,13 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
                 </fieldset>
             </details>
 
+            {hasActiveFilters && filteredContents.length > 0 && (
+                <p><button type="button" onClick={resetFilters}>絞り込みを解除</button></p>
+            )}
+
             <ul className="retro-list">
                 {filteredContents.map((item) => {
-                    const isExternal = item.type === 'external';
+                    const isExternal = item.type === 'external' && !item.hasContent;
                     return (
                         <WorkCard
                             key={item.id}
@@ -96,6 +103,7 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
                             tags={item.tags.filter(tag => !normalizeTheme(tag))}
                             themes={item.themes}
                             isExternal={isExternal}
+                            analyticsId={item.id}
                             href={isExternal && item.url ? item.url : `/blog/${item.slug}`}
                         />
                     );
@@ -106,7 +114,8 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
                 <div className="retro-empty">
                     <p>条件に合う記事はありません。</p>
                     <button
-                        onClick={() => { setSearchQuery(''); setSelectedTag(null); setSelectedTheme(null); }}
+                        type="button"
+                        onClick={resetFilters}
                     >
                         絞り込みを解除
                     </button>

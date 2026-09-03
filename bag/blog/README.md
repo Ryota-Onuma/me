@@ -1,10 +1,12 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+ryota.onuma.dev は、技術ノート・雑記帳・読書記録をテーマでつなぐ個人アーカイブです。
 
 ## 公開型パーソナルプラットフォーム
 
 このサイトは、完成したBlogだけでなく、学習途中のScrapと読書ログも残していく個人アーカイブです。3種類の記録は共通のテーマ（`Database`、`English`、`Thinking` など）で横断できます。テーマ一覧は `/themes` です。
 
-Markdownのfrontmatterでは、既存の`tags`を残したまま、必要な記録だけ`themes`を明示できます。明示しない場合は既存タグとタイトルから安全に推測されます。
+Markdownのfrontmatterでは、既存の`tags`を残したまま、公開するすべての記録に`themes`を明示します。
+
+公開する記録では `themes` と ISO 形式の日付を必須にしています。frontmatter、画像、URL、関連slugに不整合がある場合は、コンテンツを黙って除外せずビルドを失敗させます。
 
 ```yaml
 themes: ["Database"]
@@ -12,43 +14,45 @@ updated: "2026-09-02"              # 作成日とは別の最終更新日（任�
 sourceScraps: ["query-notes"]      # Blogの場合
 sourceBooks: ["sql-practice-guide"]
 related: ["other-record-slug"]
+internalOnly: true                # 表示検証用。直接URL以外の公開導線から除外
 ```
 
 Scrapの状態は既存の`open`/`closed`を後方互換で扱い、必要になった記録だけ`growing`、`evergreen`、`archived`、`published`へ移行できます。すべて同じ状態のときは状態フィルターを表示しません。
 
 メモのない書籍もLibraryの一覧には残りますが、空の詳細ページは生成せず、書籍情報の外部ページへリンクします。
 
+外部記事は、本文がある記録だけ内部の導入ページを生成し、本文がない記録は一覧から元記事へ直接リンクします。
+
+## プロダクト方針と計測
+
+主な読者は、データベース、ソフトウェア設計、チーム開発の実務を調べるエンジニアです。完成した技術ノートだけでなく、雑記帳と読書記録を共通テーマでつなぎ、考えが育つ過程もたどれることを目指します。
+
+North Star は **Engaged Learning Session**（60秒以上滞在し、同一セッションで2件目の有意味なコンテンツへ進んだ訪問）です。補助指標として、ホームから最初のコンテンツへの遷移率、テーマ内回遊率、関連記事クリック率、RSSクリック率、28日再訪率を使います。
+
+UIは `ryota:analytics` のブラウザイベントを発火するだけで、特定の計測サービスへ依存しません。イベント属性に本文、検索語、個人情報を含めないでください。
+
 ## Getting Started
 
-First, run the development server:
+開発サーバーを起動します。
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで [http://localhost:3000](http://localhost:3000) を開いてください。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+品質確認は次のコマンドで行います。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npx vitest run
+npm run test:e2e
+npm run build
+```
 
-## Learn More
+## 構成
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app` — App Routerのページ、metadata、RSS、sitemap
+- `src/components` — 1990年代風の文書UIと小さなインタラクティブ部品
+- `src/lib/contentValidation.ts` — frontmatter、URL、画像、関連slugのビルド時検証
+- `src/hooks` — URLと同期する検索・絞り込み

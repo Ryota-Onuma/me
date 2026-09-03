@@ -6,5 +6,6 @@ rating: 5
 cover: "/books/coupling-balance.png"
 externalUrl: "https://book.impress.co.jp/books/1124101149"
 tags: ["Book"]
-readDate: "2026/01/24"
+themes: ["Software Design"]
+readDate: "2026-01-24"
 ---

@@ -3,9 +3,10 @@ import path from 'path';
 import matter from 'gray-matter';
 import { POSTS_DIRECTORY, DEFAULT_THUMBNAIL } from './constants';
 import { processMarkdownContent } from './markdownProcessor';
-import { ContentLoadError, FrontmatterParseError, handleContentError } from './errors';
+import { ContentLoadError, FrontmatterParseError } from './errors';
 import type { Post, PostFrontmatter, ContentItem } from '@/types';
 import { resolveThemes } from './themes';
+import { ContentValidationError, validateFrontmatter } from './contentValidation';
 
 // Re-export types for backward compatibility
 export type { Post, PostFrontmatter, ContentItem };
@@ -52,6 +53,8 @@ export function getPostBySlug(slug: string): Post | null {
             throw new FrontmatterParseError(`${slug}.md`, error);
         }
 
+        validateFrontmatter('post', slug, data);
+
         // Process custom markdown syntax
         const processedContent = processMarkdownContent(content);
 
@@ -71,13 +74,12 @@ export function getPostBySlug(slug: string): Post | null {
                 sourceBooks: stringArray(data.sourceBooks ?? data.source_books ?? data.fromBooks ?? data.from_books),
                 related: stringArray(data.related ?? data.relatedPosts ?? data.related_posts ?? data.derivedFrom ?? data.derived_from),
                 updated: typeof data.updated === 'string' ? data.updated : undefined,
+                internalOnly: data.internalOnly === true,
             },
             content: processedContent,
         };
     } catch (error) {
-        if (error instanceof FrontmatterParseError) {
-            return handleContentError(error, `${slug}.md`, 'post');
-        }
+        if (error instanceof FrontmatterParseError || error instanceof ContentValidationError) throw error;
         throw new ContentLoadError(`${slug}.md`, 'post', error);
     }
 }
@@ -88,14 +90,8 @@ export function getPostBySlug(slug: string): Post | null {
 export function getAllPosts(): Post[] {
     const slugs = getPostSlugs();
     return slugs
-        .map(slug => {
-            try {
-                return getPostBySlug(slug);
-            } catch (error) {
-                return handleContentError(error, `${slug}.md`, 'post');
-            }
-        })
-        .filter((post): post is Post => post !== null)
+        .map(slug => getPostBySlug(slug))
+        .filter((post): post is Post => post !== null && !post.frontmatter.internalOnly)
         .sort((a, b) => new Date(b.frontmatter.updated || b.frontmatter.date).getTime() - new Date(a.frontmatter.updated || a.frontmatter.date).getTime());
 }
 
@@ -124,7 +120,7 @@ export function getAllContents(): ContentItem[] {
             }),
             thumbnail: post.frontmatter.thumbnail || DEFAULT_THUMBNAIL,
             url: externalUrl,
-            slug: externalUrl ? undefined : post.slug,
+            slug: post.slug,
             updated: post.frontmatter.updated || post.frontmatter.date,
             sourceScraps: post.frontmatter.sourceScraps,
             sourceBooks: post.frontmatter.sourceBooks,

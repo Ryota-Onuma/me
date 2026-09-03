@@ -6,7 +6,8 @@ cover: "/books/manana-law.png"
 rating: 4
 externalUrl: "https://www.amazon.co.jp/dp/479931996X"
 tags: ["Audible"]
-readDate: "2026/01/16"
+themes: ["Productivity"]
+readDate: "2026-01-16"
 ---
 
 ## 概要

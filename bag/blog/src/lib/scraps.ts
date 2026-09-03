@@ -3,9 +3,10 @@ import path from 'path';
 import matter from 'gray-matter';
 import { SCRAPS_DIRECTORY, TIMESTAMP_PATTERN } from './constants';
 import { processMarkdownContent } from './markdownProcessor';
-import { ContentLoadError, FrontmatterParseError, handleContentError } from './errors';
+import { ContentLoadError, FrontmatterParseError } from './errors';
 import type { Scrap, ScrapFrontmatter, ScrapThread, ScrapItem } from '@/types';
 import { resolveThemes } from './themes';
+import { ContentValidationError, validateFrontmatter } from './contentValidation';
 
 // Re-export types for backward compatibility
 export type { Scrap, ScrapFrontmatter, ScrapThread, ScrapItem };
@@ -93,6 +94,8 @@ export function getScrapBySlug(slug: string): Scrap | null {
             throw new FrontmatterParseError(`${slug}.md`, error);
         }
 
+        validateFrontmatter('scrap', slug, data);
+
         const { threads, isThreaded } = parseScrapThreads(content);
         const latestThread = threads
             .map(thread => thread.timestamp)
@@ -114,6 +117,7 @@ export function getScrapBySlug(slug: string): Scrap | null {
                 related: stringArray(data.related ?? data.relatedPosts ?? data.related_posts ?? data.derivedFrom ?? data.derived_from),
                 sourceBooks: stringArray(data.sourceBooks ?? data.source_books ?? data.fromBooks ?? data.from_books),
                 emoji: typeof data.emoji === 'string' ? data.emoji : '📝',
+                internalOnly: data.internalOnly === true,
             },
             threads,
             isThreaded,
@@ -121,9 +125,7 @@ export function getScrapBySlug(slug: string): Scrap | null {
             updatedAt,
         };
     } catch (error) {
-        if (error instanceof FrontmatterParseError) {
-            return handleContentError(error, `${slug}.md`, 'scrap');
-        }
+        if (error instanceof FrontmatterParseError || error instanceof ContentValidationError) throw error;
         throw new ContentLoadError(`${slug}.md`, 'scrap', error);
     }
 }
@@ -134,14 +136,8 @@ export function getScrapBySlug(slug: string): Scrap | null {
 export function getAllScraps(): Scrap[] {
     const slugs = getScrapSlugs();
     return slugs
-        .map(slug => {
-            try {
-                return getScrapBySlug(slug);
-            } catch (error) {
-                return handleContentError(error, `${slug}.md`, 'scrap');
-            }
-        })
-        .filter((scrap): scrap is Scrap => scrap !== null)
+        .map(slug => getScrapBySlug(slug))
+        .filter((scrap): scrap is Scrap => scrap !== null && !scrap.frontmatter.internalOnly)
         .sort((a, b) => new Date(b.updatedAt || b.frontmatter.updated || b.frontmatter.date).getTime() - new Date(a.updatedAt || a.frontmatter.updated || a.frontmatter.date).getTime());
 }
 

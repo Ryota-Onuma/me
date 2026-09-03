@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { ThemeLinks } from './ThemeLinks';
+import { DateText } from './DateText';
+import { ExternalLink } from './ExternalLink';
 
 interface WorkCardProps {
     title: string;
@@ -10,6 +12,7 @@ interface WorkCardProps {
     tags?: string[];
     themes?: string[];
     isExternal?: boolean;
+    analyticsId?: string;
     href: string;
 }
 
@@ -19,9 +22,9 @@ const CATEGORY_LABELS: Record<string, string> = {
     Thinking: '考察',
 };
 
-export const WorkCard = ({ title, category, description, date, updated, tags, themes, isExternal, href }: WorkCardProps) => {
+export const WorkCard = ({ title, category, description, date, updated, tags, themes, isExternal, analyticsId, href }: WorkCardProps) => {
     const titleLink = isExternal ? (
-        <a href={href} target="_blank" rel="noopener noreferrer">{title} <small>［外部］</small></a>
+        <ExternalLink href={href} showIndicator={false} eventName={analyticsId ? 'external_article_click' : undefined} eventProperties={analyticsId ? { contentId: analyticsId } : undefined}>{title} <small>［外部］</small></ExternalLink>
     ) : (
         <Link href={href}>{title}</Link>
     );
@@ -30,7 +33,11 @@ export const WorkCard = ({ title, category, description, date, updated, tags, th
         <li className="retro-work-card">
             <div>
                 <h2>{titleLink}</h2>
-                <p className="retro-card-meta">公開日：{date || '未登録'}{updated && updated !== date ? ` ｜ 更新：${updated}` : ''} ｜ 分類：{CATEGORY_LABELS[category] || category}</p>
+                <p className="retro-card-meta">
+                    公開日：<DateText value={date} />
+                    {updated && updated !== date && <> ｜ 更新：<DateText value={updated} /></>}
+                    {' ｜ '}分類：{CATEGORY_LABELS[category] || category}
+                </p>
                 {description && <p>{description}</p>}
                 {!!tags?.length && <p className="retro-card-tags">タグ：{tags.filter(Boolean).join(' / ')}</p>}
                 <ThemeLinks themes={themes} />

@@ -1,8 +1,10 @@
 ---
 title: 'Markdown記法テスト'
-date: 'Jan 04, 2026'
+date: '2026-01-04'
 status: 'open'
 tags: ['Tutorial']
+themes: ['Learning']
+internalOnly: true
 emoji: '📝'
 ---
 

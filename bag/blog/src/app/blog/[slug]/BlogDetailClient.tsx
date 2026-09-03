@@ -1,23 +1,11 @@
-'use client';
-
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeSlug from 'rehype-slug';
-import rehypeRaw from 'rehype-raw';
-import 'katex/dist/katex.min.css';
-import { useMemo } from 'react';
-
-import remarkDirective from 'remark-directive';
-import remarkGemoji from 'remark-gemoji';
-import { remarkCustomDirectives } from '@/lib/remarkCustomDirectives';
-import { createMarkdownComponents } from '@/lib/markdownComponents';
 import type { OGPData } from '@/lib/prefetchOGP';
 
 import { Header, Footer } from '@/components/layout';
-import { TableOfContents } from '@/components/markdown';
-import { BlogHero, BlogNavigation, RelatedContentSection } from '@/components/sections';
+import { MarkdownContent } from '@/components/markdown/MarkdownContent';
+import { TableOfContents } from '@/components/markdown/TableOfContents';
+import { BlogHero } from '@/components/sections/BlogHero';
+import { BlogNavigation } from '@/components/sections/BlogNavigation';
+import { RelatedContentSection } from '@/components/sections/RelatedContentSection';
 import type { ContentItem } from '@/lib/posts';
 
 
@@ -29,6 +17,7 @@ interface ParsedPost {
     tags: string[];
     content: string;
     thumbnail?: string;
+    externalUrl?: string;
     themes?: string[];
     updated?: string;
 }
@@ -42,11 +31,6 @@ interface BlogDetailClientProps {
 }
 
 export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap, relatedContent = [] }: BlogDetailClientProps) {
-    const markdownComponents = useMemo(
-        () => createMarkdownComponents(ogpDataMap),
-        [ogpDataMap]
-    );
-
     return (
         <div className="site-shell">
             <Header backLink="/blog" backLabel="技術ノート一覧へ" activePath="/blog" />
@@ -55,13 +39,7 @@ export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap, related
                 <div className="retro-article-wrap">
                     <TableOfContents content={post.content} />
                     <article className="retro-article">
-                        <ReactMarkdown
-                            remarkPlugins={[remarkGfm, remarkMath, remarkDirective, remarkGemoji, remarkCustomDirectives]}
-                            rehypePlugins={[rehypeKatex, rehypeSlug, rehypeRaw]}
-                            components={markdownComponents}
-                        >
-                            {post.content}
-                        </ReactMarkdown>
+                        <MarkdownContent content={post.content} ogpDataMap={ogpDataMap} />
                     </article>
                     <BlogNavigation prevPost={prevPost} nextPost={nextPost} />
                     <RelatedContentSection contents={relatedContent} />

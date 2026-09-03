@@ -3,6 +3,11 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ClientLayout } from '../../ClientLayout';
 import { getAllThemeSlugs, getThemeContent } from '@/lib/content';
+import { AnalyticsEvent } from '@/components/analytics/AnalyticsEvent';
+import { TrackedLink } from '@/components/analytics/TrackedLink';
+import { ExternalLink } from '@/components/ui/ExternalLink';
+
+const TYPE_LABELS = { Blog: '技術', Scrap: '雑記', Library: '読書' } as const;
 
 export function generateStaticParams() {
     return getAllThemeSlugs().map(slug => ({ slug }));
@@ -30,6 +35,7 @@ export default async function ThemeDetailPage({ params }: { params: Promise<{ sl
     return (
         <ClientLayout activePath="/themes">
             <main id="main-content" className="retro-page" tabIndex={-1}>
+                <AnalyticsEvent name="theme_open" properties={{ theme: result.theme.slug }} />
                 <header className="retro-theme-hero">
                     <p><Link href="/themes">← テーマ一覧へ</Link></p>
                     <h1>{result.theme.label}</h1>
@@ -39,11 +45,11 @@ export default async function ThemeDetailPage({ params }: { params: Promise<{ sl
                 <ul className="retro-theme-content-list">
                     {result.contents.map(item => (
                         <li key={`${item.type}-${item.id}`}>
-                            <span className="retro-related-type">[{item.type}]</span>{' '}
+                            <span className="retro-related-type">[{TYPE_LABELS[item.type]}]</span>{' '}
                             {item.isExternal ? (
-                                <a href={item.href} target="_blank" rel="noopener noreferrer">{item.title} <small>［外部］</small></a>
+                                <ExternalLink href={item.href} eventName="external_article_click" eventProperties={{ contentId: item.id }}>{item.title}</ExternalLink>
                             ) : (
-                                <Link href={item.href}>{item.title}</Link>
+                                <TrackedLink href={item.href} eventName="related_click" properties={{ contentType: item.type, contentId: item.id }}>{item.title}</TrackedLink>
                             )}
                             <p className="retro-card-meta">
                                 作成：{item.date || '未登録'}{item.updated && item.updated !== item.date ? ` ｜ 更新：${item.updated}` : ''}
@@ -55,4 +61,3 @@ export default async function ThemeDetailPage({ params }: { params: Promise<{ sl
         </ClientLayout>
     );
 }
-

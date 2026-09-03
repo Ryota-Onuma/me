@@ -6,7 +6,8 @@ cover: "/books/sql-practice-guide.png"
 rating: 5
 externalUrl: "https://amzn.asia/d/8rkq2Ya"
 tags: ["Book"]
-readDate: "2025/09/01"
+themes: ["Database"]
+readDate: "2025-09-01"
 ---
 
 ## 読んで得られた学び
@@ -292,4 +293,3 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC) = 1
 3. **ループ vs 集合操作**: アプリケーション側でのループ処理を避け、SQLの集合操作で一度に処理する考え方
 
 SQLを書く際に「どう書くか」だけでなく「なぜそう書くべきか」を理解することで、パフォーマンスを意識したクエリ設計が可能になる。
-

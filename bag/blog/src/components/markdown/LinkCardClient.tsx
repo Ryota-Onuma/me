@@ -1,7 +1,3 @@
-'use client';
-
-import { memo } from 'react';
-
 export interface OGPData {
     title?: string;
     description?: string;
@@ -16,11 +12,11 @@ interface LinkCardClientProps {
 }
 
 /**
- * Client-side LinkCard that displays pre-fetched OGP data
+ * Server-rendered LinkCard that displays pre-fetched OGP data
  * OGP data is passed from server-side via markdownComponents context
  * No external API calls needed
  */
-function LinkCardClientInner({ url, ogpData }: LinkCardClientProps) {
+export function LinkCardClient({ url, ogpData }: LinkCardClientProps) {
     let domain = '';
     try {
         domain = new URL(url).hostname;
@@ -49,11 +45,9 @@ function LinkCardClientInner({ url, ogpData }: LinkCardClientProps) {
                     <b>{displayTitle}</b><br />
                     {displayDescription && <em>{displayDescription}</em>}
                 </span>
+                <span className="sr-only">（外部ページ・新しいタブで開きます）</span>
             </a>
             <figcaption>外部ページ：{domain}</figcaption>
         </figure>
     );
 }
-
-// Memoize to prevent re-renders when parent re-renders (e.g., scroll progress)
-export const LinkCardClient = memo(LinkCardClientInner);

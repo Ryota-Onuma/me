@@ -33,32 +33,35 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
         allTags,
         allThemes,
         filteredScraps,
-        filteredCount
+        filteredCount,
+        totalCount,
+        resetFilters
     } = useScrapFilter(scraps);
+    const hasActiveFilters = Boolean(searchQuery || selectedTag || selectedTheme || statusFilter !== 'all');
 
     return (
         <section id="scrap" className="retro-page">
             <SectionHeading title="雑記帳" />
             <p className="retro-lead" role="status" aria-live="polite">
-                小さなメモ、実験、考え途中の記録。現在 {filteredCount} 件
+                小さなメモ、実験、考え途中の記録。全{totalCount}件中{filteredCount}件
                 {selectedTheme && <>（テーマ：{getThemeLabel(selectedTheme)} で絞り込み中）</>}
                 {selectedTag && <>（タグ：{selectedTag} で絞り込み中）</>}
             </p>
 
-            {/* Design intent: omit `open`; discovery controls are secondary to the archive. */}
+            <label className="retro-search-label">
+                キーワード：
+                <input
+                    type="search"
+                    placeholder="タイトル・タグを検索"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </label>
+
             <details className="retro-filter-panel">
                 <summary>雑記を検索・絞り込む</summary>
                 <fieldset className="retro-filter-box">
-                    <legend>雑記を探す</legend>
-                    <label className="retro-search-label">
-                        キーワード：
-                        <input
-                            type="search"
-                            placeholder="タイトル・タグを検索"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </label>
+                    <legend>雑記の詳細条件</legend>
 
                     {new Set(scraps.map(scrap => scrap.status)).size > 1 && <div className="retro-filter-row">
                         <span>状態：</span>
@@ -108,6 +111,10 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
                 </fieldset>
             </details>
 
+            {hasActiveFilters && filteredCount > 0 && (
+                <p><button type="button" onClick={resetFilters}>絞り込みを解除</button></p>
+            )}
+
             <ul className="retro-list">
                 {filteredScraps.map((scrap, idx) => (
                     <ScrapCard
@@ -131,7 +138,8 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
                 <div className="retro-empty">
                     <p>条件に合う雑記はありません。</p>
                     <button
-                        onClick={() => { setSearchQuery(''); setSelectedTag(null); setSelectedTheme(null); setStatusFilter('all'); }}
+                        type="button"
+                        onClick={resetFilters}
                     >
                         絞り込みを解除
                     </button>

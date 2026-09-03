@@ -33,7 +33,7 @@ export const Header = ({
                     <Image src="/icon-192x192.png" alt="" width={38} height={38} priority />
                     <span>ryota.onuma.dev</span>
                 </Link>
-                <p className="retro-subtitle">ソフトウェアと読書の個人ページ</p>
+                <p className="retro-subtitle">技術ノートと読書をつなぐ個人ページ</p>
             </div>
             <nav aria-label="主なページ">
                 {NAV_LINKS.map((item, index) => (

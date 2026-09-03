@@ -5,5 +5,6 @@ status: "completed"
 cover: "/books/issue-thinking.png"
 externalUrl: "https://amzn.asia/d/a49WNwm"
 tags: ["Audible"]
-readDate: "2024/12/20"
+themes: ["Thinking"]
+readDate: "2024-12-20"
 ---

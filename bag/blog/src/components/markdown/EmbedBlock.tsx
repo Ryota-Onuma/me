@@ -1,8 +1,6 @@
-import React, { useEffect, useRef, memo } from 'react';
+import React from 'react';
 import { assertNever } from '@/lib/assertNever';
-
-// Constants
-const TWITTER_SCRIPT_LOAD_DELAY_MS = 500;
+import { TwitterEmbed } from './TwitterEmbed';
 
 export type EmbedType = 'youtube' | 'twitter' | 'github';
 
@@ -11,78 +9,7 @@ interface EmbedBlockProps {
     id: string;
 }
 
-// Twitter Widgets API interface
-interface TwitterWidgets {
-    ready: (callback: () => void) => void;
-    widgets: {
-        createTweet: (
-            id: string,
-            container: HTMLElement,
-            options?: { theme?: string; align?: string; dnt?: boolean }
-        ) => Promise<HTMLElement>;
-    };
-}
-
-declare global {
-    interface Window {
-        twttr?: TwitterWidgets;
-    }
-}
-
-const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
-    const tweetRef = useRef<HTMLDivElement>(null);
-    const tweetMountedRef = useRef(false);
-
-    useEffect(() => {
-        if (type === 'twitter' && tweetRef.current && !tweetMountedRef.current) {
-            const container = tweetRef.current;
-
-            const createTweet = () => {
-                if (window.twttr && window.twttr.widgets && window.twttr.widgets.createTweet) {
-                    // Only create if not already mounted
-                    if (!tweetMountedRef.current) {
-                        container.innerHTML = '';
-                        window.twttr.widgets.createTweet(id, container, {
-                            theme: 'light',
-                            align: 'center',
-                            dnt: true // Do Not Track
-                        }).then(() => {
-                            tweetMountedRef.current = true;
-                        }).catch((err) => {
-                            console.error('Failed to create tweet:', err);
-                        });
-                    }
-                }
-            };
-
-            // Check if script already exists
-            const existingScript = document.getElementById('twitter-wjs');
-
-            if (!existingScript) {
-                const script = document.createElement('script');
-                script.id = 'twitter-wjs';
-                script.src = 'https://platform.twitter.com/widgets.js';
-                script.async = true;
-                script.onload = () => {
-                    if (window.twttr && window.twttr.ready) {
-                        window.twttr.ready(createTweet);
-                    } else {
-                        setTimeout(createTweet, TWITTER_SCRIPT_LOAD_DELAY_MS);
-                    }
-                };
-                document.body.appendChild(script);
-            } else {
-                if (window.twttr && window.twttr.ready) {
-                    window.twttr.ready(createTweet);
-                } else if (window.twttr && window.twttr.widgets) {
-                    createTweet();
-                } else {
-                    setTimeout(createTweet, TWITTER_SCRIPT_LOAD_DELAY_MS);
-                }
-            }
-        }
-    }, [type, id]);
-
+export const EmbedBlock: React.FC<EmbedBlockProps> = ({ type, id }) => {
     switch (type) {
         case 'youtube':
             return (
@@ -99,9 +26,7 @@ const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
         case 'twitter':
             return (
                 <figure className="not-prose retro-embed retro-twitter-embed">
-                    <div ref={tweetRef}>
-                        <p>投稿を読み込み中...</p>
-                    </div>
+                        <TwitterEmbed id={id} />
                     <figcaption>X の埋め込み投稿 / {id}</figcaption>
                 </figure>
             );
@@ -125,6 +50,7 @@ const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
                         {/* External GitHub preview image has a dynamic URL. */}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={ogpImage} alt="" />
+                        <span className="sr-only">（外部ページ・新しいタブで開きます）</span>
                     </a>
                     <figcaption>GitHub リポジトリ / {id}</figcaption>
                 </figure>
@@ -140,6 +66,3 @@ const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
             );
     }
 };
-
-// Memoize to prevent re-renders when parent re-renders (e.g., scroll progress)
-export const EmbedBlock = memo(EmbedBlockInner);

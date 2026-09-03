@@ -1,24 +1,11 @@
-'use client';
-
 import React from 'react';
-import dynamic from 'next/dynamic';
 import type { Components } from 'react-markdown';
+import { CodeBlock } from '@/components/markdown/CodeBlock';
 import { AlertBlock, getAlertType, type AlertType } from '@/components/markdown/AlertBlock';
 import { DetailsBlock } from '@/components/markdown/DetailsBlock';
 import { EmbedBlock } from '@/components/markdown/EmbedBlock';
 import { LinkCardClient } from '@/components/markdown/LinkCardClient';
 import type { OGPData } from '@/lib/prefetchOGP';
-
-// Syntax highlighting and diagram rendering are the two heaviest widgets on a
-// detail page. Keep them out of the initial bundle unless the Markdown uses them.
-const CodeBlock = dynamic(
-    () => import('@/components/markdown/CodeBlock').then(module => module.CodeBlock),
-    { loading: () => <p className="retro-widget-loading">コードを読み込み中...</p> }
-);
-const Mermaid = dynamic(
-    () => import('@/components/markdown/Mermaid').then(module => module.Mermaid),
-    { loading: () => <p className="retro-widget-loading">図を読み込み中...</p> }
-);
 
 // Type definitions for custom markdown components
 interface HeadingComponentProps {
@@ -67,6 +54,8 @@ interface ParagraphComponentProps {
 interface MarkdownComponentOptions {
     /** Offset article headings when the page title already owns h1. */
     headingOffset?: boolean;
+    /** Loaded only for documents that actually contain Mermaid fences. */
+    MermaidComponent?: React.ComponentType<{ chart: string }>;
 }
 
 /**
@@ -141,8 +130,9 @@ export const createMarkdownComponents = (
         const match = /language-([^{:]+)(?::([^{]+))?(?:\{([^}]+)\})?/.exec(className || '');
         const codeString = String(children);
 
-        if (!inline && match && match[1] === 'mermaid') {
-            return <Mermaid chart={codeString} />;
+        if (!inline && match && match[1] === 'mermaid' && options.MermaidComponent) {
+            const MermaidComponent = options.MermaidComponent;
+            return <MermaidComponent chart={codeString} />;
         }
 
         if (!inline && match) {

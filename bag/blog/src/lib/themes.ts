@@ -3,8 +3,8 @@
  *
  * Markdown may use either a canonical slug (recommended) or one of the
  * aliases below.  Existing `tags` remain useful metadata; when `themes` is
- * absent we infer a small, stable set from the old tags and title so that the
- * archive becomes connected without requiring a risky content migration.
+ * absent we may infer a small, stable set from legacy tags and titles. Public
+ * content is required to declare themes explicitly by content validation.
  */
 
 export interface ThemeDefinition {
@@ -104,8 +104,7 @@ export function normalizeTheme(value: string): string | null {
 
 /**
  * Resolve explicit themes first, then infer from legacy tags/title/category.
- * Unknown explicit values become URL-safe custom slugs, so adding a new
- * theme in Markdown never requires a code change.
+ * Unknown explicit values are rejected by content validation and omitted here.
  */
 export function resolveThemes(input: {
     themes?: unknown;
@@ -128,7 +127,7 @@ export function resolveThemes(input: {
         .toLocaleLowerCase();
     const slugs = new Set<string>();
     for (const value of values) {
-        const slug = normalizeTheme(value) ?? (explicitValues.length ? getThemeSlug(value) : null);
+        const slug = normalizeTheme(value);
         if (slug) slugs.add(slug);
     }
     // Explicit themes are authoritative, but adding inferred themes from the
@@ -142,7 +141,6 @@ export function resolveThemes(input: {
     }
     // `Book`, `Audible`, and publication names are intentionally not themes;
     // they simply produce no match in the alias map above.
-    if (!slugs.size && (input.title || input.category)) slugs.add('learning');
     return Array.from(slugs);
 }
 

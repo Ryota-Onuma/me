@@ -1,6 +1,4 @@
-'use client';
-
-import React, { memo } from 'react';
+import React from 'react';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { CopyButton } from './CopyButton';
@@ -77,7 +75,7 @@ const shouldHighlightLine = (lineNumber: number, highlightLines: string | undefi
     });
 };
 
-const CodeBlockInner: React.FC<CodeBlockProps> = ({ language, filename, highlightLines, code }) => {
+export const CodeBlock: React.FC<CodeBlockProps> = ({ language, filename, highlightLines, code }) => {
     const codeString = code.replace(/\n$/, '');
 
     return (
@@ -113,6 +111,3 @@ const CodeBlockInner: React.FC<CodeBlockProps> = ({ language, filename, highligh
         </div>
     );
 };
-
-// Memoize to prevent re-renders when parent re-renders (e.g., scroll progress)
-export const CodeBlock = memo(CodeBlockInner);

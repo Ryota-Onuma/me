@@ -1,25 +1,12 @@
-'use client';
-
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeSlug from 'rehype-slug';
-import rehypeRaw from 'rehype-raw';
-import 'katex/dist/katex.min.css';
-import { useMemo } from 'react';
 import Image from 'next/image';
-
-import remarkDirective from 'remark-directive';
-import remarkGemoji from 'remark-gemoji';
-import { remarkCustomDirectives } from '@/lib/remarkCustomDirectives';
-import { createMarkdownComponents } from '@/lib/markdownComponents';
 import type { OGPData } from '@/lib/prefetchOGP';
 
 import { Header, Footer } from '@/components/layout';
-import { RelatedContentSection } from '@/components/sections';
+import { MarkdownContent } from '@/components/markdown/MarkdownContent';
+import { RelatedContentSection } from '@/components/sections/RelatedContentSection';
 import { ThemeLinks } from '@/components/ui/ThemeLinks';
 import { isMediaTag } from '@/lib/themes';
+import { ExternalLink } from '@/components/ui/ExternalLink';
 interface ParsedBook {
     title: string;
     author: string;
@@ -48,11 +35,6 @@ const STATUS_LABELS: Record<'yet' | 'reading' | 'completed', string> = {
 };
 
 export function BookDetailClient({ book, ogpDataMap, relatedContent = [] }: BookDetailClientProps) {
-    const markdownComponents = useMemo(
-        () => createMarkdownComponents(ogpDataMap),
-        [ogpDataMap]
-    );
-
     return (
         <div className="site-shell">
             <Header backLink="/library" backLabel="読書記録一覧へ" activePath="/library" />
@@ -72,20 +54,14 @@ export function BookDetailClient({ book, ogpDataMap, relatedContent = [] }: Book
                             </tbody>
                         </table>
                         <ThemeLinks themes={book.themes} />
-                        <p><a href={book.externalUrl} target="_blank" rel="noopener noreferrer">≫ {book.externalLabel || '書籍の詳細を外部サイトで見る'}</a></p>
+                        <p><ExternalLink href={book.externalUrl} eventName="external_article_click" eventProperties={{ contentType: 'library' }}>≫ {book.externalLabel || '書籍の詳細を外部サイトで見る'}</ExternalLink></p>
                     </div>
                 </section>
 
                 <article className="retro-article retro-book-notes">
                     <h2>読書メモ</h2>
                     {book.content.trim() ? (
-                        <ReactMarkdown
-                            remarkPlugins={[remarkGfm, remarkMath, remarkDirective, remarkGemoji, remarkCustomDirectives]}
-                            rehypePlugins={[rehypeKatex, rehypeSlug, rehypeRaw]}
-                            components={markdownComponents}
-                        >
-                            {book.content}
-                        </ReactMarkdown>
+                        <MarkdownContent content={book.content} ogpDataMap={ogpDataMap} />
                     ) : (
                         <p className="retro-card-meta">この本のメモはまだありません。</p>
                     )}

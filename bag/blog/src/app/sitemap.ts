@@ -20,10 +20,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }));
 
     const posts: MetadataRoute.Sitemap = getAllContents()
-        .filter(item => item.type === 'internal' && item.slug)
+        .filter(item => (item.type === 'internal' || item.hasContent) && item.slug)
         .map(item => ({
             url: `${ORIGIN}/blog/${item.slug}`,
-            lastModified: toDate(item.date),
+            lastModified: toDate(item.updated || item.date),
             changeFrequency: 'yearly',
             priority: 0.7,
         }));
@@ -37,7 +37,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     const books: MetadataRoute.Sitemap = getAllBookItems().filter(item => item.hasNotes).map(item => ({
         url: `${ORIGIN}/library/${item.slug}`,
-        lastModified: toDate(item.readDate),
+        lastModified: toDate(item.updated || item.readDate),
         changeFrequency: item.status === 'reading' ? 'monthly' : 'yearly',
         priority: 0.5,
     }));

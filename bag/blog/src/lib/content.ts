@@ -45,8 +45,8 @@ export function getUnifiedContent(): UnifiedContent[] {
         date: item.date,
         updated: item.updated || item.date,
         themes: item.themes || [],
-        href: item.type === 'external' && item.url ? item.url : `/blog/${item.slug}`,
-        isExternal: item.type === 'external',
+        href: item.type === 'external' && !item.hasContent && item.url ? item.url : `/blog/${item.slug}`,
+        isExternal: item.type === 'external' && !item.hasContent,
         description: item.description,
     }));
     const scraps = getAllScrapItems().map((item): UnifiedContent => ({

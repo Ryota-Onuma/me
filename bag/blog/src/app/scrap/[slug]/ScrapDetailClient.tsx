@@ -1,24 +1,10 @@
-'use client';
-
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
-import rehypeSlug from 'rehype-slug';
-import 'katex/dist/katex.min.css';
-import { useMemo } from 'react';
 import Link from 'next/link';
-
-import remarkDirective from 'remark-directive';
-import remarkGemoji from 'remark-gemoji';
-import { remarkCustomDirectives } from '@/lib/remarkCustomDirectives';
-import { createMarkdownComponents } from '@/lib/markdownComponents';
 import type { OGPData } from '@/lib/prefetchOGP';
 
 import { Header, Footer } from '@/components/layout';
-import { TableOfContents } from '@/components/markdown';
-import { RelatedContentSection } from '@/components/sections';
+import { MarkdownContent } from '@/components/markdown/MarkdownContent';
+import { TableOfContents } from '@/components/markdown/TableOfContents';
+import { RelatedContentSection } from '@/components/sections/RelatedContentSection';
 import { ThemeLinks } from '@/components/ui/ThemeLinks';
 
 import type { Scrap } from '@/lib/scraps';
@@ -42,11 +28,6 @@ const STATUS_LABELS: Record<Scrap['frontmatter']['status'], string> = {
 };
 
 export function ScrapDetailClient({ scrap, ogpDataMap, relatedContent = [] }: ScrapDetailClientProps) {
-    const markdownComponents = useMemo(
-        () => createMarkdownComponents(ogpDataMap, { headingOffset: true }),
-        [ogpDataMap]
-    );
-
     return (
         <div className="site-shell">
             <Header backLink="/scrap" backLabel="雑記帳一覧へ" activePath="/scrap" />
@@ -74,13 +55,7 @@ export function ScrapDetailClient({ scrap, ogpDataMap, relatedContent = [] }: Sc
                                 </header>
                             )}
                             <div className="retro-article">
-                                <ReactMarkdown
-                                    remarkPlugins={[remarkGfm, remarkMath, remarkDirective, remarkGemoji, remarkCustomDirectives]}
-                                    rehypePlugins={[rehypeKatex, rehypeSlug, rehypeRaw]}
-                                    components={markdownComponents}
-                                >
-                                    {thread.content}
-                                </ReactMarkdown>
+                                <MarkdownContent content={thread.content} headingOffset ogpDataMap={ogpDataMap} />
                             </div>
                         </article>
                     ))}

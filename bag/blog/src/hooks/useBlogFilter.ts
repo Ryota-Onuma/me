@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useCallback, useMemo } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import type { ContentItem } from '@/lib/posts';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 import { normalizeTheme } from '@/lib/themes';
+import { useSynchronizedSearchParams } from './useSynchronizedSearchParams';
 
 // Client-side hook that receives contents as prop
 export interface UseBlogFilterResult {
@@ -17,34 +19,72 @@ export interface UseBlogFilterResult {
     allThemes: string[];
     filteredContents: ContentItem[];
     totalItems: number;
+    resetFilters: () => void;
 }
 
 /**
  * useBlogFilter - ブログ記事の検索、タグによるフィルタリングを管理する
  */
 export const useBlogFilter = (contents: ContentItem[] = []): UseBlogFilterResult => {
-    const searchParams = useSearchParams();
+    const searchParams = useSynchronizedSearchParams();
     const router = useRouter();
+    const pathname = usePathname();
+    const searchQuery = searchParams.get('q') ?? '';
     const selectedTag = searchParams.get('tag');
     const rawTheme = searchParams.get('theme');
     const selectedTheme = rawTheme ? (normalizeTheme(rawTheme) || rawTheme) : null;
-    const [searchQuery, setSearchQuery] = useState('');
+
+    const updateParams = useCallback((
+        update: (params: URLSearchParams) => void,
+        method: 'push' | 'replace' = 'push'
+    ) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        update(newParams);
+        const query = newParams.toString();
+        const href = query ? `${pathname}?${query}` : pathname;
+        // Archive state is client-side. Native history keeps typing and facet
+        // changes from queuing a full App Router navigation while still
+        // syncing useSearchParams and shareable URLs.
+        if (typeof window !== 'undefined') {
+            window.history[method === 'replace' ? 'replaceState' : 'pushState'](window.history.state, '', href);
+            window.dispatchEvent(new PopStateEvent('popstate'));
+            return;
+        }
+        router[method](href, { scroll: false });
+    }, [pathname, router, searchParams]);
+
+    const setSearchQuery = (query: string) => {
+        trackAnalyticsEvent('filter_use', { collection: 'blog', filter: 'q', active: Boolean(query) });
+        updateParams(params => {
+            if (query) params.set('q', query);
+            else params.delete('q');
+        }, 'replace');
+    };
 
     const setSelectedTag = (tag: string | null) => {
-        const newParams = new URLSearchParams(searchParams.toString());
-        if (tag) {
-            newParams.set('tag', tag);
-        } else {
-            newParams.delete('tag');
-        }
-        router.push(`?${newParams.toString()}`);
+        trackAnalyticsEvent('filter_use', { collection: 'blog', filter: 'tag', active: Boolean(tag) });
+        updateParams(newParams => {
+            if (tag) {
+                newParams.set('tag', tag);
+            } else {
+                newParams.delete('tag');
+            }
+        });
     };
 
     const setSelectedTheme = (theme: string | null) => {
-        const newParams = new URLSearchParams(searchParams.toString());
-        if (theme) newParams.set('theme', theme);
-        else newParams.delete('theme');
-        router.push(`?${newParams.toString()}`);
+        trackAnalyticsEvent('filter_use', { collection: 'blog', filter: 'theme', active: Boolean(theme) });
+        updateParams(newParams => {
+            if (theme) newParams.set('theme', theme);
+            else newParams.delete('theme');
+        });
+    };
+
+    const resetFilters = () => {
+        trackAnalyticsEvent('filter_use', { collection: 'blog', filter: 'reset', active: false });
+        updateParams(params => {
+            ['q', 'theme', 'tag', 'status', 'sort'].forEach(key => params.delete(key));
+        });
     };
 
     const allTags = useMemo(() => {
@@ -82,6 +122,7 @@ export const useBlogFilter = (contents: ContentItem[] = []): UseBlogFilterResult
         allTags,
         allThemes,
         filteredContents,
-        totalItems: contents.length
+        totalItems: contents.length,
+        resetFilters
     };
 };

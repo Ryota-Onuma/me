@@ -1,5 +1,6 @@
-import Link from 'next/link';
 import type { UnifiedContent } from '@/lib/content';
+import { TrackedLink } from '@/components/analytics/TrackedLink';
+import { ExternalLink } from '@/components/ui/ExternalLink';
 
 interface RelatedContentSectionProps {
     contents: UnifiedContent[];
@@ -22,9 +23,21 @@ export const RelatedContentSection = ({ contents, title = '関連する記録' }
                     <li key={`${item.type}-${item.id}`}>
                         <span className="retro-related-type">[{TYPE_LABELS[item.type]}]</span>{' '}
                         {item.isExternal ? (
-                            <a href={item.href} target="_blank" rel="noopener noreferrer">{item.title} <small>［外部］</small></a>
+                            <ExternalLink
+                                href={item.href}
+                                eventName="related_click"
+                                eventProperties={{ contentType: item.type, contentId: item.id, external: true }}
+                            >
+                                {item.title}
+                            </ExternalLink>
                         ) : (
-                            <Link href={item.href}>{item.title}</Link>
+                            <TrackedLink
+                                href={item.href}
+                                eventName="related_click"
+                                properties={{ contentType: item.type, contentId: item.id, external: false }}
+                            >
+                                {item.title}
+                            </TrackedLink>
                         )}
                         {item.updated && <time dateTime={item.updated}>（{item.updated}）</time>}
                     </li>
@@ -33,4 +46,3 @@ export const RelatedContentSection = ({ contents, title = '関連する記録' }
         </section>
     );
 };
-

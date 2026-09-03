@@ -100,8 +100,8 @@ test.describe('Retro design behavior', () => {
 
         await page.goto('/scrap');
         await page.locator('.retro-filter-panel').getByText('雑記を検索・絞り込む').click();
-        await page.getByRole('searchbox').fill('Tutorial');
-        await expect(page.getByRole('heading', { name: 'Markdown記法テスト' })).toBeVisible();
+        await page.getByRole('searchbox').fill('English');
+        await expect(page.getByRole('heading', { name: /Shadowing Practice/ }).first()).toBeVisible();
     });
 
     test('keeps one page h1 and offsets headings inside Scrap posts', async ({ page }) => {
@@ -126,6 +126,7 @@ test.describe('Retro design behavior', () => {
 
         await expect(page.locator('.retro-progress')).toHaveCount(0);
         await expect(page.locator('main h1')).toHaveCount(1);
+        await expect(page.getByRole('link', { name: /元記事を外部サイトで読む/ })).toHaveAttribute('href', /^https:/);
 
         await page.goto('/library/domain-driven-design-intro');
         await expect(page.locator('.retro-progress')).toHaveCount(0);
@@ -167,7 +168,10 @@ test.describe('Retro design behavior', () => {
         await expect(copyButton).toHaveText('コピー済み');
         await expect(page.locator('.retro-mermaid')).toBeVisible();
         await expect(page.locator('.retro-alert').first()).toBeVisible();
-        await expect(page.locator('.retro-details').first()).toBeVisible();
+        const details = page.locator('.retro-details').first();
+        await expect(details).toBeVisible();
+        await details.locator(':scope > summary').click();
+        await expect(details).toHaveAttribute('open', '');
         await expect(page.locator('.retro-link-card')).toBeVisible();
         await expect(page.locator('.retro-github-card')).toHaveAttribute('href', /github\.com/);
         await expect(page.locator('.retro-video-embed iframe')).toHaveAttribute('src', /youtube\.com\/embed/);
@@ -265,9 +269,10 @@ test.describe('Retro design behavior', () => {
         await page.goto('/scrap/ask');
         await expect(page).toHaveTitle(/askの使い方/);
         await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /askの使い方/);
-        await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
-            'content',
-            'https://ryota.onuma.dev/og.png'
-        );
+        await expect(page.locator('meta[property="article:published_time"]')).toHaveAttribute('content', /2026-01-04/);
+        await expect(page.locator('meta[property="article:author"]')).toHaveAttribute('content', 'https://ryota.onuma.dev/');
+        await expect(page.locator('meta[property="og:image"]')).toHaveCount(0);
+        await expect(page.locator('meta[name="twitter:image"]')).toHaveCount(0);
+        expect(await page.locator('script[type="application/ld+json"]').textContent()).toContain('BlogPosting');
     });
 });

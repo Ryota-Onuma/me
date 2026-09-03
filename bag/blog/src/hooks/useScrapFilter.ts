@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import type { ScrapItem } from '@/lib/scraps';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 import { normalizeTheme } from '@/lib/themes';
+import { useSynchronizedSearchParams } from './useSynchronizedSearchParams';
 
 export type ScrapStatus = 'all' | 'open' | 'closed' | 'growing' | 'evergreen' | 'archived' | 'published';
 
@@ -20,29 +23,78 @@ export interface UseScrapFilterResult {
     filteredScraps: ScrapItem[];
     totalCount: number;
     filteredCount: number;
+    resetFilters: () => void;
 }
 
 /**
  * useScrapFilter - スクラップの検索、タグ、ステータスによるフィルタリングを管理する
  */
 export const useScrapFilter = (scraps: ScrapItem[] = []): UseScrapFilterResult => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedTag, setSelectedTag] = useState<string | null>(null);
-    const [statusFilter, setStatusFilter] = useState<ScrapStatus>('all');
-    const [selectedTheme, setSelectedThemeState] = useState<string | null>(() => {
-        if (typeof window === 'undefined') return null;
-        const value = new URLSearchParams(window.location.search).get('theme');
-        return value ? (normalizeTheme(value) || value) : null;
-    });
+    const searchParams = useSynchronizedSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchQuery = searchParams.get('q') ?? '';
+    const selectedTag = searchParams.get('tag');
+    const rawTheme = searchParams.get('theme');
+    const selectedTheme = rawTheme ? (normalizeTheme(rawTheme) || rawTheme) : null;
+    const rawStatus = searchParams.get('status');
+    const statusFilter: ScrapStatus = rawStatus && STATUS_OPTIONS.has(rawStatus as ScrapStatus)
+        ? rawStatus as ScrapStatus
+        : 'all';
+
+    const updateParams = useCallback((
+        update: (params: URLSearchParams) => void,
+        method: 'push' | 'replace' = 'push'
+    ) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        update(newParams);
+        const query = newParams.toString();
+        const href = query ? `${pathname}?${query}` : pathname;
+        if (typeof window !== 'undefined') {
+            window.history[method === 'replace' ? 'replaceState' : 'pushState'](window.history.state, '', href);
+            window.dispatchEvent(new PopStateEvent('popstate'));
+            return;
+        }
+        router[method](href, { scroll: false });
+    }, [pathname, router, searchParams]);
+
+    const setSearchQuery = (query: string) => {
+        trackAnalyticsEvent('filter_use', { collection: 'scrap', filter: 'q', active: Boolean(query) });
+        updateParams(params => {
+            if (query) params.set('q', query);
+            else params.delete('q');
+        }, 'replace');
+    };
+
+    const setSelectedTag = (tag: string | null) => {
+        trackAnalyticsEvent('filter_use', { collection: 'scrap', filter: 'tag', active: Boolean(tag) });
+        updateParams(params => {
+            if (tag) params.set('tag', tag);
+            else params.delete('tag');
+        });
+    };
 
     const setSelectedTheme = (theme: string | null) => {
-        setSelectedThemeState(theme);
-        if (typeof window === 'undefined') return;
-        const newParams = new URLSearchParams(window.location.search);
-        if (theme) newParams.set('theme', theme);
-        else newParams.delete('theme');
-        const query = newParams.toString();
-        window.history.pushState({}, '', query ? `?${query}` : window.location.pathname);
+        trackAnalyticsEvent('filter_use', { collection: 'scrap', filter: 'theme', active: Boolean(theme) });
+        updateParams(params => {
+            if (theme) params.set('theme', theme);
+            else params.delete('theme');
+        });
+    };
+
+    const setStatusFilter = (status: ScrapStatus) => {
+        trackAnalyticsEvent('filter_use', { collection: 'scrap', filter: 'status', active: status !== 'all' });
+        updateParams(params => {
+            if (status === 'all') params.delete('status');
+            else params.set('status', status);
+        });
+    };
+
+    const resetFilters = () => {
+        trackAnalyticsEvent('filter_use', { collection: 'scrap', filter: 'reset', active: false });
+        updateParams(params => {
+            ['q', 'theme', 'tag', 'status', 'sort'].forEach(key => params.delete(key));
+        });
     };
 
     const allTags = useMemo(() => {
@@ -80,6 +132,9 @@ export const useScrapFilter = (scraps: ScrapItem[] = []): UseScrapFilterResult =
         allThemes,
         filteredScraps,
         totalCount: scraps.length,
-        filteredCount: filteredScraps.length
+        filteredCount: filteredScraps.length,
+        resetFilters
     };
 };
+
+const STATUS_OPTIONS = new Set<ScrapStatus>(['all', 'open', 'closed', 'growing', 'evergreen', 'archived', 'published']);

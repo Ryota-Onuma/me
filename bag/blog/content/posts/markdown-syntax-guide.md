@@ -4,8 +4,10 @@ type: 'internal'
 title: 'Markdown & Syntax Highlighting Guide'
 category: 'Tutorial'
 description: 'A comprehensive guide to testing and verifying Markdown rendering and syntax highlighting in this blog engine.'
-date: 'Jan 02, 2026'
+date: '2026-01-02'
 tags: []
+themes: ['Learning']
+internalOnly: true
 thumbnail: '/thumbnails/markdown-syntax-guide.png'
 ---
 

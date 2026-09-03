@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import type { BookItem } from '@/lib/books';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 import { isMediaTag, normalizeTheme } from '@/lib/themes';
+import { useSynchronizedSearchParams } from './useSynchronizedSearchParams';
 
 export type BookStatus = 'all' | 'yet' | 'reading' | 'completed';
 export type SortOption = 'readDate-newest' | 'readDate-oldest' | 'rating-high' | 'rating-low';
@@ -23,30 +26,90 @@ export interface UseLibraryFilterResult {
     filteredBooks: BookItem[];
     totalCount: number;
     filteredCount: number;
+    resetFilters: () => void;
 }
 
 /**
  * useLibraryFilter - 書籍の検索、タグ、ステータス、ソートを管理する
  */
 export const useLibraryFilter = (books: BookItem[] = []): UseLibraryFilterResult => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedTag, setSelectedTag] = useState<string | null>(null);
-    const [statusFilter, setStatusFilter] = useState<BookStatus>('all');
-    const [sortOption, setSortOption] = useState<SortOption>('readDate-newest');
-    const [selectedTheme, setSelectedThemeState] = useState<string | null>(() => {
-        if (typeof window === 'undefined') return null;
-        const value = new URLSearchParams(window.location.search).get('theme');
-        return value ? (normalizeTheme(value) || value) : null;
-    });
+    const searchParams = useSynchronizedSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchQuery = searchParams.get('q') ?? '';
+    const selectedTag = searchParams.get('tag');
+    const rawTheme = searchParams.get('theme');
+    const selectedTheme = rawTheme ? (normalizeTheme(rawTheme) || rawTheme) : null;
+    const rawStatus = searchParams.get('status');
+    const statusFilter: BookStatus = rawStatus && STATUS_OPTIONS.has(rawStatus as BookStatus)
+        ? rawStatus as BookStatus
+        : 'all';
+    const rawSort = searchParams.get('sort');
+    const sortOption: SortOption = rawSort && SORT_OPTIONS.has(rawSort as SortOption)
+        ? rawSort as SortOption
+        : 'readDate-newest';
+
+    const updateParams = useCallback((
+        update: (params: URLSearchParams) => void,
+        method: 'push' | 'replace' = 'push'
+    ) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        update(newParams);
+        const query = newParams.toString();
+        const href = query ? `${pathname}?${query}` : pathname;
+        if (typeof window !== 'undefined') {
+            window.history[method === 'replace' ? 'replaceState' : 'pushState'](window.history.state, '', href);
+            window.dispatchEvent(new PopStateEvent('popstate'));
+            return;
+        }
+        router[method](href, { scroll: false });
+    }, [pathname, router, searchParams]);
+
+    const setSearchQuery = (query: string) => {
+        trackAnalyticsEvent('filter_use', { collection: 'library', filter: 'q', active: Boolean(query) });
+        updateParams(params => {
+            if (query) params.set('q', query);
+            else params.delete('q');
+        }, 'replace');
+    };
+
+    const setSelectedTag = (tag: string | null) => {
+        trackAnalyticsEvent('filter_use', { collection: 'library', filter: 'tag', active: Boolean(tag) });
+        updateParams(params => {
+            if (tag) params.set('tag', tag);
+            else params.delete('tag');
+        });
+    };
 
     const setSelectedTheme = (theme: string | null) => {
-        setSelectedThemeState(theme);
-        if (typeof window === 'undefined') return;
-        const newParams = new URLSearchParams(window.location.search);
-        if (theme) newParams.set('theme', theme);
-        else newParams.delete('theme');
-        const query = newParams.toString();
-        window.history.pushState({}, '', query ? `?${query}` : window.location.pathname);
+        trackAnalyticsEvent('filter_use', { collection: 'library', filter: 'theme', active: Boolean(theme) });
+        updateParams(params => {
+            if (theme) params.set('theme', theme);
+            else params.delete('theme');
+        });
+    };
+
+    const setStatusFilter = (status: BookStatus) => {
+        trackAnalyticsEvent('filter_use', { collection: 'library', filter: 'status', active: status !== 'all' });
+        updateParams(params => {
+            if (status === 'all') params.delete('status');
+            else params.set('status', status);
+        });
+    };
+
+    const setSortOption = (option: SortOption) => {
+        trackAnalyticsEvent('filter_use', { collection: 'library', filter: 'sort', active: option !== 'readDate-newest' });
+        updateParams(params => {
+            if (option === 'readDate-newest') params.delete('sort');
+            else params.set('sort', option);
+        });
+    };
+
+    const resetFilters = () => {
+        trackAnalyticsEvent('filter_use', { collection: 'library', filter: 'reset', active: false });
+        updateParams(params => {
+            ['q', 'theme', 'tag', 'status', 'sort'].forEach(key => params.delete(key));
+        });
     };
 
     const allTags = useMemo(() => {
@@ -116,6 +179,10 @@ export const useLibraryFilter = (books: BookItem[] = []): UseLibraryFilterResult
         allThemes,
         filteredBooks,
         totalCount: books.length,
-        filteredCount: filteredBooks.length
+        filteredCount: filteredBooks.length,
+        resetFilters
     };
 };
+
+const STATUS_OPTIONS = new Set<BookStatus>(['all', 'yet', 'reading', 'completed']);
+const SORT_OPTIONS = new Set<SortOption>(['readDate-newest', 'readDate-oldest', 'rating-high', 'rating-low']);

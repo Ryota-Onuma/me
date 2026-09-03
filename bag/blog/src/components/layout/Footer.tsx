@@ -1,4 +1,6 @@
 import { SOCIAL_LINKS } from '@/data/socialLinks';
+import { ExternalLink } from '@/components/ui/ExternalLink';
+import { TrackedLink } from '@/components/analytics/TrackedLink';
 
 export const Footer = () => {
     return (
@@ -7,12 +9,11 @@ export const Footer = () => {
                 {SOCIAL_LINKS.map((link, index) => (
                     <span key={link.label}>
                         {index > 0 && ' ｜ '}
-                        <a href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a>
+                        <ExternalLink href={link.href} showIndicator={false}>{link.label}</ExternalLink>
                     </span>
                 ))}
-                {' ｜ '}<a href="/feed.xml">RSS 2.0</a>
+                {' ｜ '}<TrackedLink href="/feed.xml" eventName="rss_click">RSS 2.0</TrackedLink>
             </p>
-            <p>最終更新：<time dateTime="2026-09-02">2026-09-02</time></p>
             <p>文責：<span lang="en">Ryota Onuma</span></p>
             <p className="retro-footer-english">This page is maintained by Ryota Onuma.</p>
         </footer>

@@ -7,4 +7,5 @@ export { EmbedBlock } from './EmbedBlock';
 export { LinkCard } from './LinkCard';
 export { LinkCardClient, type OGPData } from './LinkCardClient';
 export { Mermaid } from './Mermaid';
+export { MarkdownContent } from './MarkdownContent';
 export { TableOfContents } from './TableOfContents';

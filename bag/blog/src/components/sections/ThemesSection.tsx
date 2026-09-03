@@ -10,7 +10,7 @@ export const ThemesSection = ({ themes }: ThemesSectionProps) => (
         <div className="retro-section-heading">
             <h1 id="themes-heading">テーマ</h1>
             <hr />
-            <p>Blog・Scrap・Libraryを横断する、いままでの関心の地図。</p>
+            <p>技術ノート・雑記帳・読書記録を横断する、いままでの関心の地図。</p>
         </div>
         <ul className="retro-theme-list">
             {themes.map(theme => (
@@ -18,7 +18,7 @@ export const ThemesSection = ({ themes }: ThemesSectionProps) => (
                     <h2><Link href={`/themes/${theme.slug}`}>{theme.label}</Link></h2>
                     <p>{theme.description}</p>
                     <p className="retro-card-meta">
-                        {theme.count} 件（Blog {theme.blogCount} / Scrap {theme.scrapCount} / Library {theme.libraryCount}）
+                        {theme.count} 件（技術 {theme.blogCount} / 雑記 {theme.scrapCount} / 読書 {theme.libraryCount}）
                     </p>
                 </li>
             ))}
@@ -26,4 +26,3 @@ export const ThemesSection = ({ themes }: ThemesSectionProps) => (
         {!themes.length && <p className="retro-empty">まだテーマの記録はありません。</p>}
     </section>
 );
-

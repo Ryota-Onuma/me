@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ThemeLinks } from './ThemeLinks';
+import { DateText } from './DateText';
 
 interface ScrapCardProps {
     title: string;
@@ -31,7 +32,11 @@ export const ScrapCard = ({ title, emoji, status, date, lastUpdated, tags, theme
         <li className="retro-scrap-card" data-index={index + 1}>
             <div>
                 <h2><span className="retro-scrap-emoji" aria-hidden="true">{emoji}</span>{' '}<Link href={href}>{title}</Link></h2>
-                <p className="retro-card-meta">作成：{date}{lastUpdated && lastUpdated !== date ? ` ｜ 更新：${lastUpdated}` : ''} ｜ {STATUS_LABELS[status]}{isThreaded ? ` ｜ 追記 ${threadCount} 件` : ''}</p>
+                <p className="retro-card-meta">
+                    作成：<DateText value={date} />
+                    {lastUpdated && lastUpdated !== date && <> ｜ 更新：<DateText value={lastUpdated} /></>}
+                    {' ｜ '}{STATUS_LABELS[status]}{isThreaded ? ` ｜ 追記 ${threadCount} 件` : ''}
+                </p>
                 {tags.length > 0 && <p className="retro-card-tags">タグ：{tags.join(' / ')}</p>}
                 <ThemeLinks themes={themes} />
             </div>

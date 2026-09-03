@@ -1,7 +1,7 @@
 {
     "name": "ryota.onuma.dev",
     "short_name": "ryota.onuma.dev",
-    "description": "Ryota Onumaの、ソフトウェアと読書の個人ページ。",
+    "description": "データベース、ソフトウェア設計、チーム開発の実務と、考えるための読書をつなぐ個人ナレッジページ。",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#c0c0c0",

@@ -1,8 +1,7 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
 import type { ContentItem } from '@/lib/posts';
+import { ExternalLink } from '@/components/ui/ExternalLink';
 
 interface BlogNavigationProps {
     prevPost: ContentItem | null;
@@ -15,7 +14,8 @@ export const BlogNavigation: React.FC<BlogNavigationProps> = ({ prevPost, nextPo
             ? `← 前の記事：${targetPost.title}`
             : `次の記事：${targetPost.title} →`;
 
-        if (targetPost.type === 'internal' && targetPost.slug) {
+        const hasInternalPage = targetPost.slug && (targetPost.type === 'internal' || targetPost.hasContent);
+        if (hasInternalPage) {
             return (
                 <Link href={`/blog/${targetPost.slug}`} className={`retro-post-link is-${direction}`}>
                     {label}
@@ -25,14 +25,15 @@ export const BlogNavigation: React.FC<BlogNavigationProps> = ({ prevPost, nextPo
 
         if (targetPost.url) {
             return (
-                <a
+                <ExternalLink
                     href={targetPost.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className={`retro-post-link is-${direction}`}
+                    showIndicator={false}
+                    eventName="external_article_click"
+                    eventProperties={{ contentId: targetPost.id }}
                 >
                     {label} <small>（外部・新しいタブ）</small>
-                </a>
+                </ExternalLink>
             );
         }
 

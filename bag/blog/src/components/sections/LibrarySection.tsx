@@ -31,32 +31,37 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
         allTags,
         allThemes,
         filteredBooks,
-        filteredCount
+        filteredCount,
+        totalCount,
+        resetFilters
     } = useLibraryFilter(books);
+    const hasActiveFilters = Boolean(
+        searchQuery || selectedTag || selectedTheme || statusFilter !== 'all' || sortOption !== 'readDate-newest'
+    );
 
     return (
         <section id="library" className="retro-page">
             <SectionHeading title="読書記録" />
             <p className="retro-lead" role="status" aria-live="polite">
-                読んだ本と、そこから得た学びの記録。現在 {filteredCount} 冊
+                読んだ本と、そこから得た学びの記録。全{totalCount}冊中{filteredCount}冊
                 {selectedTheme && <>（テーマ：{getThemeLabel(selectedTheme)} で絞り込み中）</>}
                 {selectedTag && <>（タグ：{selectedTag} で絞り込み中）</>}
             </p>
 
-            {/* Design intent: omit `open`; discovery controls are secondary to the archive. */}
+            <label className="retro-search-label">
+                キーワード：
+                <input
+                    type="search"
+                    placeholder="書名・著者名を検索"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </label>
+
             <details className="retro-filter-panel">
                 <summary>本を検索・絞り込む</summary>
                 <fieldset className="retro-filter-box">
-                    <legend>本を探す</legend>
-                    <label className="retro-search-label">
-                        キーワード：
-                        <input
-                            type="search"
-                            placeholder="書名・著者名を検索"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </label>
+                    <legend>本の詳細条件</legend>
 
                     <div className="retro-filter-row">
                         <span>読書状況：</span>
@@ -108,6 +113,10 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
                 </fieldset>
             </details>
 
+            {hasActiveFilters && filteredCount > 0 && (
+                <p><button type="button" onClick={resetFilters}>絞り込みを解除</button></p>
+            )}
+
             <ul className="retro-list">
                 {filteredBooks.map((book, idx) => (
                     <BookCard
@@ -123,6 +132,7 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
                         tags={book.tags.filter(tag => !isMediaTag(tag))}
                         themes={book.themes}
                         hasNotes={book.hasNotes}
+                        analyticsId={book.id}
                         index={idx}
                     />
                 ))}
@@ -132,7 +142,8 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
                 <div className="retro-empty">
                     <p>条件に合う本はありません。</p>
                     <button
-                        onClick={() => { setSearchQuery(''); setSelectedTag(null); setSelectedTheme(null); setStatusFilter('all'); }}
+                        type="button"
+                        onClick={resetFilters}
                     >
                         絞り込みを解除
                     </button>

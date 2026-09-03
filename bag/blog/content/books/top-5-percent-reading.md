@@ -5,5 +5,6 @@ status: "completed"
 cover: "/books/top-5-percent-reading.png"
 externalUrl: "https://amzn.asia/d/dVM2O1F"
 tags: ["Book"]
-readDate: "2025/08/01"
+themes: ["Productivity"]
+readDate: "2025-08-01"
 ---

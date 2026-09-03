@@ -26,6 +26,8 @@ export interface PostFrontmatter {
     derivedFrom?: string[];
     /** Last meaningful edit (date is the original publication date). */
     updated?: string;
+    /** Available by direct URL for visual regression tests, but hidden from public indexes. */
+    internalOnly?: boolean;
 }
 
 export interface Post {
@@ -68,6 +70,7 @@ export interface ScrapFrontmatter {
     related?: string[];
     sourceBooks?: string[];
     emoji?: string;
+    internalOnly?: boolean;
 }
 
 export interface ScrapThread {

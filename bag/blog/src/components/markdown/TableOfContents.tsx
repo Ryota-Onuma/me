@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useMemo } from 'react';
+import React from 'react';
 import GithubSlugger from 'github-slugger';
 
 interface Heading {
@@ -13,7 +11,7 @@ interface TableOfContentsProps {
 }
 
 export const TableOfContents = ({ content }: TableOfContentsProps): React.ReactNode => {
-    const headings = useMemo((): Heading[] => {
+    const headings = (() => {
         const matches = Array.from(content.matchAll(/^(#{1,6})[\t ]+(.+?)[\t ]*#*[\t ]*$/gm));
         const slugger = new GithubSlugger();
 
@@ -30,7 +28,7 @@ export const TableOfContents = ({ content }: TableOfContentsProps): React.ReactN
             if (depth === 2) items.push({ text, id });
             return items;
         }, []);
-    }, [content]);
+    })();
 
     if (headings.length === 0) return null;
 

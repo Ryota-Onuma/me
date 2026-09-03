@@ -4,6 +4,8 @@ import { getScrapBySlug, getScrapSlugs } from '@/lib/scraps';
 import { getRelatedContent } from '@/lib/content';
 import { prefetchOGPData } from '@/lib/prefetchOGP';
 import { ScrapDetailClient } from './ScrapDetailClient';
+import { absoluteSiteUrl, serializeJsonLd, SITE_AUTHOR, toIsoDate } from '@/lib/detailSeo';
+import { AnalyticsEvent } from '@/components/analytics/AnalyticsEvent';
 
 interface PageProps {
     params: Promise<{ slug: string }>;
@@ -23,15 +25,29 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 
     const title = `${scrap.frontmatter.title} | ryota.onuma.dev`;
-    const description = `${scrap.frontmatter.title} — ${scrap.frontmatter.tags.join('、')}についての雑記`;
+    const description = scrap.frontmatter.tags.length
+        ? `${scrap.frontmatter.title} — ${scrap.frontmatter.tags.join('、')}についての雑記`
+        : `${scrap.frontmatter.title}についての雑記`;
     const url = `/scrap/${slug}`;
+    const publishedTime = toIsoDate(scrap.frontmatter.date);
+    const modifiedTime = toIsoDate(scrap.updatedAt || scrap.frontmatter.updated || scrap.frontmatter.date);
 
     return {
         title,
         description,
         alternates: { canonical: url },
-        openGraph: { title, description, url, type: 'article', images: ['/og.png'] },
-        twitter: { card: 'summary_large_image', title, description, images: ['/og.png'] },
+        openGraph: {
+            title,
+            description,
+            url,
+            type: 'article',
+            tags: scrap.frontmatter.tags,
+            publishedTime,
+            modifiedTime,
+            authors: [SITE_AUTHOR.url],
+            images: [],
+        },
+        twitter: { card: 'summary', title, description, images: [] },
     };
 }
 
@@ -46,6 +62,26 @@ export default async function ScrapDetailPage({ params }: PageProps) {
     // Collect all thread contents and pre-fetch OGP data
     const allContent = scrap.threads.map(t => t.content).join('\n');
     const ogpDataMap = await prefetchOGPData(allContent);
+    const description = scrap.frontmatter.tags.length
+        ? `${scrap.frontmatter.title} — ${scrap.frontmatter.tags.join('、')}についての雑記`
+        : `${scrap.frontmatter.title}についての雑記`;
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: scrap.frontmatter.title,
+        description,
+        datePublished: toIsoDate(scrap.frontmatter.date),
+        dateModified: toIsoDate(scrap.updatedAt || scrap.frontmatter.updated || scrap.frontmatter.date),
+        author: { '@type': 'Person', ...SITE_AUTHOR },
+        mainEntityOfPage: absoluteSiteUrl(`/scrap/${slug}`),
+        keywords: scrap.frontmatter.tags.length ? scrap.frontmatter.tags.join(', ') : undefined,
+    };
 
-    return <ScrapDetailClient scrap={scrap} relatedContent={getRelatedContent('scrap', slug)} ogpDataMap={ogpDataMap} />;
+    return (
+        <>
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
+            <AnalyticsEvent name="content_open" properties={{ contentType: 'scrap', contentId: slug }} />
+            <ScrapDetailClient scrap={scrap} relatedContent={getRelatedContent('scrap', slug)} ogpDataMap={ogpDataMap} />
+        </>
+    );
 }

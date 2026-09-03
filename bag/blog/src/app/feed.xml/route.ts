@@ -1,6 +1,7 @@
 import { getAllContents } from '@/lib/posts';
 import { getAllScrapItems } from '@/lib/scraps';
 import { getAllBookItems } from '@/lib/books';
+import { SITE_DESCRIPTION } from '@/data/site';
 
 const ORIGIN = 'https://ryota.onuma.dev';
 
@@ -23,7 +24,7 @@ export function GET() {
         title: item.title,
         description: item.description || `${item.category}の記事`,
         date: item.date,
-        url: item.type === 'external' && item.url ? item.url : `${ORIGIN}/blog/${item.slug}`,
+        url: item.type === 'external' && !item.hasContent && item.url ? item.url : `${ORIGIN}/blog/${item.slug}`,
     }));
     const scraps = getAllScrapItems().map(item => ({
         title: item.title,
@@ -55,7 +56,7 @@ export function GET() {
   <channel>
     <title>ryota.onuma.dev</title>
     <link>${ORIGIN}</link>
-    <description>Ryota Onumaの、ソフトウェアと読書の個人ページ。</description>
+    <description>${escapeXml(SITE_DESCRIPTION)}</description>
     <language>ja</language>${items}
   </channel>
 </rss>`;

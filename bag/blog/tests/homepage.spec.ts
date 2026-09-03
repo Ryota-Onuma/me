@@ -15,7 +15,7 @@ test.describe('Homepage', () => {
     });
 
     test('should describe the site in Japanese', async ({ page }) => {
-        await expect(page.getByText('ソフトウェアと読書の個人ページ')).toBeVisible();
+        await expect(page.getByText(/データベース、ソフトウェア設計、チーム開発/)).toBeVisible();
     });
 
     test('should display personal bio', async ({ page }) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface DetailsBlockProps {
     title?: string;
@@ -6,18 +6,10 @@ interface DetailsBlockProps {
 }
 
 export const DetailsBlock: React.FC<DetailsBlockProps> = ({ title = 'Details', children }) => {
-    const [isOpen, setIsOpen] = useState(false);
-
     return (
-        <div className="retro-details">
-            <button
-                type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                aria-expanded={isOpen}
-            >
-                <span>{isOpen ? '▼' : '▶'} {title}</span>
-            </button>
-            {isOpen && <div className="retro-details-content">{children}</div>}
-        </div>
+        <details className="retro-details">
+            <summary>{title}</summary>
+            <div className="retro-details-content">{children}</div>
+        </details>
     );
 };

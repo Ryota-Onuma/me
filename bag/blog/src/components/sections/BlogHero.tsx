@@ -1,5 +1,6 @@
 import React from 'react';
 import { ThemeLinks } from '../ui/ThemeLinks';
+import { ExternalLink } from '../ui/ExternalLink';
 
 interface ParsedPost {
     title: string;
@@ -7,6 +8,7 @@ interface ParsedPost {
     tags: string[];
     themes?: string[];
     updated?: string;
+    externalUrl?: string;
 }
 
 interface BlogHeroProps {
@@ -21,5 +23,8 @@ export const BlogHero: React.FC<BlogHeroProps> = ({ post }) => (
             {post.tags.length > 0 && ` ｜ タグ：${post.tags.join(' / ')}`}
         </p>
         <ThemeLinks themes={post.themes} />
+        {post.externalUrl && (
+            <p><ExternalLink href={post.externalUrl} eventName="external_article_click">元記事を外部サイトで読む</ExternalLink></p>
+        )}
     </header>
 );

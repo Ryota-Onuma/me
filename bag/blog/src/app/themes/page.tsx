@@ -4,7 +4,7 @@ import { ThemesSection } from '@/components/sections';
 import { getThemeEntries } from '@/lib/content';
 
 const title = 'テーマ | ryota.onuma.dev';
-const description = 'Blog・Scrap・Libraryを横断して、関心の育ち方をたどるテーマ一覧。';
+const description = '技術ノート・雑記帳・読書記録を横断して、関心の育ち方をたどるテーマ一覧。';
 
 export const metadata: Metadata = {
     title,
@@ -23,4 +23,3 @@ export default function ThemesPage() {
         </ClientLayout>
     );
 }
-
