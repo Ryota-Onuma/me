@@ -27,9 +27,9 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
 
     return (
         <section id="blog" className="retro-page">
-            <SectionHeading title="技術ノート" />
+            <SectionHeading section="blog" />
             <p className="retro-lead" role="status" aria-live="polite">
-                技術記事、仕事の記録、考えたこと。全{totalItems}件中{filteredContents.length}件
+                読み返せる形に整理した技術記事と仕事の記録。全{totalItems}件中{filteredContents.length}件
                 {selectedTheme && <>（テーマ：{getThemeLabel(selectedTheme)} で絞り込み中）</>}
                 {selectedTag && <>（タグ：{selectedTag} で絞り込み中）</>}
             </p>
@@ -45,7 +45,7 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
             </label>
 
             <details className="retro-filter-panel">
-                <summary>記事を検索・絞り込む</summary>
+                <summary>テーマ・分類で絞る</summary>
                 <fieldset className="retro-filter-box">
                     <legend>記事の詳細条件</legend>
 
@@ -90,7 +90,7 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
             )}
 
             <ul className="retro-list">
-                {filteredContents.map((item) => {
+                {filteredContents.map((item, index) => {
                     const isExternal = item.type === 'external' && !item.hasContent;
                     return (
                         <WorkCard
@@ -105,6 +105,7 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
                             isExternal={isExternal}
                             analyticsId={item.id}
                             href={isExternal && item.url ? item.url : `/blog/${item.slug}`}
+                            index={index}
                         />
                     );
                 })}

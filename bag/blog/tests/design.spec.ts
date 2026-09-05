@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Retro design behavior', () => {
-    test('uses the document frame and link language of a late-1990s Japanese homepage', async ({ page }) => {
+test.describe('Personal reference room design', () => {
+    test('uses a wide paper archive frame and familiar blue links', async ({ page }) => {
         await page.goto('/');
 
         await expect(page.getByRole('link', { name: 'ryota.onuma.dev ホーム' })).toBeVisible();
-        await expect(page.getByText('Welcome to my homepage!')).toBeVisible();
+        await expect(page.getByText('集めたものを、あとから取り出せる形に。')).toBeVisible();
         await expect(page.getByRole('contentinfo').getByRole('link', { name: 'GitHub' })).toBeVisible();
 
         const homeLink = page.locator('.retro-index').getByRole('link', { name: '技術ノート' });
@@ -29,13 +29,17 @@ test.describe('Retro design behavior', () => {
             };
         });
 
-        expect(appearance.canvas).toBe('rgb(192, 192, 192)');
-        expect(appearance.backgroundImage).toBe('none');
-        // 720px is intentional: a complete document fits within an 800px SVGA browser.
-        expect(appearance.shellWidth).toBe('720px');
-        expect(appearance.shellShadow).toBe('none');
+        expect(appearance.canvas).toBe('rgb(232, 223, 202)');
+        expect(appearance.backgroundImage).toContain('paper-texture.png');
+        expect(appearance.shellWidth).toBe('1080px');
+        expect(appearance.shellShadow).not.toBe('none');
         expect(appearance.logoFont).not.toContain('Arial Black');
         expect(appearance.imageFilter).toBe('none');
+
+        const homeHeading = page.getByRole('heading', { name: 'Ryota Onumaの個人資料室' });
+        expect(await homeHeading.evaluate(element => getComputedStyle(element).color))
+            .toBe('rgb(23, 58, 104)');
+        await expect(page.locator('.retro-profile img')).toHaveAttribute('src', /archive-hero/);
     });
 
     test('keeps the homepage within a narrow mobile viewport', async ({ page }) => {
@@ -48,16 +52,19 @@ test.describe('Retro design behavior', () => {
 
         expect(hasHorizontalOverflow).toBe(false);
         await expect(page.locator('.retro-profile')).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Ryota Onumaのホームページ' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Ryota Onumaの個人資料室' })).toBeVisible();
+        expect(await page.locator('.retro-home-directory-grid').evaluate(
+            element => getComputedStyle(element).gridTemplateColumns.split(' ').length
+        )).toBe(1);
     });
 
-    test('keeps search controls secondary and article rows as native links', async ({ page }) => {
+    test('keeps search visible and article rows as native links', async ({ page }) => {
         await page.goto('/blog');
 
         const filterPanel = page.locator('.retro-filter-panel');
         await expect(filterPanel).not.toHaveAttribute('open', '');
-        await filterPanel.getByText('記事を検索・絞り込む').click();
         await expect(page.getByRole('searchbox')).toBeVisible();
+        await filterPanel.getByText('テーマ・分類で絞る').click();
 
         const firstArticleLink = page.locator('.retro-list > li h2 a').first();
         await expect(firstArticleLink).toHaveAttribute('href', /.+/);
@@ -94,12 +101,12 @@ test.describe('Retro design behavior', () => {
 
     test('searches the fields promised by the blog and Scrap controls', async ({ page }) => {
         await page.goto('/blog');
-        await page.locator('.retro-filter-panel').getByText('記事を検索・絞り込む').click();
+        await page.locator('.retro-filter-panel').getByText('テーマ・分類で絞る').click();
         await page.getByRole('searchbox').fill('思考法');
         await expect(page.getByRole('heading', { name: /具体.*抽象/ })).toBeVisible();
 
         await page.goto('/scrap');
-        await page.locator('.retro-filter-panel').getByText('雑記を検索・絞り込む').click();
+        await page.locator('.retro-filter-panel').getByText('テーマ・分類で絞る').click();
         await page.getByRole('searchbox').fill('English');
         await expect(page.getByRole('heading', { name: /Shadowing Practice/ }).first()).toBeVisible();
     });
@@ -132,7 +139,7 @@ test.describe('Retro design behavior', () => {
         await expect(page.locator('.retro-progress')).toHaveCount(0);
     });
 
-    test('uses plain document headings, native-looking controls, and a light-gray code listing', async ({ page }) => {
+    test('uses collection headings, paper controls, and a blueprint code listing', async ({ page }) => {
         await page.goto('/blog');
 
         const sectionHeading = page.locator('.retro-section-heading');
@@ -140,17 +147,19 @@ test.describe('Retro design behavior', () => {
         expect(await sectionHeading.evaluate(element => getComputedStyle(element).boxShadow)).toBe('none');
 
         const filterPanel = page.locator('.retro-filter-panel');
-        await filterPanel.getByText('記事を検索・絞り込む').click();
+        await filterPanel.getByText('テーマ・分類で絞る').click();
         const selectedButton = filterPanel.getByRole('button', { name: 'すべて' });
-        expect(await selectedButton.evaluate(element => getComputedStyle(element).color)).toBe('rgb(0, 0, 0)');
+        expect(await selectedButton.evaluate(element => getComputedStyle(element).color)).toBe('rgb(255, 253, 247)');
 
         await page.goto('/blog/markdown-syntax-guide');
         const codeBlock = page.locator('.retro-code-block').first();
         await expect(codeBlock).toBeVisible();
         expect(await codeBlock.evaluate(element => getComputedStyle(element).backgroundColor))
-            .toBe('rgb(230, 230, 230)');
+            .toBe('rgb(239, 245, 247)');
+        expect(await codeBlock.evaluate(element => getComputedStyle(element).backgroundImage))
+            .not.toBe('none');
         expect(await page.locator('.retro-detail-hero').evaluate(element => getComputedStyle(element).boxShadow))
-            .toBe('none');
+            .not.toBe('none');
     });
 
     test('keeps code copy, Mermaid, link cards, and embeds functional', async ({ page }) => {
@@ -180,7 +189,7 @@ test.describe('Retro design behavior', () => {
     test('keeps Library search, status, sort, tags, ratings, and external links', async ({ page }) => {
         await page.goto('/library');
         const filterPanel = page.locator('.retro-filter-panel');
-        await filterPanel.getByText('本を検索・絞り込む').click();
+        await filterPanel.getByText('テーマ・分類で絞る').click();
 
         await page.getByRole('searchbox').fill('アジャイル');
         await expect(page.getByRole('heading', { name: /アジャイルな見積り/ })).toBeVisible();
@@ -245,6 +254,40 @@ test.describe('Retro design behavior', () => {
         expect(await page.evaluate(
             () => document.documentElement.scrollWidth <= document.documentElement.clientWidth
         )).toBe(true);
+    });
+
+    test('keeps every primary archive route inside 320px without horizontal scrolling', async ({ page }) => {
+        await page.setViewportSize({ width: 320, height: 720 });
+        for (const path of ['/', '/blog', '/scrap', '/library', '/themes', '/blog/concrete-abstract-thinking', '/scrap/ask', '/library/domain-driven-design-intro', '/missing-record']) {
+            await page.goto(path);
+            await page.locator('main').waitFor({ state: 'visible' });
+            expect(await page.evaluate(
+                () => document.documentElement.scrollWidth <= document.documentElement.clientWidth
+            ), `${path} should not overflow horizontally`).toBe(true);
+        }
+    });
+
+    test('uses touch-sized primary controls and releases the sticky toc on mobile', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.goto('/blog');
+        const controls = [page.getByRole('searchbox'), page.locator('.retro-filter-panel > summary')];
+        for (const control of controls) {
+            const box = await control.boundingBox();
+            expect(box?.height).toBeGreaterThanOrEqual(44);
+        }
+
+        await page.goto('/blog/concrete-abstract-thinking');
+        expect(await page.locator('.retro-toc').evaluate(element => getComputedStyle(element).position)).toBe('static');
+
+        await page.setViewportSize({ width: 1440, height: 900 });
+        expect(await page.locator('.retro-toc').evaluate(element => getComputedStyle(element).position)).toBe('sticky');
+    });
+
+    test('stops decorative transforms when reduced motion is requested', async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await page.goto('/');
+        await expect(page.locator('.retro-profile')).toBeVisible();
+        expect(await page.locator('.retro-profile').evaluate(element => getComputedStyle(element).transform)).toBe('none');
     });
 
     test('does not present ordinary Scrap chapters as timestamped posts', async ({ page }) => {

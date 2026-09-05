@@ -41,7 +41,7 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
 
     return (
         <section id="library" className="retro-page">
-            <SectionHeading title="読書記録" />
+            <SectionHeading section="library" />
             <p className="retro-lead" role="status" aria-live="polite">
                 読んだ本と、そこから得た学びの記録。全{totalCount}冊中{filteredCount}冊
                 {selectedTheme && <>（テーマ：{getThemeLabel(selectedTheme)} で絞り込み中）</>}
@@ -59,7 +59,7 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
             </label>
 
             <details className="retro-filter-panel">
-                <summary>本を検索・絞り込む</summary>
+                <summary>テーマ・分類で絞る</summary>
                 <fieldset className="retro-filter-box">
                     <legend>本の詳細条件</legend>
 

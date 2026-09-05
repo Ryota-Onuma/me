@@ -12,6 +12,7 @@ import type { ContentItem } from '@/lib/posts';
 
 
 interface ParsedPost {
+    accession: string;
     title: string;
     date: string;
     tags: string[];

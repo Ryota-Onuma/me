@@ -41,9 +41,9 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
 
     return (
         <section id="scrap" className="retro-page">
-            <SectionHeading title="雑記帳" />
+            <SectionHeading section="scrap" />
             <p className="retro-lead" role="status" aria-live="polite">
-                小さなメモ、実験、考え途中の記録。全{totalCount}件中{filteredCount}件
+                書きかけのメモ、小さな実験、考え途中の記録。全{totalCount}件中{filteredCount}件
                 {selectedTheme && <>（テーマ：{getThemeLabel(selectedTheme)} で絞り込み中）</>}
                 {selectedTag && <>（タグ：{selectedTag} で絞り込み中）</>}
             </p>
@@ -59,7 +59,7 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
             </label>
 
             <details className="retro-filter-panel">
-                <summary>雑記を検索・絞り込む</summary>
+                <summary>テーマ・分類で絞る</summary>
                 <fieldset className="retro-filter-box">
                     <legend>雑記の詳細条件</legend>
 

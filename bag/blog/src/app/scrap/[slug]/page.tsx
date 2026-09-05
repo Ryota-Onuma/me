@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getScrapBySlug, getScrapSlugs } from '@/lib/scraps';
+import { getScrapBySlug, getScrapSlugs, getAllScrapItems } from '@/lib/scraps';
 import { getRelatedContent } from '@/lib/content';
 import { prefetchOGPData } from '@/lib/prefetchOGP';
 import { ScrapDetailClient } from './ScrapDetailClient';
 import { absoluteSiteUrl, serializeJsonLd, SITE_AUTHOR, toIsoDate } from '@/lib/detailSeo';
 import { AnalyticsEvent } from '@/components/analytics/AnalyticsEvent';
+import { ARCHIVE_SECTIONS, formatAccessionNumber } from '@/data/site';
 
 interface PageProps {
     params: Promise<{ slug: string }>;
@@ -61,6 +62,7 @@ export default async function ScrapDetailPage({ params }: PageProps) {
 
     // Collect all thread contents and pre-fetch OGP data
     const allContent = scrap.threads.map(t => t.content).join('\n');
+    const archiveIndex = getAllScrapItems().findIndex(item => item.slug === slug);
     const ogpDataMap = await prefetchOGPData(allContent);
     const description = scrap.frontmatter.tags.length
         ? `${scrap.frontmatter.title} — ${scrap.frontmatter.tags.join('、')}についての雑記`
@@ -81,7 +83,12 @@ export default async function ScrapDetailPage({ params }: PageProps) {
         <>
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
             <AnalyticsEvent name="content_open" properties={{ contentType: 'scrap', contentId: slug }} />
-            <ScrapDetailClient scrap={scrap} relatedContent={getRelatedContent('scrap', slug)} ogpDataMap={ogpDataMap} />
+            <ScrapDetailClient
+                scrap={scrap}
+                accession={formatAccessionNumber(ARCHIVE_SECTIONS.scrap.accessionPrefix, archiveIndex)}
+                relatedContent={getRelatedContent('scrap', slug)}
+                ogpDataMap={ogpDataMap}
+            />
         </>
     );
 }

@@ -8,12 +8,12 @@ interface RelatedContentSectionProps {
 }
 
 const TYPE_LABELS: Record<UnifiedContent['type'], string> = {
-    Blog: 'Blog',
-    Scrap: 'Scrap',
-    Library: 'Library',
+    Blog: '技術',
+    Scrap: '雑記',
+    Library: '読書',
 };
 
-export const RelatedContentSection = ({ contents, title = '関連する記録' }: RelatedContentSectionProps) => {
+export const RelatedContentSection = ({ contents, title = '同じ引き出し' }: RelatedContentSectionProps) => {
     if (!contents.length) return null;
     return (
         <section className="retro-related" aria-labelledby="related-heading">

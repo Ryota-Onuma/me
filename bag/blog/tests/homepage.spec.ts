@@ -10,7 +10,7 @@ test.describe('Homepage', () => {
     });
 
     test('should display the main heading', async ({ page }) => {
-        const heading = page.getByRole('heading', { name: 'Ryota Onumaのホームページ' });
+        const heading = page.getByRole('heading', { name: 'Ryota Onumaの個人資料室' });
         await expect(heading).toBeVisible();
     });
 

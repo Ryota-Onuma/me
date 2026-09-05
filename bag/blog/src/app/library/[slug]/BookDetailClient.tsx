@@ -7,7 +7,9 @@ import { RelatedContentSection } from '@/components/sections/RelatedContentSecti
 import { ThemeLinks } from '@/components/ui/ThemeLinks';
 import { isMediaTag } from '@/lib/themes';
 import { ExternalLink } from '@/components/ui/ExternalLink';
+import { TableOfContents } from '@/components/markdown/TableOfContents';
 interface ParsedBook {
+    accession: string;
     title: string;
     author: string;
     status: 'yet' | 'reading' | 'completed';
@@ -42,6 +44,11 @@ export function BookDetailClient({ book, ogpDataMap, relatedContent = [] }: Book
                 <section className="retro-book-hero">
                     {book.cover && <Image src={book.cover} alt={`${book.title}の表紙`} width={280} height={400} priority />}
                     <div>
+                        <div className="retro-record-stamp">
+                            <span>資料票</span>
+                            <b>{book.accession}</b>
+                        </div>
+                        <p className="retro-kicker">LIBRARY / READING RECORD</p>
                         <p className="retro-card-meta">読書状況：{STATUS_LABELS[book.status]}{book.updated && ` ｜ 記録日：${book.updated}`}</p>
                         <h1>{book.title}</h1>
                         <p className="retro-book-author">著者：{book.author}</p>
@@ -58,15 +65,18 @@ export function BookDetailClient({ book, ogpDataMap, relatedContent = [] }: Book
                     </div>
                 </section>
 
-                <article className="retro-article retro-book-notes">
-                    <h2>読書メモ</h2>
-                    {book.content.trim() ? (
-                        <MarkdownContent content={book.content} ogpDataMap={ogpDataMap} />
-                    ) : (
-                        <p className="retro-card-meta">この本のメモはまだありません。</p>
-                    )}
-                </article>
-                <RelatedContentSection contents={relatedContent} />
+                <div className="retro-article-wrap">
+                    <TableOfContents content={book.content} />
+                    <article className="retro-article retro-book-notes">
+                        <h2>読書メモ</h2>
+                        {book.content.trim() ? (
+                            <MarkdownContent content={book.content} ogpDataMap={ogpDataMap} />
+                        ) : (
+                            <p className="retro-card-meta">この本のメモはまだありません。</p>
+                        )}
+                    </article>
+                    <RelatedContentSection contents={relatedContent} />
+                </div>
             </main>
             <Footer />
         </div>

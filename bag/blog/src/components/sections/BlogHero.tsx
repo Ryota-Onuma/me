@@ -3,6 +3,7 @@ import { ThemeLinks } from '../ui/ThemeLinks';
 import { ExternalLink } from '../ui/ExternalLink';
 
 interface ParsedPost {
+    accession: string;
     title: string;
     date: string;
     tags: string[];
@@ -17,6 +18,11 @@ interface BlogHeroProps {
 
 export const BlogHero: React.FC<BlogHeroProps> = ({ post }) => (
     <header className="retro-detail-hero">
+        <div className="retro-record-stamp">
+            <span>資料票</span>
+            <b>{post.accession}</b>
+        </div>
+        <p className="retro-kicker">TECHNICAL NOTE / ORGANIZED ARTICLE</p>
         <h1>{post.title}</h1>
         <p className="retro-card-meta">
             公開日：{post.date}{post.updated && post.updated !== post.date && ` ｜ 更新：${post.updated}`}

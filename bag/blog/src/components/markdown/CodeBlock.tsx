@@ -94,13 +94,13 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, filename, highli
                 language={language}
                 PreTag="div"
                 showLineNumbers={true}
-                lineNumberStyle={{ minWidth: '3em', paddingRight: '1em', color: '#808080', textAlign: 'right', userSelect: 'none' }}
+                lineNumberStyle={{ minWidth: '3em', paddingRight: '1em', color: '#685f52', textAlign: 'right', userSelect: 'none' }}
                 wrapLines={true}
                 lineProps={(lineNumber) => ({
                     style: {
                         display: 'block',
-                        backgroundColor: shouldHighlightLine(lineNumber, highlightLines) ? '#ffffcc' : 'transparent',
-                        borderLeft: shouldHighlightLine(lineNumber, highlightLines) ? '2px solid #800000' : '2px solid transparent',
+                        backgroundColor: shouldHighlightLine(lineNumber, highlightLines) ? '#fff4bf' : 'transparent',
+                        borderLeft: shouldHighlightLine(lineNumber, highlightLines) ? '2px solid #a4423d' : '2px solid transparent',
                         paddingRight: '1em'
                     } as React.CSSProperties
                 })}

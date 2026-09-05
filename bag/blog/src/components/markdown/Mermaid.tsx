@@ -10,12 +10,12 @@ mermaid.initialize({
     securityLevel: 'strict', // Use strict mode for security
     fontFamily: 'MS PGothic, Osaka, sans-serif',
     themeVariables: {
-        primaryColor: '#eeeeee',
-        primaryTextColor: '#000000',
-        primaryBorderColor: '#000066',
-        lineColor: '#333333',
-        secondaryColor: '#ffffdd',
-        tertiaryColor: '#ffffff',
+        primaryColor: '#dbe7f2',
+        primaryTextColor: '#17283f',
+        primaryBorderColor: '#174ea6',
+        lineColor: '#685f52',
+        secondaryColor: '#fff4bf',
+        tertiaryColor: '#fffdf7',
     }
 });
 

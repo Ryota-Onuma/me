@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getBookBySlug, getBookSlugs } from '@/lib/books';
+import { getBookBySlug, getBookSlugs, getAllBookItems } from '@/lib/books';
 import { getRelatedContent } from '@/lib/content';
 import { prefetchOGPData } from '@/lib/prefetchOGP';
 import { BookDetailClient } from './BookDetailClient';
 import { DEFAULT_BOOK_COVER } from '@/lib/constants';
 import { absoluteSiteUrl, serializeJsonLd, SITE_AUTHOR, toIsoDate } from '@/lib/detailSeo';
 import { AnalyticsEvent } from '@/components/analytics/AnalyticsEvent';
+import { ARCHIVE_SECTIONS, formatAccessionNumber } from '@/data/site';
 
 // Generate static paths for all books at build time
 export async function generateStaticParams() {
@@ -74,6 +75,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
 
     // Pre-fetch OGP data for link cards at build time
     const ogpDataMap = await prefetchOGPData(book.content);
+    const archiveIndex = getAllBookItems().findIndex(item => item.slug === slug);
     const image = book.frontmatter.cover && book.frontmatter.cover !== DEFAULT_BOOK_COVER
         ? absoluteSiteUrl(book.frontmatter.cover)
         : undefined;
@@ -108,6 +110,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
             <AnalyticsEvent name="content_open" properties={{ contentType: 'library', contentId: slug }} />
             <BookDetailClient
                 book={{
+                    accession: formatAccessionNumber(ARCHIVE_SECTIONS.library.accessionPrefix, archiveIndex),
                     title: book.frontmatter.title,
                     author: book.frontmatter.author,
                     status: book.frontmatter.status,

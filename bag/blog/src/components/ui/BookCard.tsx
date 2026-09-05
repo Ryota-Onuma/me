@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ThemeLinks } from './ThemeLinks';
 import { DateText } from './DateText';
 import { ExternalLink } from './ExternalLink';
+import { ARCHIVE_SECTIONS, formatAccessionNumber } from '@/data/site';
 
 interface BookCardProps {
     title: string;
@@ -32,7 +33,9 @@ export const BookCard = ({ title, author, status, cover, readDate, updated, rati
     const isAboveFold = index < 3;
 
     return (
-        <li className="retro-book-card">
+        <li className="retro-book-card retro-index-entry">
+            <p className="retro-accession">{formatAccessionNumber(ARCHIVE_SECTIONS.library.accessionPrefix, index)}</p>
+            <p className="retro-entry-type">{STATUS_LABELS[status]}</p>
             <Image
                 src={cover || "/books/default_cover.png"}
                 alt=""
@@ -41,13 +44,8 @@ export const BookCard = ({ title, author, status, cover, readDate, updated, rati
                 loading={isAboveFold ? "eager" : "lazy"}
                 {...(isAboveFold && { fetchPriority: "high" })}
             />
-            <div>
+            <div className="retro-entry-body">
                 <h2>{hasNotes ? <Link href={href}>{title}</Link> : <ExternalLink href={href} showIndicator={false} eventName={analyticsId ? 'external_article_click' : undefined} eventProperties={analyticsId ? { contentId: analyticsId } : undefined}>{title} <small>［書籍情報］</small></ExternalLink>}</h2>
-                <p className="retro-card-meta">
-                    {STATUS_LABELS[status]}
-                    {readDate && <> ｜ 読了：<DateText value={readDate} /></>}
-                    {updated && updated !== readDate && <> ｜ 更新：<DateText value={updated} /></>}
-                </p>
                 <p>著者：{author}</p>
                 <p className="retro-rating" aria-label={rating ? `5段階中${rating}` : '未評価'}>
                     評価: {rating ? `${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}` : '未評価'}
@@ -55,6 +53,10 @@ export const BookCard = ({ title, author, status, cover, readDate, updated, rati
                 {!!tags?.length && <p className="retro-card-tags">タグ：{tags.filter(Boolean).join(' / ')}</p>}
                 <ThemeLinks themes={themes} />
             </div>
+            <p className="retro-entry-date">
+                <small>{updated ? '更新' : '読了'}</small>
+                <DateText value={updated || readDate} />
+            </p>
         </li>
     );
 };

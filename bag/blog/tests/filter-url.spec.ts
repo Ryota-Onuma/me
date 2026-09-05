@@ -30,7 +30,7 @@ test.describe('URL-backed archive filters', () => {
         await expect(page.getByRole('heading', { name: /アジャイルな見積り/ })).toBeVisible();
         await expect(page.getByRole('heading', { name: 'ドメイン駆動設計をはじめよう' })).toHaveCount(0);
 
-        await page.locator('.retro-filter-panel').getByText('本を検索・絞り込む').click();
+        await page.locator('.retro-filter-panel').getByText('テーマ・分類で絞る').click();
         await page.getByRole('button', { name: '読了' }).click();
         await expect(page).toHaveURL(/\/library\?status=completed$/);
         await expect(page.getByRole('heading', { name: /アジャイルな見積り/ })).toHaveCount(0);

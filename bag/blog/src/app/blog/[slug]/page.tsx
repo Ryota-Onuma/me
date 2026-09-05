@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { getPostBySlug, getPostSlugs, getAdjacentPosts } from '@/lib/posts';
+import { getPostBySlug, getPostSlugs, getAdjacentPosts, getAllContents } from '@/lib/posts';
 import { getRelatedContent } from '@/lib/content';
 import { prefetchOGPData } from '@/lib/prefetchOGP';
 import { BlogDetailClient } from './BlogDetailClient';
 import { DEFAULT_THUMBNAIL } from '@/lib/constants';
 import { absoluteSiteUrl, serializeJsonLd, SITE_AUTHOR, toIsoDate } from '@/lib/detailSeo';
 import { AnalyticsEvent } from '@/components/analytics/AnalyticsEvent';
+import { ARCHIVE_SECTIONS, formatAccessionNumber } from '@/data/site';
 
 // Generate static paths for all posts at build time
 export async function generateStaticParams() {
@@ -80,6 +81,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     }
 
     const { prev, next } = getAdjacentPosts(slug);
+    const archiveIndex = getAllContents().findIndex(item => item.slug === slug);
 
     // Pre-fetch OGP data for link cards at build time
     const ogpDataMap = await prefetchOGPData(post.content);
@@ -106,6 +108,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <AnalyticsEvent name="content_open" properties={{ contentType: 'blog', contentId: slug }} />
             <BlogDetailClient
                 post={{
+                    accession: formatAccessionNumber(ARCHIVE_SECTIONS.blog.accessionPrefix, archiveIndex),
                     title: post.frontmatter.title,
                     date: post.frontmatter.date,
                     tags: post.frontmatter.tags,
