@@ -1,8 +1,9 @@
 ---
 title: 'askの使い方'
-date: 'Jan 04, 2026'
+date: '2026-01-04'
 status: 'open'
 tags: ['English']
+themes: ['English']
 emoji: '💬'
 ---
 

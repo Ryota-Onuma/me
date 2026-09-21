@@ -6,7 +6,8 @@ rating: 3
 cover: "/books/who-moved-my-cheese.png"
 externalUrl: "https://amzn.asia/d/1Bd38Za"
 tags: ["Audible"]
-readDate: "2026/01/21"
+themes: ["Thinking"]
+readDate: "2026-01-21"
 ---
 
 ## 概要
@@ -67,4 +68,3 @@ readDate: "2026/01/21"
 4. **過去に執着しない**: 失ったものを嘆くより、次のチャンスを探す
 
 変化を恐れて立ち止まるか、変化を楽しんで前に進むか。その選択が、その後の結果を大きく左右する。
-

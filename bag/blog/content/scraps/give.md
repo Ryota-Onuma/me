@@ -1,8 +1,9 @@
 ---
 title: 'giveの使い方'
-date: 'Jan 05, 2026'
+date: '2026-01-05'
 status: 'open'
 tags: ['English']
+themes: ['English']
 emoji: '🎁'
 ---
 

@@ -1,18 +1,26 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import { ClientLayout } from './ClientLayout';
 
 export default function NotFound() {
     return (
-        <div className="min-h-screen bg-[#fbfbfa] flex flex-col items-center justify-center text-center px-6">
-            <h1 className="text-6xl md:text-8xl font-semibold text-black mb-6">404</h1>
-            <p className="text-xl md:text-2xl text-black/60 mb-8">
-                Page not found
-            </p>
-            <Link
-                href="/"
-                className="px-6 py-3 bg-black text-white rounded-md font-medium text-sm hover:bg-black/80 transition-colors"
-            >
-                Go Home
-            </Link>
-        </div>
+        <ClientLayout>
+            <main id="main-content" className="retro-not-found" tabIndex={-1}>
+                <div>
+                    <p className="retro-kicker">ERROR / 404</p>
+                    <h1>空の引き出しでした。</h1>
+                    <p>お探しの資料は、この番号では収蔵されていないようです。</p>
+                    <p><Link href="/">← 資料室の入口へ戻る</Link></p>
+                </div>
+                <Image
+                    src="/illustrations/empty-drawer.png"
+                    alt="空の引き出しをのぞき込む手描きのキャラクター"
+                    width={1536}
+                    height={1024}
+                    sizes="(max-width: 700px) 90vw, 520px"
+                    priority
+                />
+            </main>
+        </ClientLayout>
     );
 }

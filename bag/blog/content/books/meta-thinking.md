@@ -6,7 +6,8 @@ rating: 1
 cover: "/books/meta-thinking.png"
 externalUrl: "https://amzn.asia/d/7Ppbmfs"
 tags: ["Audible"]
-readDate: "2025/08/30"
+themes: ["Thinking"]
+readDate: "2025-08-30"
 ---
 
 ## 感想

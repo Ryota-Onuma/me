@@ -5,5 +5,6 @@ status: "completed"
 cover: "/books/prompt-engineering-llm.png"
 externalUrl: "https://www.oreilly.co.jp/books/9784814401130/"
 tags: ["Book"]
-readDate: "2025/12/01"
+themes: ["AI"]
+readDate: "2025-12-01"
 ---

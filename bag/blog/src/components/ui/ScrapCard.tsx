@@ -1,66 +1,51 @@
 'use client';
 
-import { MessageSquare } from 'lucide-react';
+import Link from 'next/link';
+import { ThemeLinks } from './ThemeLinks';
+import { DateText } from './DateText';
+import { ARCHIVE_SECTIONS, formatAccessionNumber } from '@/data/site';
 
 interface ScrapCardProps {
     title: string;
     emoji: string;
-    status: 'open' | 'closed';
+    status: 'open' | 'closed' | 'growing' | 'evergreen' | 'archived' | 'published';
     date: string;
+    lastUpdated?: string;
     tags: string[];
+    themes?: string[];
     threadCount: number;
+    isThreaded: boolean;
     index: number;
+    href: string;
 }
 
-export const ScrapCard = ({ title, emoji, status, date, tags, threadCount, index }: ScrapCardProps) => {
+const STATUS_LABELS = {
+    open: '公開中',
+    closed: '完了',
+    growing: '育成中',
+    evergreen: '定番',
+    archived: '更新終了',
+    published: 'Blog整理済み',
+} as const;
+
+export const ScrapCard = ({ title, emoji, status, date, lastUpdated, tags, themes, threadCount, isThreaded, index, href }: ScrapCardProps) => {
     return (
-        <article
-            className="group relative bg-white rounded-lg border border-black/10 p-6 transition-all duration-200 hover:border-black/25"
-            style={{ animationDelay: `${index * 50}ms` }}
-        >
-            {/* Header */}
-            <div className="flex items-start justify-between mb-4">
-                <span className="text-3xl">{emoji}</span>
-                <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${status === 'open'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-500'
-                    }`}>
-                    {status}
-                </span>
+        <li className="retro-scrap-card retro-index-entry" data-index={index + 1}>
+            <p className="retro-accession">{formatAccessionNumber(ARCHIVE_SECTIONS.scrap.accessionPrefix, index)}</p>
+            <p className="retro-entry-type">{STATUS_LABELS[status]}</p>
+            <div className="retro-entry-body">
+                <h2><span className="retro-scrap-emoji" aria-hidden="true">{emoji}</span>{' '}<Link href={href}>{title}</Link></h2>
+                <p className="retro-card-meta">
+                    {isThreaded ? `追記 ${threadCount} 件` : '単独メモ'}
+                </p>
+                {tags.length > 0 && <p className="retro-card-tags">タグ：{tags.join(' / ')}</p>}
+                <ThemeLinks themes={themes} />
             </div>
-
-            {/* Title */}
-            <h3 className="text-lg font-semibold text-black mb-3 line-clamp-2 group-hover:text-accent-hover transition-colors">
-                {title}
-            </h3>
-
-            {/* Tags */}
-            {tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                    {tags.slice(0, 3).map(tag => (
-                        <span key={tag} className="px-2 py-0.5 bg-black/5 rounded text-[10px] font-medium text-black/50">
-                            {tag}
-                        </span>
-                    ))}
-                    {tags.length > 3 && (
-                        <span className="px-2 py-0.5 text-[10px] font-medium text-black/30">
-                            +{tags.length - 3}
-                        </span>
-                    )}
-                </div>
-            )}
-
-            {/* Footer */}
-            <div className="flex items-center justify-between text-xs text-black/40">
-                <span>{date}</span>
-                <div className="flex items-center gap-1">
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>{threadCount}</span>
-                </div>
-            </div>
-
-            {/* Hover Indicator */}
-            <div className="absolute inset-x-0 bottom-0 h-0.5 bg-accent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-        </article>
+            <p className="retro-entry-date">
+                <small>更新</small>
+                <DateText value={lastUpdated || date} />
+                {lastUpdated && lastUpdated !== date && <span>作成 <DateText value={date} /></span>}
+            </p>
+        </li>
     );
 };

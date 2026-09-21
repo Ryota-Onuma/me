@@ -1,76 +1,101 @@
 'use client';
 
-import { Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { ScrapCard, SectionHeading, TagFilterButton } from '../ui';
 import { useScrapFilter, type ScrapStatus } from '@/hooks/useScrapFilter';
-import { BACKGROUND_COLOR_LIGHT } from '@/lib/constants';
 import type { ScrapItem } from '@/lib/scraps';
+import { getThemeLabel, normalizeTheme } from '@/lib/themes';
 
 interface ScrapSectionProps {
     scraps: ScrapItem[];
 }
 
-const STATUS_OPTIONS: ScrapStatus[] = ['all', 'open', 'closed'];
+const STATUS_OPTIONS: ScrapStatus[] = ['all', 'open', 'closed', 'growing', 'evergreen', 'archived', 'published'];
+const STATUS_LABELS: Record<ScrapStatus, string> = {
+    all: 'すべて',
+    open: '公開中',
+    closed: '完了',
+    growing: '育成中',
+    evergreen: '定番',
+    archived: '更新終了',
+    published: 'Blog整理済み',
+};
 
 export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
-    const router = useRouter();
     const {
         searchQuery,
         setSearchQuery,
         selectedTag,
         setSelectedTag,
+        selectedTheme,
+        setSelectedTheme,
         statusFilter,
         setStatusFilter,
         allTags,
+        allThemes,
         filteredScraps,
-        filteredCount
+        filteredCount,
+        totalCount,
+        resetFilters
     } = useScrapFilter(scraps);
+    const hasActiveFilters = Boolean(searchQuery || selectedTag || selectedTheme || statusFilter !== 'all');
 
     return (
-        <section id="scrap" className="pt-28 pb-16 md:pt-32 md:pb-20 px-6 md:px-16 lg:px-24" style={{ backgroundColor: BACKGROUND_COLOR_LIGHT }}>
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-                <div>
-                    <SectionHeading title="Scrap" />
-                    <p className="text-black/55 text-base mt-4 max-w-2xl leading-relaxed">
-                        Quick notes, experiments, and work-in-progress thoughts.<br />
-                        <span className="text-black font-semibold">{filteredCount}</span> scraps
-                        {selectedTag && <> filtered by <span className="text-black px-2 py-0.5 rounded bg-black/10 text-xs font-medium">{selectedTag}</span></>}
-                    </p>
-                </div>
-            </div>
+        <section id="scrap" className="retro-page">
+            <SectionHeading section="scrap" />
+            <p className="retro-lead" role="status" aria-live="polite">
+                書きかけのメモ、小さな実験、考え途中の記録。全{totalCount}件中{filteredCount}件
+                {selectedTheme && <>（テーマ：{getThemeLabel(selectedTheme)} で絞り込み中）</>}
+                {selectedTag && <>（タグ：{selectedTag} で絞り込み中）</>}
+            </p>
 
-            {/* Filters */}
-            <div className="flex flex-col gap-8 mb-16">
-                <div className="flex flex-col md:flex-row gap-4">
-                    <div className="relative w-full md:w-96 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 group-focus-within:text-accent transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Search scraps..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-white border border-black/10 rounded-md text-sm text-black placeholder-black/35 focus:outline-none focus:border-accent-hover focus:bg-white transition-all"
-                        />
-                    </div>
+            <label className="retro-search-label">
+                キーワード：
+                <input
+                    type="search"
+                    placeholder="タイトル・タグを検索"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </label>
 
-                    {/* Status Filter */}
-                    <div className="flex gap-2">
+            <details className="retro-filter-panel">
+                <summary>テーマ・分類で絞る</summary>
+                <fieldset className="retro-filter-box">
+                    <legend>雑記の詳細条件</legend>
+
+                    {new Set(scraps.map(scrap => scrap.status)).size > 1 && <div className="retro-filter-row">
+                        <span>状態：</span>
                         {STATUS_OPTIONS.map(status => (
                             <TagFilterButton
                                 key={status}
-                                label={status}
+                                label={STATUS_LABELS[status]}
                                 isSelected={statusFilter === status}
                                 onClick={() => setStatusFilter(status)}
                             />
                         ))}
-                    </div>
+                    </div>}
+
+                <div className="retro-filter-row">
+                    <span>テーマ：</span>
+                    <TagFilterButton
+                        label="全テーマ"
+                        isSelected={selectedTheme === null}
+                        onClick={() => setSelectedTheme(null)}
+                    />
+                    {allThemes.map(theme => (
+                        <TagFilterButton
+                            key={theme}
+                            label={getThemeLabel(theme)}
+                            isSelected={selectedTheme === theme}
+                            onClick={() => setSelectedTheme(selectedTheme === theme ? null : theme)}
+                        />
+                    ))}
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="retro-filter-row">
+                    <span>分類：</span>
                     <TagFilterButton
-                        label="All Topics"
+                        label="すべて"
                         isSelected={selectedTag === null}
                         onClick={() => setSelectedTag(null)}
                     />
@@ -83,37 +108,40 @@ export const ScrapSection = ({ scraps }: ScrapSectionProps) => {
                         />
                     ))}
                 </div>
-            </div>
+                </fieldset>
+            </details>
 
-            {/* Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {hasActiveFilters && filteredCount > 0 && (
+                <p><button type="button" onClick={resetFilters}>絞り込みを解除</button></p>
+            )}
+
+            <ul className="retro-list">
                 {filteredScraps.map((scrap, idx) => (
-                    <div
+                    <ScrapCard
                         key={scrap.id}
-                        onClick={() => router.push(`/scrap/${scrap.slug}`)}
-                        className="cursor-pointer"
-                    >
-                        <ScrapCard
-                            title={scrap.title}
-                            emoji={scrap.emoji}
-                            status={scrap.status}
-                            date={scrap.date}
-                            tags={scrap.tags}
-                            threadCount={scrap.threadCount}
-                            index={idx}
-                        />
-                    </div>
+                        href={`/scrap/${scrap.slug}`}
+                        title={scrap.title}
+                        emoji={scrap.emoji}
+                        status={scrap.status}
+                        date={scrap.date}
+                        lastUpdated={scrap.lastUpdated}
+                        tags={scrap.tags.filter(tag => !normalizeTheme(tag))}
+                        themes={scrap.themes}
+                        threadCount={scrap.threadCount}
+                        isThreaded={scrap.isThreaded}
+                        index={idx}
+                    />
                 ))}
-            </div>
+            </ul>
 
             {filteredCount === 0 && (
-                <div className="text-center py-32 border border-dashed border-black/10 rounded-lg">
-                    <p className="text-black/40 text-sm">No scraps found matching your criteria</p>
+                <div className="retro-empty">
+                    <p>条件に合う雑記はありません。</p>
                     <button
-                        onClick={() => { setSearchQuery(''); setSelectedTag(null); setStatusFilter('all'); }}
-                        className="mt-4 text-black/60 hover:text-black text-xs underline underline-offset-4"
+                        type="button"
+                        onClick={resetFilters}
                     >
-                        Clear filters
+                        絞り込みを解除
                     </button>
                 </div>
             )}

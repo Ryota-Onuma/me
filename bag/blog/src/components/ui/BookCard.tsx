@@ -1,7 +1,11 @@
 'use client';
 
-import { Star, Calendar } from 'lucide-react';
-import { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ThemeLinks } from './ThemeLinks';
+import { DateText } from './DateText';
+import { ExternalLink } from './ExternalLink';
+import { ARCHIVE_SECTIONS, formatAccessionNumber } from '@/data/site';
 
 interface BookCardProps {
     title: string;
@@ -9,111 +13,50 @@ interface BookCardProps {
     status: 'yet' | 'reading' | 'completed';
     cover?: string;
     readDate?: string;
+    updated?: string;
     rating?: number;
     tags?: string[];
+    themes?: string[];
+    hasNotes?: boolean;
     index?: number; // For LCP optimization
+    analyticsId?: string;
+    href: string;
 }
 
 const STATUS_LABELS: Record<'yet' | 'reading' | 'completed', string> = {
-    yet: 'Yet',
-    reading: 'Reading',
-    completed: 'Completed',
+    yet: '未読',
+    reading: '読書中',
+    completed: '読了',
 };
 
-const STATUS_STYLES: Record<'yet' | 'reading' | 'completed', string> = {
-    yet: 'bg-slate-100 text-slate-700 border border-slate-200',
-    reading: 'bg-amber-50 text-amber-700 border border-amber-200',
-    completed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-};
-
-export const BookCard = ({ title, author, status, cover, readDate, rating, tags, index = 0 }: BookCardProps) => {
+export const BookCard = ({ title, author, status, cover, readDate, updated, rating, tags, themes, hasNotes = true, index = 0, analyticsId, href }: BookCardProps) => {
     const isAboveFold = index < 3;
-    const [isLoaded, setIsLoaded] = useState(false);
-
-    const renderStars = (rating?: number) => {
-        if (!rating) return <span className="text-[11px] text-black/40">Not Rated</span>;
-
-        return (
-            <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                        key={star}
-                        className={`w-3 h-3 ${star <= rating
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-black/20'
-                            }`}
-                    />
-                ))}
-            </div>
-        );
-    };
 
     return (
-        <article className="group relative flex flex-col h-full bg-white border border-black/10 rounded-lg overflow-hidden hover:border-black/25 transition-premium ease-out">
-            {/* Cover Image */}
-            <div className={`relative aspect-[3/4] overflow-hidden bg-gray-100 ${!isLoaded ? 'shimmer' : ''}`}>
-                <img
-                    src={cover || "/books/default_cover.png"}
-                    alt={title}
-                    className={`w-full h-full object-contain transition-opacity duration-200 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-                    loading={isAboveFold ? "eager" : "lazy"}
-                    onLoad={() => setIsLoaded(true)}
-                    {...(isAboveFold && { fetchPriority: "high" })}
-                />
-
-                {/* Status badge */}
-                <div className="absolute top-3 right-3 pointer-events-none">
-                    <div className={`text-xs font-medium px-2 py-1 rounded-md flex items-center justify-center ${STATUS_STYLES[status]}`}>
-                        {STATUS_LABELS[status]}
-                    </div>
-                </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-3 flex flex-col flex-1 relative">
-                {/* Read Date or Status */}
-                {readDate ? (
-                    <div className="flex items-center gap-2 mb-3">
-                        <Calendar className="w-3 h-3 text-black/40" />
-                        <span className="text-xs font-medium text-black/50">
-                            {readDate}
-                        </span>
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-2 mb-3">
-                        <span className="text-xs font-medium text-black/50">
-                            {STATUS_LABELS[status]}
-                        </span>
-                    </div>
-                )}
-
-                {/* Title */}
-                <h3 className="text-lg font-semibold leading-tight mb-2 text-black group-hover:text-accent-hover line-clamp-2 transition-colors duration-200">
-                    {title}
-                </h3>
-
-                {/* Author */}
-                <p className="text-sm text-black/55 mb-3 group-hover:text-black/70 transition-colors duration-200">
-                    {author}
+        <li className="retro-book-card retro-index-entry">
+            <p className="retro-accession">{formatAccessionNumber(ARCHIVE_SECTIONS.library.accessionPrefix, index)}</p>
+            <p className="retro-entry-type">{STATUS_LABELS[status]}</p>
+            <Image
+                src={cover || "/books/default_cover.png"}
+                alt=""
+                width={116}
+                height={156}
+                loading={isAboveFold ? "eager" : "lazy"}
+                {...(isAboveFold && { fetchPriority: "high" })}
+            />
+            <div className="retro-entry-body">
+                <h2>{hasNotes ? <Link href={href}>{title}</Link> : <ExternalLink href={href} showIndicator={false} eventName={analyticsId ? 'external_article_click' : undefined} eventProperties={analyticsId ? { contentId: analyticsId } : undefined}>{title} <small>［書籍情報］</small></ExternalLink>}</h2>
+                <p>著者：{author}</p>
+                <p className="retro-rating" aria-label={rating ? `5段階中${rating}` : '未評価'}>
+                    評価: {rating ? `${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}` : '未評価'}
                 </p>
-
-                {/* Rating */}
-                <div className="mb-4">
-                    {renderStars(rating)}
-                </div>
-
-                {/* Tags */}
-                <div className="mt-auto flex flex-wrap gap-1.5">
-                    {tags?.filter(tag => tag && tag.trim()).slice(0, 3).map((tag, idx) => (
-                        <span
-                            key={idx}
-                            className="text-xs font-medium text-black/45 px-2 py-1 rounded bg-black/[0.04] border border-black/5 group-hover:border-black/10 group-hover:text-black/60 transition-colors"
-                        >
-                            {tag}
-                        </span>
-                    ))}
-                </div>
+                {!!tags?.length && <p className="retro-card-tags">タグ：{tags.filter(Boolean).join(' / ')}</p>}
+                <ThemeLinks themes={themes} />
             </div>
-        </article>
+            <p className="retro-entry-date">
+                <small>{updated ? '更新' : '読了'}</small>
+                <DateText value={updated || readDate} />
+            </p>
+        </li>
     );
 };

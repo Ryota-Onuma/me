@@ -1,9 +1,6 @@
-import React, { useEffect, useRef, memo } from 'react';
-import { Github, Twitter, ArrowUpRight } from 'lucide-react';
+import React from 'react';
 import { assertNever } from '@/lib/assertNever';
-
-// Constants
-const TWITTER_SCRIPT_LOAD_DELAY_MS = 500;
+import { TwitterEmbed } from './TwitterEmbed';
 
 export type EmbedType = 'youtube' | 'twitter' | 'github';
 
@@ -12,156 +9,60 @@ interface EmbedBlockProps {
     id: string;
 }
 
-// Twitter Widgets API interface
-interface TwitterWidgets {
-    ready: (callback: () => void) => void;
-    widgets: {
-        createTweet: (
-            id: string,
-            container: HTMLElement,
-            options?: { theme?: string; align?: string; dnt?: boolean }
-        ) => Promise<HTMLElement>;
-    };
-}
-
-declare global {
-    interface Window {
-        twttr?: TwitterWidgets;
-    }
-}
-
-const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
-    const tweetRef = useRef<HTMLDivElement>(null);
-    const tweetMountedRef = useRef(false);
-
-    useEffect(() => {
-        if (type === 'twitter' && tweetRef.current && !tweetMountedRef.current) {
-            const container = tweetRef.current;
-
-            const createTweet = () => {
-                if (window.twttr && window.twttr.widgets && window.twttr.widgets.createTweet) {
-                    // Only create if not already mounted
-                    if (!tweetMountedRef.current) {
-                        container.innerHTML = '';
-                        window.twttr.widgets.createTweet(id, container, {
-                            theme: 'light',
-                            align: 'center',
-                            dnt: true // Do Not Track
-                        }).then(() => {
-                            tweetMountedRef.current = true;
-                        }).catch((err) => {
-                            console.error('Failed to create tweet:', err);
-                        });
-                    }
-                }
-            };
-
-            // Check if script already exists
-            const existingScript = document.getElementById('twitter-wjs');
-
-            if (!existingScript) {
-                const script = document.createElement('script');
-                script.id = 'twitter-wjs';
-                script.src = 'https://platform.twitter.com/widgets.js';
-                script.async = true;
-                script.onload = () => {
-                    if (window.twttr && window.twttr.ready) {
-                        window.twttr.ready(createTweet);
-                    } else {
-                        setTimeout(createTweet, TWITTER_SCRIPT_LOAD_DELAY_MS);
-                    }
-                };
-                document.body.appendChild(script);
-            } else {
-                if (window.twttr && window.twttr.ready) {
-                    window.twttr.ready(createTweet);
-                } else if (window.twttr && window.twttr.widgets) {
-                    createTweet();
-                } else {
-                    setTimeout(createTweet, TWITTER_SCRIPT_LOAD_DELAY_MS);
-                }
-            }
-        }
-    }, [type, id]);
-
+export const EmbedBlock: React.FC<EmbedBlockProps> = ({ type, id }) => {
     switch (type) {
         case 'youtube':
             return (
-                <div className="my-10 group">
-                    <div className="aspect-video w-full rounded-lg overflow-hidden border border-black/10 relative bg-black/5">
-                        <iframe
-                            width="100%"
-                            height="100%"
-                            src={`https://www.youtube.com/embed/${id}`}
-                            title="YouTube video player"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowFullScreen
-                            className="w-full h-full"
-                        ></iframe>
-                    </div>
-                </div>
+                <figure className="not-prose retro-embed retro-video-embed">
+                    <iframe
+                        src={`https://www.youtube.com/embed/${id}`}
+                        title="YouTube video player"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                    ></iframe>
+                    <figcaption>YouTube / {id}</figcaption>
+                </figure>
             );
         case 'twitter':
             return (
-                <div className="not-prose my-10 flex justify-center min-h-[200px] w-full">
-                    <div ref={tweetRef} className="w-full max-w-xl flex justify-center">
-                        <div className="animate-pulse flex flex-col items-center gap-4 py-12">
-                            <Twitter className="text-black/10" size={32} />
-                            <div className="text-xs font-medium text-black/25">Loading Tweet...</div>
-                        </div>
-                    </div>
-                </div>
+                <figure className="not-prose retro-embed retro-twitter-embed">
+                        <TwitterEmbed id={id} />
+                    <figcaption>X の埋め込み投稿 / {id}</figcaption>
+                </figure>
             );
         case 'github':
             // Official GitHub Social Preview (OGP) image URL format
             const ogpImage = `https://opengraph.githubassets.com/1/${id}`;
 
             return (
-                <div className="not-prose my-10">
+                <figure className="not-prose retro-embed">
                     <a
                         href={`https://github.com/${id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex flex-row items-stretch border border-black/10 rounded-lg overflow-hidden bg-white transition-all duration-200 hover:border-black/25 max-w-2xl h-32 md:h-36 relative"
+                        className="retro-github-card"
                     >
-                        <div className="flex-1 min-w-0 p-6 md:p-8 flex flex-col justify-center relative z-10">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Github size={14} className="text-black/60" />
-                                <span className="text-xs font-medium text-black/40">GitHub</span>
-                            </div>
-                            <h4 className="text-base md:text-xl font-semibold text-black group-hover:text-accent-hover transition-colors truncate leading-tight">
-                                {id.split('/')[1]}
-                            </h4>
-                            <p className="mt-1 text-xs font-bold text-black/30 truncate">
-                                {id.split('/')[0]}
-                            </p>
+                        <div>
+                            <small>GitHub repository</small>
+                            <strong>{id.split('/')[1]}</strong>
+                            <span>{id.split('/')[0]}</span>
                         </div>
-
-                        <div className="w-32 md:w-60 overflow-hidden relative border-l border-black/5 bg-black/[0.03] flex-shrink-0 flex items-center justify-center p-4">
-                            <img
-                                src={ogpImage}
-                                alt={`${id} repository`}
-                                className="w-full h-full object-contain"
-                            />
-                            <div className="absolute right-3 bottom-3 bg-white border border-black/10 rounded-md p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <ArrowUpRight className="text-black/60" size={14} />
-                            </div>
-                        </div>
+                        {/* External GitHub preview image has a dynamic URL. */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={ogpImage} alt="" />
+                        <span className="sr-only">（外部ページ・新しいタブで開きます）</span>
                     </a>
-                </div>
+                    <figcaption>GitHub リポジトリ / {id}</figcaption>
+                </figure>
             );
         default:
             // This case handles unsupported embeds safely while providing exhaustive checks for known types
             return (
-                <div className="my-8 p-6 rounded-lg bg-black/5 border border-black/10 text-xs text-black/45 font-medium text-center">
-                    Unsupported embed: {type} ({id})
+                <div className="retro-alert">
+                    <b>Unsupported embed:</b> {type} ({id})
                     {/* Still perform exhaustive check for defined EmbedType */}
                     {typeof type !== 'string' && assertNever(type as never)}
                 </div>
             );
     }
 };
-
-// Memoize to prevent re-renders when parent re-renders (e.g., scroll progress)
-export const EmbedBlock = memo(EmbedBlockInner);

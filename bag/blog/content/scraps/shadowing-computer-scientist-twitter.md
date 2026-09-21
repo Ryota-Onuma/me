@@ -1,8 +1,9 @@
 ---
 title: 'Shadowing Practice: Computer Scientist Answers Computer Questions From Twitter'
-date: 'Jan 17, 2026'
+date: '2026-01-17'
 status: 'open'
 tags: ['English', 'Shadowing', 'Computer Science']
+themes: ['English', 'Learning']
 emoji: '🎤'
 ---
 

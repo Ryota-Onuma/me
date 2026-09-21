@@ -5,7 +5,9 @@ status: "completed"
 cover: "/books/concrete-abstract-training.png"
 externalUrl: "https://amzn.asia/d/6X9cNVB"
 tags: ["Audible"]
-readDate: "2026/01/07"
+themes: ['Thinking']
+sourcePosts: ['concrete-abstract-thinking']
+readDate: "2026-01-07"
 rating: 5
 ---
 

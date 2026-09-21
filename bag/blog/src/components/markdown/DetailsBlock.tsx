@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import React from 'react';
 
 interface DetailsBlockProps {
     title?: string;
@@ -7,28 +6,10 @@ interface DetailsBlockProps {
 }
 
 export const DetailsBlock: React.FC<DetailsBlockProps> = ({ title = 'Details', children }) => {
-    const [isOpen, setIsOpen] = useState(false);
-
     return (
-        <div className="my-6 border border-black/10 rounded-lg overflow-hidden bg-white transition-all duration-200">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-black/[0.02] transition-colors cursor-pointer"
-            >
-                <span className="font-medium text-sm">{title}</span>
-                <ChevronRight
-                    size={18}
-                    className={`text-black/30 transition-transform duration-300 ${isOpen ? 'rotate-90 text-black' : ''}`}
-                />
-            </button>
-            <div
-                className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[2000px] opacity-100 border-t border-black/5' : 'max-h-0 opacity-0'
-                    } overflow-hidden`}
-            >
-                <div className="p-6 prose-sm md:prose-base leading-relaxed text-black/70 prose-light">
-                    {children}
-                </div>
-            </div>
-        </div>
+        <details className="retro-details">
+            <summary>{title}</summary>
+            <div className="retro-details-content">{children}</div>
+        </details>
     );
 };

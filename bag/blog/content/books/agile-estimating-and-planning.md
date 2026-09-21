@@ -5,5 +5,5 @@ status: "reading"
 cover: "/books/agile-estimating-and-planning.png"
 externalUrl: "https://book.mynavi.jp/ec/products/detail/id=35757"
 tags: ["Book"]
+themes: ["Team Development"]
 ---
-

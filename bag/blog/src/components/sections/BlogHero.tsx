@@ -1,49 +1,36 @@
 import React from 'react';
-import { Clock, Tag } from 'lucide-react';
+import { ThemeLinks } from '../ui/ThemeLinks';
+import { ExternalLink } from '../ui/ExternalLink';
 
 interface ParsedPost {
+    accession: string;
     title: string;
     date: string;
     tags: string[];
-    thumbnail?: string;
+    themes?: string[];
+    updated?: string;
+    externalUrl?: string;
 }
 
 interface BlogHeroProps {
     post: ParsedPost;
 }
 
-export const BlogHero: React.FC<BlogHeroProps> = ({ post }) => {
-    return (
-        <header className="relative w-full min-h-[56vh] md:min-h-[64vh] flex flex-col justify-end overflow-hidden bg-[#fbfbfa] border-b border-black/10">
-            <div className="absolute inset-0 z-0">
-                <img
-                    src={post.thumbnail || "/thumbnails/default_blog.png"}
-                    alt={post.title}
-                    className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-[#fbfbfa]/72" />
-            </div>
-
-            <div className="relative z-10 px-6 md:px-24 pb-16 md:pb-24 max-w-5xl mx-auto w-full">
-                <div className="flex items-center gap-4 mb-6 flex-wrap">
-                    <span className="flex items-center gap-2 text-sm text-black/70 font-medium">
-                        <Clock size={14} className="text-black/60" />
-                        {post.date}
-                    </span>
-                    <div className="flex gap-2 flex-wrap">
-                        {post.tags.map(tag => (
-                            <span key={tag} className="flex items-center gap-1.5 text-xs bg-white px-2.5 py-1 rounded-md text-black/70 font-medium border border-black/10">
-                                <Tag size={10} className="text-black/60" />
-                                {tag}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-
-                <h1 className="mb-0 text-black md:text-5xl lg:text-6xl font-semibold leading-tight">
-                    {post.title}
-                </h1>
-            </div>
-        </header>
-    );
-};
+export const BlogHero: React.FC<BlogHeroProps> = ({ post }) => (
+    <header className="retro-detail-hero">
+        <div className="retro-record-stamp">
+            <span>資料票</span>
+            <b>{post.accession}</b>
+        </div>
+        <p className="retro-kicker">TECHNICAL NOTE / ORGANIZED ARTICLE</p>
+        <h1>{post.title}</h1>
+        <p className="retro-card-meta">
+            公開日：{post.date}{post.updated && post.updated !== post.date && ` ｜ 更新：${post.updated}`}
+            {post.tags.length > 0 && ` ｜ タグ：${post.tags.join(' / ')}`}
+        </p>
+        <ThemeLinks themes={post.themes} />
+        {post.externalUrl && (
+            <p><ExternalLink href={post.externalUrl} eventName="external_article_click">元記事を外部サイトで読む</ExternalLink></p>
+        )}
+    </header>
+);

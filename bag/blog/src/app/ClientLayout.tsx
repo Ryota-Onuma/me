@@ -1,22 +1,16 @@
-'use client';
-
 import { Header, Footer } from '@/components/layout';
-
-
-
 
 interface ClientLayoutProps {
     children: React.ReactNode;
+    activePath?: string;
 }
 
-export function ClientLayout({ children }: ClientLayoutProps) {
+export function ClientLayout({ children, activePath }: ClientLayoutProps) {
     return (
-        <>
-            <Header />
-
+        <div className="site-shell">
+            <Header activePath={activePath} />
             {children}
-
             <Footer />
-        </>
+        </div>
     );
 }

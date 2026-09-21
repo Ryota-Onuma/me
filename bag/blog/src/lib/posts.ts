@@ -3,11 +3,17 @@ import path from 'path';
 import matter from 'gray-matter';
 import { POSTS_DIRECTORY, DEFAULT_THUMBNAIL } from './constants';
 import { processMarkdownContent } from './markdownProcessor';
-import { ContentLoadError, FrontmatterParseError, handleContentError } from './errors';
+import { ContentLoadError, FrontmatterParseError } from './errors';
 import type { Post, PostFrontmatter, ContentItem } from '@/types';
+import { resolveThemes } from './themes';
+import { ContentValidationError, validateFrontmatter } from './contentValidation';
 
 // Re-export types for backward compatibility
 export type { Post, PostFrontmatter, ContentItem };
+
+const stringArray = (value: unknown): string[] => Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : typeof value === 'string' ? [value] : [];
 
 const postsPath = path.join(process.cwd(), POSTS_DIRECTORY);
 
@@ -47,6 +53,8 @@ export function getPostBySlug(slug: string): Post | null {
             throw new FrontmatterParseError(`${slug}.md`, error);
         }
 
+        validateFrontmatter('post', slug, data);
+
         // Process custom markdown syntax
         const processedContent = processMarkdownContent(content);
 
@@ -55,38 +63,36 @@ export function getPostBySlug(slug: string): Post | null {
             frontmatter: {
                 title: typeof data.title === 'string' ? data.title : 'Untitled',
                 date: typeof data.date === 'string' ? data.date : '',
-                tags: Array.isArray(data.tags) ? data.tags as string[] : (typeof data.tags === 'string' ? [data.tags] : []),
+                tags: stringArray(data.tags),
                 category: typeof data.category === 'string' ? data.category : 'Blog',
                 description: typeof data.description === 'string' ? data.description : '',
                 thumbnail: typeof data.thumbnail === 'string' ? data.thumbnail : DEFAULT_THUMBNAIL,
                 url: typeof data.url === 'string' ? data.url : (typeof data.external_url === 'string' ? data.external_url : undefined),
                 id: typeof data.id === 'string' ? data.id : undefined,
+                themes: resolveThemes({ themes: data.themes, tags: data.tags, title: typeof data.title === 'string' ? data.title : '', category: typeof data.category === 'string' ? data.category : 'Blog' }),
+                sourceScraps: stringArray(data.sourceScraps ?? data.source_scraps ?? data.fromScraps ?? data.from_scraps),
+                sourceBooks: stringArray(data.sourceBooks ?? data.source_books ?? data.fromBooks ?? data.from_books),
+                related: stringArray(data.related ?? data.relatedPosts ?? data.related_posts ?? data.derivedFrom ?? data.derived_from),
+                updated: typeof data.updated === 'string' ? data.updated : undefined,
+                internalOnly: data.internalOnly === true,
             },
             content: processedContent,
         };
     } catch (error) {
-        if (error instanceof FrontmatterParseError) {
-            return handleContentError(error, `${slug}.md`, 'post');
-        }
+        if (error instanceof FrontmatterParseError || error instanceof ContentValidationError) throw error;
         throw new ContentLoadError(`${slug}.md`, 'post', error);
     }
 }
 
 /**
- * Get all posts sorted by date
+ * Get all posts sorted by most recently updated date
  */
 export function getAllPosts(): Post[] {
     const slugs = getPostSlugs();
     return slugs
-        .map(slug => {
-            try {
-                return getPostBySlug(slug);
-            } catch (error) {
-                return handleContentError(error, `${slug}.md`, 'post');
-            }
-        })
-        .filter((post): post is Post => post !== null)
-        .sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime());
+        .map(slug => getPostBySlug(slug))
+        .filter((post): post is Post => post !== null && !post.frontmatter.internalOnly)
+        .sort((a, b) => new Date(b.frontmatter.updated || b.frontmatter.date).getTime() - new Date(a.frontmatter.updated || a.frontmatter.date).getTime());
 }
 
 /**
@@ -106,9 +112,20 @@ export function getAllContents(): ContentItem[] {
             description: post.frontmatter.description || '',
             date: post.frontmatter.date,
             tags: post.frontmatter.tags,
+            themes: resolveThemes({
+                themes: post.frontmatter.themes,
+                tags: post.frontmatter.tags,
+                title: post.frontmatter.title,
+                category: post.frontmatter.category,
+            }),
             thumbnail: post.frontmatter.thumbnail || DEFAULT_THUMBNAIL,
             url: externalUrl,
-            slug: externalUrl ? undefined : post.slug,
+            slug: post.slug,
+            updated: post.frontmatter.updated || post.frontmatter.date,
+            sourceScraps: post.frontmatter.sourceScraps,
+            sourceBooks: post.frontmatter.sourceBooks,
+            related: post.frontmatter.related,
+            hasContent: post.content.trim().length > 0,
         };
     });
 }

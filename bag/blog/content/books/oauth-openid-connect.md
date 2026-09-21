@@ -5,5 +5,6 @@ status: "completed"
 cover: "/books/oauth-openid-connect.png"
 externalUrl: "https://authya.booth.pm/items/1550861"
 tags: ["Book"]
-readDate: "2024/12/01"
+themes: ["Software Design"]
+readDate: "2024-12-01"
 ---

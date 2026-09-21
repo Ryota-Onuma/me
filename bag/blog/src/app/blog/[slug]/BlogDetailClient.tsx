@@ -1,38 +1,26 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeSlug from 'rehype-slug';
-import rehypeRaw from 'rehype-raw';
-import 'katex/dist/katex.min.css';
-import { useMemo } from 'react';
-
-import remarkDirective from 'remark-directive';
-import remarkGemoji from 'remark-gemoji';
-import { remarkCustomDirectives } from '@/lib/remarkCustomDirectives';
-import { createMarkdownComponents } from '@/lib/markdownComponents';
 import type { OGPData } from '@/lib/prefetchOGP';
 
 import { Header, Footer } from '@/components/layout';
-import { ProgressBar } from '@/components/ui/ProgressBar';
-import { useScrollProgress } from '@/hooks/useScrollProgress';
-
-import { TableOfContents } from '@/components/markdown';
-import { BlogHero, BlogNavigation } from '@/components/sections';
+import { MarkdownContent } from '@/components/markdown/MarkdownContent';
+import { TableOfContents } from '@/components/markdown/TableOfContents';
+import { BlogHero } from '@/components/sections/BlogHero';
+import { BlogNavigation } from '@/components/sections/BlogNavigation';
+import { RelatedContentSection } from '@/components/sections/RelatedContentSection';
 import type { ContentItem } from '@/lib/posts';
 
 
 
 
 interface ParsedPost {
+    accession: string;
     title: string;
     date: string;
     tags: string[];
     content: string;
     thumbnail?: string;
+    externalUrl?: string;
+    themes?: string[];
+    updated?: string;
 }
 
 interface BlogDetailClientProps {
@@ -40,64 +28,25 @@ interface BlogDetailClientProps {
     prevPost: ContentItem | null;
     nextPost: ContentItem | null;
     ogpDataMap?: Record<string, OGPData>;
+    relatedContent?: import('@/lib/content').UnifiedContent[];
 }
 
-export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap }: BlogDetailClientProps) {
-    const router = useRouter();
-    const { scrollProgress } = useScrollProgress();
-
-    // Memoize markdown components to prevent re-mounting on scroll
-    const markdownComponents = useMemo(
-        () => createMarkdownComponents(ogpDataMap),
-        [ogpDataMap]
-    );
-
-    if (!post) {
-        return (
-            <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center text-black/50 gap-6">
-                <p className="text-xl font-semibold">Post Not Found</p>
-                <button
-                    onClick={() => router.push('/')}
-                    className="text-xs font-medium border-b border-black/20 pb-1 hover:border-black transition-colors"
-                >
-                    Back to Home
-                </button>
-            </div>
-        );
-    }
-
+export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap, relatedContent = [] }: BlogDetailClientProps) {
     return (
-        <>
-            <ProgressBar scrollProgress={scrollProgress} />
-
-            <Header />
-
-            <div className="min-h-screen bg-[#fafafa] text-[#1a1a1a]">
-                <main className="min-h-screen animate-fade-in relative z-10">
-                    <BlogHero post={post} />
-
-                    <div className="px-6 md:px-24 pb-24">
-                        <div className="max-w-3xl mx-auto">
-                            <TableOfContents content={post.content} />
-
-                            <div className="prose prose-lg md:prose-xl prose-headings:font-semibold prose-headings:tracking-normal prose-a:text-black prose-a:decoration-black/30 hover:prose-a:decoration-black prose-code:text-black prose-code:before:content-none prose-code:after:content-none prose-img:rounded-lg prose-img:border prose-img:border-black/10 prose-blockquote:border-none prose-blockquote:p-0 prose-light">
-                                <ReactMarkdown
-                                    remarkPlugins={[remarkGfm, remarkMath, remarkDirective, remarkGemoji, remarkCustomDirectives]}
-                                    rehypePlugins={[rehypeKatex, rehypeSlug, rehypeRaw]}
-                                    components={markdownComponents}
-                                >
-                                    {post.content}
-                                </ReactMarkdown>
-                            </div>
-                        </div>
-
-                        <BlogNavigation prevPost={prevPost} nextPost={nextPost} />
-                    </div>
-                </main>
-            </div>
-
+        <div className="site-shell">
+            <Header backLink="/blog" backLabel="技術ノート一覧へ" activePath="/blog" />
+            <main id="main-content" className="retro-detail-page" tabIndex={-1}>
+                <BlogHero post={post} />
+                <div className="retro-article-wrap">
+                    <TableOfContents content={post.content} />
+                    <article className="retro-article">
+                        <MarkdownContent content={post.content} ogpDataMap={ogpDataMap} />
+                    </article>
+                    <BlogNavigation prevPost={prevPost} nextPost={nextPost} />
+                    <RelatedContentSection contents={relatedContent} />
+                </div>
+            </main>
             <Footer />
-
-        </>
+        </div>
     );
 }

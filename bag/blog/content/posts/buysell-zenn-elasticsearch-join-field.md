@@ -2,12 +2,11 @@
 title: "親子関係のあるデータの検索を、ElasticsearchのJoin field typeを使って実現した"
 description: "Elasticsearchの`Join field type`を使うことで、親子関係のあるデータ検索をシンプルに実現できることがおわかりいただけたかと思います。"
 tags: ["バイセルテックブログ", "Zenn"]
+themes: ["Database"]
 date: "2024-10-19"
 thumbnail: "/thumbnails/elasticsearch-join-field-zenn.png"
 external_url: "https://zenn.dev/buyselltech/articles/db14b7f21c28e7"
 ---
-
-# 親子関係のあるデータの検索を、Elasticsearch の Join field type を使って実現した
 
 この記事は外部サイトで公開されています。記事の詳細を読むには、上記のリンクをクリックして外部サイトにアクセスしてください。
 
