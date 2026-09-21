@@ -88,7 +88,7 @@ const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
         case 'youtube':
             return (
                 <div className="my-10 group">
-                    <div className="aspect-video w-full rounded-3xl overflow-hidden border border-black/5 shadow-2xl relative bg-black/5">
+                    <div className="aspect-video w-full rounded-lg overflow-hidden border border-black/10 relative bg-black/5">
                         <iframe
                             width="100%"
                             height="100%"
@@ -108,7 +108,7 @@ const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
                     <div ref={tweetRef} className="w-full max-w-xl flex justify-center">
                         <div className="animate-pulse flex flex-col items-center gap-4 py-12">
                             <Twitter className="text-black/10" size={32} />
-                            <div className="text-xs font-bold tracking-widest uppercase text-black/20">Loading Tweet...</div>
+                            <div className="text-xs font-medium text-black/25">Loading Tweet...</div>
                         </div>
                     </div>
                 </div>
@@ -123,14 +123,14 @@ const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
                         href={`https://github.com/${id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex flex-row items-stretch border border-black/10 rounded-3xl overflow-hidden bg-white/50 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:border-black/20 hover:-translate-y-1 max-w-2xl h-32 md:h-36 relative"
+                        className="group flex flex-row items-stretch border border-black/10 rounded-lg overflow-hidden bg-white transition-all duration-200 hover:border-black/25 max-w-2xl h-32 md:h-36 relative"
                     >
                         <div className="flex-1 min-w-0 p-6 md:p-8 flex flex-col justify-center relative z-10">
                             <div className="flex items-center gap-2 mb-2">
                                 <Github size={14} className="text-black/60" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/30">GitHub</span>
+                                <span className="text-xs font-medium text-black/40">GitHub</span>
                             </div>
-                            <h4 className="text-base md:text-xl font-black text-black group-hover:text-accent transition-colors truncate leading-tight">
+                            <h4 className="text-base md:text-xl font-semibold text-black group-hover:text-accent-hover transition-colors truncate leading-tight">
                                 {id.split('/')[1]}
                             </h4>
                             <p className="mt-1 text-xs font-bold text-black/30 truncate">
@@ -142,10 +142,10 @@ const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
                             <img
                                 src={ogpImage}
                                 alt={`${id} repository`}
-                                className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
+                                className="w-full h-full object-contain"
                             />
-                            <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <ArrowUpRight className="text-white drop-shadow-md" size={24} />
+                            <div className="absolute right-3 bottom-3 bg-white border border-black/10 rounded-md p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ArrowUpRight className="text-black/60" size={14} />
                             </div>
                         </div>
                     </a>
@@ -154,7 +154,7 @@ const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
         default:
             // This case handles unsupported embeds safely while providing exhaustive checks for known types
             return (
-                <div className="my-8 p-6 rounded-2xl bg-black/5 border border-black/10 text-xs text-black/40 font-bold tracking-widest uppercase text-center italic">
+                <div className="my-8 p-6 rounded-lg bg-black/5 border border-black/10 text-xs text-black/45 font-medium text-center">
                     Unsupported embed: {type} ({id})
                     {/* Still perform exhaustive check for defined EmbedType */}
                     {typeof type !== 'string' && assertNever(type as never)}
@@ -165,4 +165,3 @@ const EmbedBlockInner: React.FC<EmbedBlockProps> = ({ type, id }) => {
 
 // Memoize to prevent re-renders when parent re-renders (e.g., scroll progress)
 export const EmbedBlock = memo(EmbedBlockInner);
-

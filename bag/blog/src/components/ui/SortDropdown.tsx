@@ -18,8 +18,8 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
 export const SortDropdown = ({ value, onChange }: SortDropdownProps) => {
     return (
         <div className="relative group">
-            <div className="flex items-center gap-2 px-4 py-3 bg-black/[0.02] backdrop-blur-xl border border-black/10 rounded-2xl text-sm text-black cursor-pointer hover:border-accent hover:bg-accent-light transition-all">
-                <ArrowUpDown className="w-4 h-4 text-black/30 group-hover:text-accent transition-colors" />
+            <div className="flex items-center gap-2 px-4 py-3 bg-white border border-black/10 rounded-md text-sm text-black cursor-pointer hover:border-black/25 transition-all">
+                <ArrowUpDown className="w-4 h-4 text-black/35 group-hover:text-black/60 transition-colors" />
                 <select
                     value={value}
                     onChange={(e) => onChange(e.target.value as SortOption)}

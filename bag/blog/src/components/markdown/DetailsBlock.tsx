@@ -10,12 +10,12 @@ export const DetailsBlock: React.FC<DetailsBlockProps> = ({ title = 'Details', c
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className="my-6 border border-black/10 rounded-xl overflow-hidden bg-white shadow-sm transition-all duration-300">
+        <div className="my-6 border border-black/10 rounded-lg overflow-hidden bg-white transition-all duration-200">
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex items-center justify-between p-4 text-left hover:bg-black/[0.02] transition-colors cursor-pointer"
             >
-                <span className="font-bold text-sm tracking-tight">{title}</span>
+                <span className="font-medium text-sm">{title}</span>
                 <ChevronRight
                     size={18}
                     className={`text-black/30 transition-transform duration-300 ${isOpen ? 'rotate-90 text-black' : ''}`}
@@ -32,4 +32,3 @@ export const DetailsBlock: React.FC<DetailsBlockProps> = ({ title = 'Details', c
         </div>
     );
 };
-

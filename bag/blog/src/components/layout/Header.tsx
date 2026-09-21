@@ -42,7 +42,7 @@ export const Header = ({
     return (
         <>
             <header
-                className={`fixed top-0 left-0 w-full z-[1000] border-b border-black/5 bg-[#fafafa]/80 backdrop-blur-xl transition-all duration-300 ${isScrolled ? 'h-16' : 'h-20 md:h-24'
+                className={`fixed top-0 left-0 w-full z-[1000] border-b border-black/10 bg-[#fbfbfa]/95 transition-all duration-200 ${isScrolled ? 'h-16' : 'h-20'
                     }`}
             >
                 <div className="h-full flex justify-between items-center px-6 md:px-16 lg:px-24">
@@ -50,7 +50,7 @@ export const Header = ({
                         {/* Logo */}
                         <Link
                             href="/"
-                            className="text-xl md:text-2xl font-black tracking-tighter text-black hover:text-black/80 transition-premium cursor-pointer"
+                            className="text-lg md:text-xl font-semibold text-black hover:text-black/70 transition-premium cursor-pointer"
                         >
                             ryota.onuma<span className="text-[#76b5c5]">.dev</span>
                         </Link>
@@ -58,13 +58,13 @@ export const Header = ({
                         {backLink && (
                             <button
                                 onClick={() => router.push(backLink)}
-                                className="flex items-center gap-2 text-black/40 hover:text-black transition-premium group"
+                                className="flex items-center gap-2 text-black/50 hover:text-black transition-premium group"
                                 aria-label={`Go back to ${backLabel || 'previous page'}`}
                             >
-                                <div className="p-1.5 rounded-full bg-black/5 border border-black/10 group-hover:border-black/20 transition-premium">
-                                    <ArrowLeft size={12} className="group-hover:-translate-x-1 transition-transform" />
+                                <div className="p-1.5 rounded-md bg-white border border-black/10 group-hover:border-black/20 transition-premium">
+                                    <ArrowLeft size={12} />
                                 </div>
-                                <span className="text-[10px] font-black tracking-[0.2em] uppercase">{backLabel || 'Back'}</span>
+                                <span className="text-xs font-medium">{backLabel || 'Back'}</span>
                             </button>
                         )}
                     </div>
@@ -75,9 +75,9 @@ export const Header = ({
                             <Link
                                 key={item}
                                 href={getLinkPath(item)}
-                                className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.3em] transition-premium cursor-pointer ${isActive(item)
-                                    ? 'text-black'
-                                    : 'text-black/30 hover:text-black hover:bg-black/5'
+                                className={`px-3 py-2 rounded-md text-sm font-medium transition-premium cursor-pointer ${isActive(item)
+                                    ? 'text-black bg-black/[0.04]'
+                                    : 'text-black/45 hover:text-black hover:bg-black/[0.04]'
                                     }`}
                             >
                                 {navLabels[item]}

@@ -1,6 +1,6 @@
 'use client';
 
-import { Star, Calendar, CheckCircle2, BookOpen, Clock } from 'lucide-react';
+import { Star, Calendar } from 'lucide-react';
 import { useState } from 'react';
 
 interface BookCardProps {
@@ -21,15 +21,9 @@ const STATUS_LABELS: Record<'yet' | 'reading' | 'completed', string> = {
 };
 
 const STATUS_STYLES: Record<'yet' | 'reading' | 'completed', string> = {
-    yet: 'bg-slate-500 text-white',
-    reading: 'bg-amber-500 text-white',
-    completed: 'bg-emerald-600 text-white',
-};
-
-const STATUS_ICONS: Record<'yet' | 'reading' | 'completed', React.ComponentType<{ className?: string }>> = {
-    yet: Clock,
-    reading: BookOpen,
-    completed: CheckCircle2,
+    yet: 'bg-slate-100 text-slate-700 border border-slate-200',
+    reading: 'bg-amber-50 text-amber-700 border border-amber-200',
+    completed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
 };
 
 export const BookCard = ({ title, author, status, cover, readDate, rating, tags, index = 0 }: BookCardProps) => {
@@ -55,24 +49,21 @@ export const BookCard = ({ title, author, status, cover, readDate, rating, tags,
     };
 
     return (
-        <article className="group relative flex flex-col h-full bg-black/[0.02] border border-black/10 rounded-xl overflow-hidden hover:bg-black/[0.04] hover:border-accent-dim hover:shadow-xl hover:shadow-accent/5 transition-premium ease-out hover:-translate-y-0.5">
+        <article className="group relative flex flex-col h-full bg-white border border-black/10 rounded-lg overflow-hidden hover:border-black/25 transition-premium ease-out">
             {/* Cover Image */}
             <div className={`relative aspect-[3/4] overflow-hidden bg-gray-100 ${!isLoaded ? 'shimmer' : ''}`}>
                 <img
                     src={cover || "/books/default_cover.png"}
                     alt={title}
-                    className={`w-full h-full object-contain group-hover:scale-105 transition-all duration-1000 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    className={`w-full h-full object-contain transition-opacity duration-200 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                     loading={isAboveFold ? "eager" : "lazy"}
                     onLoad={() => setIsLoaded(true)}
                     {...(isAboveFold && { fetchPriority: "high" })}
                 />
 
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#fafafa] via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
-
-                {/* Status ribbon badge */}
-                <div className="absolute top-0 right-0 overflow-hidden w-28 h-28 pointer-events-none">
-                    <div className={`absolute transform rotate-45 text-[10px] font-bold uppercase tracking-wider py-1.5 w-36 top-6 -right-8 shadow-lg flex items-center justify-center ${STATUS_STYLES[status]}`}>
+                {/* Status badge */}
+                <div className="absolute top-3 right-3 pointer-events-none">
+                    <div className={`text-xs font-medium px-2 py-1 rounded-md flex items-center justify-center ${STATUS_STYLES[status]}`}>
                         {STATUS_LABELS[status]}
                     </div>
                 </div>
@@ -84,25 +75,25 @@ export const BookCard = ({ title, author, status, cover, readDate, rating, tags,
                 {readDate ? (
                     <div className="flex items-center gap-2 mb-3">
                         <Calendar className="w-3 h-3 text-black/40" />
-                        <span className="text-[11px] font-medium text-black/50 uppercase tracking-widest">
+                        <span className="text-xs font-medium text-black/50">
                             {readDate}
                         </span>
                     </div>
                 ) : (
                     <div className="flex items-center gap-2 mb-3">
-                        <span className="text-[11px] font-medium text-black/50 uppercase tracking-widest">
+                        <span className="text-xs font-medium text-black/50">
                             {STATUS_LABELS[status]}
                         </span>
                     </div>
                 )}
 
                 {/* Title */}
-                <h3 className="text-lg font-bold leading-tight mb-2 text-black group-hover:text-accent line-clamp-2 transition-colors duration-500">
+                <h3 className="text-lg font-semibold leading-tight mb-2 text-black group-hover:text-accent-hover line-clamp-2 transition-colors duration-200">
                     {title}
                 </h3>
 
                 {/* Author */}
-                <p className="text-sm text-black/50 mb-3 group-hover:text-black/70 transition-colors duration-500">
+                <p className="text-sm text-black/55 mb-3 group-hover:text-black/70 transition-colors duration-200">
                     {author}
                 </p>
 
@@ -116,7 +107,7 @@ export const BookCard = ({ title, author, status, cover, readDate, rating, tags,
                     {tags?.filter(tag => tag && tag.trim()).slice(0, 3).map((tag, idx) => (
                         <span
                             key={idx}
-                            className="text-[10px] font-medium text-black/40 px-2 py-1 rounded bg-black/5 border border-black/5 group-hover:border-accent/20 group-hover:text-black/60 transition-colors"
+                            className="text-xs font-medium text-black/45 px-2 py-1 rounded bg-black/[0.04] border border-black/5 group-hover:border-black/10 group-hover:text-black/60 transition-colors"
                         >
                             {tag}
                         </span>

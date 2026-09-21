@@ -81,8 +81,8 @@ export const AlertBlock: React.FC<AlertBlockProps> = ({ type, children }) => {
     const Icon = styles.icon;
 
     return (
-        <div className={`my-8 p-5 rounded-2xl border ${styles.bg} ${styles.border} shadow-sm transition-all duration-300`}>
-            <div className={`flex items-center gap-2 mb-3 ${styles.color} font-black uppercase tracking-[0.2em] text-[11px]`}>
+        <div className={`my-8 p-5 rounded-lg border ${styles.bg} ${styles.border} transition-all duration-200`}>
+            <div className={`flex items-center gap-2 mb-3 ${styles.color} font-semibold text-xs`}>
                 <Icon size={16} strokeWidth={3} />
                 <span>{styles.label}</span>
             </div>
@@ -98,4 +98,3 @@ export const getAlertType = (children: React.ReactNode): AlertType | null => {
     const match = content.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/);
     return match ? (match[1] as AlertType) : null;
 };
-

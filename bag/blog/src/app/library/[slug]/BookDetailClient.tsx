@@ -8,7 +8,7 @@ import rehypeKatex from 'rehype-katex';
 import rehypeSlug from 'rehype-slug';
 import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import remarkDirective from 'remark-directive';
 import remarkGemoji from 'remark-gemoji';
@@ -17,7 +17,6 @@ import { createMarkdownComponents } from '@/lib/markdownComponents';
 import type { OGPData } from '@/lib/prefetchOGP';
 
 import { Header, Footer } from '@/components/layout';
-import { NoiseOverlay, Spotlight } from '@/components/effects';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useScrollProgress } from '@/hooks/useScrollProgress';
 
@@ -51,9 +50,9 @@ const STATUS_LABELS: Record<'yet' | 'reading' | 'completed', string> = {
 };
 
 const STATUS_STYLES: Record<'yet' | 'reading' | 'completed', string> = {
-    yet: 'bg-slate-500 text-white',
-    reading: 'bg-yellow-100 text-yellow-700',
-    completed: 'bg-accent text-white shadow-sm',
+    yet: 'bg-slate-100 text-slate-700 border-slate-200',
+    reading: 'bg-amber-50 text-amber-700 border-amber-200',
+    completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
 };
 
 export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
@@ -69,10 +68,10 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
     if (!book) {
         return (
             <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center text-black/50 gap-6">
-                <p className="text-xl font-bold tracking-widest uppercase">Book Not Found</p>
+                <p className="text-xl font-semibold">Book Not Found</p>
                 <button
                     onClick={() => router.push('/library')}
-                    className="text-xs uppercase tracking-widest font-black border-b border-black/20 pb-1 hover:border-black transition-colors"
+                    className="text-xs font-medium border-b border-black/20 pb-1 hover:border-black transition-colors"
                 >
                     Back to Library
                 </button>
@@ -100,9 +99,6 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
 
     return (
         <>
-            <NoiseOverlay />
-            <Spotlight />
-
             <ProgressBar scrollProgress={scrollProgress} />
 
             <Header />
@@ -116,14 +112,7 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                                 {/* Cover Image */}
                                 {book.cover && (
                                     <div className="flex-shrink-0 mx-auto md:mx-0">
-                                        <div className="w-60 md:w-64 aspect-[2/3] rounded-2xl overflow-hidden border border-black/10 shadow-2xl relative bg-black/5">
-                                            {/* Blurred background */}
-                                            <img
-                                                src={book.cover}
-                                                alt=""
-                                                className="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-50"
-                                            />
-                                            {/* Main cover image */}
+                                        <div className="w-60 md:w-64 aspect-[2/3] rounded-lg overflow-hidden border border-black/10 relative bg-white">
                                             <img
                                                 src={book.cover}
                                                 alt={book.title}
@@ -137,13 +126,13 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                                 <div className="flex-1">
                                     {/* Status Badge */}
                                     <div className="mb-4">
-                                        <span className={`inline-flex items-center gap-1.5 backdrop-blur-md border border-black/10 text-xs px-4 py-2 rounded-full font-bold uppercase tracking-wider ${STATUS_STYLES[book.status]}`}>
+                                        <span className={`inline-flex items-center gap-1.5 border text-xs px-3 py-1.5 rounded-md font-medium ${STATUS_STYLES[book.status]}`}>
                                             {STATUS_LABELS[book.status]}
                                         </span>
                                     </div>
 
                                     {/* Title */}
-                                    <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight text-black mb-4">
+                                    <h1 className="text-4xl md:text-5xl font-semibold leading-tight text-black mb-4">
                                         {book.title}
                                     </h1>
 
@@ -179,7 +168,7 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                                         {book.tags.map((tag, idx) => (
                                             <span
                                                 key={idx}
-                                                className="text-xs font-medium text-black/60 px-3 py-1.5 rounded-full bg-black/5 border border-black/10"
+                                                className="text-xs font-medium text-black/60 px-3 py-1.5 rounded-md bg-black/5 border border-black/10"
                                             >
                                                 {tag}
                                             </span>
@@ -191,7 +180,7 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                                         href={book.externalUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-full font-bold hover:bg-accent-dark transition-all hover:scale-105 shadow-lg hover:shadow-xl"
+                                        className="inline-flex items-center gap-2 px-5 py-3 bg-black text-white rounded-md font-medium hover:bg-black/85 transition-all"
                                     >
                                         {(() => {
                                             if (book.externalLabel) return book.externalLabel;
@@ -216,7 +205,7 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                                                 }
 
                                                 return `View on ${url.hostname}`;
-                                            } catch (e) {
+                                            } catch {
                                                 return 'View Details';
                                             }
                                         })()}
@@ -230,7 +219,7 @@ export function BookDetailClient({ book, ogpDataMap }: BookDetailClientProps) {
                     {/* Content Section */}
                     <div className="px-6 md:px-24 pb-24">
                         <div className="max-w-3xl mx-auto">
-                            <div className="prose prose-lg md:prose-xl prose-headings:font-bold prose-headings:tracking-tight prose-a:text-black prose-a:decoration-black/30 hover:prose-a:decoration-black prose-code:text-black prose-code:before:content-none prose-code:after:content-none prose-img:rounded-2xl prose-img:border prose-img:border-black/10 prose-blockquote:border-none prose-blockquote:p-0 prose-light">
+                            <div className="prose prose-lg md:prose-xl prose-headings:font-semibold prose-headings:tracking-normal prose-a:text-black prose-a:decoration-black/30 hover:prose-a:decoration-black prose-code:text-black prose-code:before:content-none prose-code:after:content-none prose-img:rounded-lg prose-img:border prose-img:border-black/10 prose-blockquote:border-none prose-blockquote:p-0 prose-light">
                                 <ReactMarkdown
                                     remarkPlugins={[remarkGfm, remarkMath, remarkDirective, remarkGemoji, remarkCustomDirectives]}
                                     rehypePlugins={[rehypeKatex, rehypeSlug, rehypeRaw]}

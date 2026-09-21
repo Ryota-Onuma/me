@@ -8,7 +8,7 @@ import rehypeKatex from 'rehype-katex';
 import rehypeSlug from 'rehype-slug';
 import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import remarkDirective from 'remark-directive';
 import remarkGemoji from 'remark-gemoji';
@@ -17,7 +17,6 @@ import { createMarkdownComponents } from '@/lib/markdownComponents';
 import type { OGPData } from '@/lib/prefetchOGP';
 
 import { Header, Footer } from '@/components/layout';
-import { NoiseOverlay, Spotlight } from '@/components/effects';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useScrollProgress } from '@/hooks/useScrollProgress';
 
@@ -56,10 +55,10 @@ export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap }: BlogD
     if (!post) {
         return (
             <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center text-black/50 gap-6">
-                <p className="text-xl font-bold tracking-widest uppercase">Post Not Found</p>
+                <p className="text-xl font-semibold">Post Not Found</p>
                 <button
                     onClick={() => router.push('/')}
-                    className="text-xs uppercase tracking-widest font-black border-b border-black/20 pb-1 hover:border-black transition-colors"
+                    className="text-xs font-medium border-b border-black/20 pb-1 hover:border-black transition-colors"
                 >
                     Back to Home
                 </button>
@@ -69,9 +68,6 @@ export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap }: BlogD
 
     return (
         <>
-            <NoiseOverlay />
-            <Spotlight />
-
             <ProgressBar scrollProgress={scrollProgress} />
 
             <Header />
@@ -84,7 +80,7 @@ export function BlogDetailClient({ post, prevPost, nextPost, ogpDataMap }: BlogD
                         <div className="max-w-3xl mx-auto">
                             <TableOfContents content={post.content} />
 
-                            <div className="prose prose-lg md:prose-xl prose-headings:font-bold prose-headings:tracking-tight prose-a:text-black prose-a:decoration-black/30 hover:prose-a:decoration-black prose-code:text-black prose-code:before:content-none prose-code:after:content-none prose-img:rounded-2xl prose-img:border prose-img:border-black/10 prose-blockquote:border-none prose-blockquote:p-0 prose-light">
+                            <div className="prose prose-lg md:prose-xl prose-headings:font-semibold prose-headings:tracking-normal prose-a:text-black prose-a:decoration-black/30 hover:prose-a:decoration-black prose-code:text-black prose-code:before:content-none prose-code:after:content-none prose-img:rounded-lg prose-img:border prose-img:border-black/10 prose-blockquote:border-none prose-blockquote:p-0 prose-light">
                                 <ReactMarkdown
                                     remarkPlugins={[remarkGfm, remarkMath, remarkDirective, remarkGemoji, remarkCustomDirectives]}
                                     rehypePlugins={[rehypeKatex, rehypeSlug, rehypeRaw]}

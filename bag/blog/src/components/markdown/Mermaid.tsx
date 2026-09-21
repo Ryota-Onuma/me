@@ -104,7 +104,7 @@ const MermaidInner = ({ chart }: MermaidProps): React.ReactNode => {
         <div className="relative my-12 group">
             {!error && (
                 <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="bg-white/80 backdrop-blur-md rounded-xl border border-black/5 shadow-sm">
+                    <div className="bg-white rounded-md border border-black/10">
                         <CopyButton
                             text={chart}
                             className="text-black/50 hover:text-black hover:bg-black/5"
@@ -113,7 +113,7 @@ const MermaidInner = ({ chart }: MermaidProps): React.ReactNode => {
                 </div>
             )}
             <div
-                className="flex justify-center bg-white rounded-3xl border border-black/10 p-8 md:p-12 overflow-x-auto shadow-sm"
+                className="flex justify-center bg-white rounded-lg border border-black/10 p-8 md:p-12 overflow-x-auto"
                 style={{ minHeight: DIAGRAM_CONTAINER_MIN_HEIGHT }}
             >
                 {error ? (

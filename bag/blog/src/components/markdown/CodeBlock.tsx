@@ -81,10 +81,10 @@ const CodeBlockInner: React.FC<CodeBlockProps> = ({ language, filename, highligh
     const codeString = code.replace(/\n$/, '');
 
     return (
-        <div className="relative group/code bg-[#1e1e1e] border border-white/5 rounded-xl overflow-hidden my-8 shadow-2xl transition-all duration-300">
+        <div className="relative group/code bg-[#1e1e1e] border border-white/10 rounded-lg overflow-hidden my-8">
             <div className="flex items-center justify-between px-4 py-2.5 bg-white/10 border-b border-white/5">
                 <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{language}</span>
+                    <span className="text-xs font-medium text-white/80">{language}</span>
                     {filename && (
                         <span className="text-xs font-bold text-white font-mono bg-accent/40 px-2.5 py-0.5 rounded border border-accent/50">{filename}</span>
                     )}
@@ -116,4 +116,3 @@ const CodeBlockInner: React.FC<CodeBlockProps> = ({ language, filename, highligh
 
 // Memoize to prevent re-renders when parent re-renders (e.g., scroll progress)
 export const CodeBlock = memo(CodeBlockInner);
-

@@ -34,7 +34,7 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps): React.ReactNod
 
     return (
         <div
-            className="fixed inset-0 z-[2000] bg-[#fafafa]/95 backdrop-blur-xl flex flex-col items-center justify-center gap-10 animate-fade-in"
+            className="fixed inset-0 z-[2000] bg-[#fbfbfa] flex flex-col items-center justify-center gap-10 animate-fade-in"
         >
             <button
                 className="absolute top-8 right-6 md:top-12 md:right-12 text-black/50 hover:text-black transition-colors"
@@ -49,7 +49,7 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps): React.ReactNod
                         key={item}
                         href={getLinkPath(item)}
                         onClick={handleLinkClick}
-                        className="text-4xl md:text-6xl font-black uppercase tracking-[0.2em] text-black/40 hover:text-black transition-premium"
+                        className="text-3xl md:text-5xl font-semibold text-black/55 hover:text-black transition-premium"
                     >
                         {navLabels[item]}
                     </Link>

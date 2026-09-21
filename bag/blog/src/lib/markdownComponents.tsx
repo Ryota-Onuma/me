@@ -146,10 +146,10 @@ export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): 
                     src={src}
                     alt={alt || ''}
                     width={width}
-                    className="rounded-2xl border border-black/10 shadow-sm transition-transform hover:scale-[1.01]"
+                    className="rounded-lg border border-black/10"
                 />
                 {alt && alt !== '' && (
-                    <figcaption className="mt-4 text-xs font-medium text-black/40 tracking-wider uppercase">
+                    <figcaption className="mt-4 text-xs font-medium text-black/45">
                         {alt}
                     </figcaption>
                 )}
@@ -199,5 +199,4 @@ export const createMarkdownComponents = (ogpDataMap?: Record<string, OGPData>): 
         <LinkCardClient url={url ?? ''} ogpData={ogpDataMap?.[url ?? '']} />
     )
 } as Partial<Components>);
-
 

@@ -26,12 +26,12 @@ export const BlogNavigation: React.FC<BlogNavigationProps> = ({ prevPost, nextPo
             {prevPost ? (
                 <button
                     onClick={() => handlePostClick(prevPost)}
-                    className="group flex flex-col items-start gap-2 text-left w-full md:w-1/2 p-4 rounded-2xl hover:bg-black/5 transition-all border border-transparent hover:border-black/5 cursor-pointer"
+                    className="group flex flex-col items-start gap-2 text-left w-full md:w-1/2 p-4 rounded-lg hover:bg-black/[0.03] transition-all border border-transparent hover:border-black/10 cursor-pointer"
                 >
-                    <span className="flex items-center gap-2 text-xs uppercase tracking-widest text-black/40 group-hover:text-black/60 transition-colors">
+                    <span className="flex items-center gap-2 text-xs text-black/45 group-hover:text-black/60 transition-colors">
                         <ArrowLeft size={12} /> Previous
                     </span>
-                    <span className="text-lg font-bold text-black group-hover:text-black/90 line-clamp-2">
+                    <span className="text-lg font-semibold text-black group-hover:text-black/90 line-clamp-2">
                         {prevPost.title}
                     </span>
                 </button>
@@ -40,12 +40,12 @@ export const BlogNavigation: React.FC<BlogNavigationProps> = ({ prevPost, nextPo
             {nextPost && (
                 <button
                     onClick={() => handlePostClick(nextPost)}
-                    className="group flex flex-col items-end gap-2 text-right w-full md:w-1/2 p-4 rounded-2xl hover:bg-black/5 transition-all border border-transparent hover:border-black/5 cursor-pointer"
+                    className="group flex flex-col items-end gap-2 text-right w-full md:w-1/2 p-4 rounded-lg hover:bg-black/[0.03] transition-all border border-transparent hover:border-black/10 cursor-pointer"
                 >
-                    <span className="flex items-center gap-2 text-xs uppercase tracking-widest text-black/40 group-hover:text-black/60 transition-colors">
+                    <span className="flex items-center gap-2 text-xs text-black/45 group-hover:text-black/60 transition-colors">
                         Next <ArrowRight size={12} />
                     </span>
-                    <span className="text-lg font-bold text-black group-hover:text-black/90 line-clamp-2">
+                    <span className="text-lg font-semibold text-black group-hover:text-black/90 line-clamp-2">
                         {nextPost.title}
                     </span>
                 </button>

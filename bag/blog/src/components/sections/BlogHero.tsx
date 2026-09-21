@@ -14,26 +14,25 @@ interface BlogHeroProps {
 
 export const BlogHero: React.FC<BlogHeroProps> = ({ post }) => {
     return (
-        <header className="relative w-full h-[60vh] md:h-[70vh] flex flex-col justify-end overflow-hidden">
+        <header className="relative w-full min-h-[56vh] md:min-h-[64vh] flex flex-col justify-end overflow-hidden bg-[#fbfbfa] border-b border-black/10">
             <div className="absolute inset-0 z-0">
                 <img
                     src={post.thumbnail || "/thumbnails/default_blog.png"}
                     alt={post.title}
-                    className="w-full h-full object-cover animate-fade-in-scale"
+                    className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#fafafa] via-[#fafafa]/80 to-[#fafafa]/20" />
-                <div className="absolute inset-0 bg-gradient-to-b from-[#fafafa]/20 to-transparent" />
+                <div className="absolute inset-0 bg-[#fbfbfa]/72" />
             </div>
 
             <div className="relative z-10 px-6 md:px-24 pb-16 md:pb-24 max-w-5xl mx-auto w-full">
-                <div className="flex items-center gap-4 mb-6 flex-wrap animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-                    <span className="flex items-center gap-2 text-xs md:text-sm text-black/80 uppercase tracking-[0.2em] font-bold">
+                <div className="flex items-center gap-4 mb-6 flex-wrap">
+                    <span className="flex items-center gap-2 text-sm text-black/70 font-medium">
                         <Clock size={14} className="text-black/60" />
                         {post.date}
                     </span>
                     <div className="flex gap-2 flex-wrap">
                         {post.tags.map(tag => (
-                            <span key={tag} className="flex items-center gap-1.5 text-[10px] md:text-xs bg-black/10 px-3 py-1 rounded-full text-black font-bold uppercase tracking-wider border border-black/10 backdrop-blur-md">
+                            <span key={tag} className="flex items-center gap-1.5 text-xs bg-white px-2.5 py-1 rounded-md text-black/70 font-medium border border-black/10">
                                 <Tag size={10} className="text-black/60" />
                                 {tag}
                             </span>
@@ -41,7 +40,7 @@ export const BlogHero: React.FC<BlogHeroProps> = ({ post }) => {
                     </div>
                 </div>
 
-                <h1 className="mb-0 text-black animate-fade-in-up md:text-6xl lg:text-7xl" style={{ animationDelay: '300ms' }}>
+                <h1 className="mb-0 text-black md:text-5xl lg:text-6xl font-semibold leading-tight">
                     {post.title}
                 </h1>
             </div>

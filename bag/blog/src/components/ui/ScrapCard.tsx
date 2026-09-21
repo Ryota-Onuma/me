@@ -15,13 +15,13 @@ interface ScrapCardProps {
 export const ScrapCard = ({ title, emoji, status, date, tags, threadCount, index }: ScrapCardProps) => {
     return (
         <article
-            className="group relative bg-white rounded-2xl border border-black/10 p-6 transition-all duration-300 hover:shadow-xl hover:shadow-black/5 hover:-translate-y-1"
+            className="group relative bg-white rounded-lg border border-black/10 p-6 transition-all duration-200 hover:border-black/25"
             style={{ animationDelay: `${index * 50}ms` }}
         >
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
                 <span className="text-3xl">{emoji}</span>
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${status === 'open'
+                <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${status === 'open'
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-500'
                     }`}>
@@ -30,7 +30,7 @@ export const ScrapCard = ({ title, emoji, status, date, tags, threadCount, index
             </div>
 
             {/* Title */}
-            <h3 className="text-lg font-bold text-black mb-3 line-clamp-2 group-hover:text-accent transition-colors">
+            <h3 className="text-lg font-semibold text-black mb-3 line-clamp-2 group-hover:text-accent-hover transition-colors">
                 {title}
             </h3>
 
@@ -60,7 +60,7 @@ export const ScrapCard = ({ title, emoji, status, date, tags, threadCount, index
             </div>
 
             {/* Hover Indicator */}
-            <div className="absolute inset-0 rounded-2xl border-2 border-accent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-0.5 bg-accent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
         </article>
     );
 };

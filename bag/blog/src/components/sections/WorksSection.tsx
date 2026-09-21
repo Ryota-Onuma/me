@@ -28,10 +28,10 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
                 <div>
                     <SectionHeading title="Blog" />
-                    <p className="text-black/50 text-base mt-4 max-w-2xl leading-relaxed">
+                    <p className="text-black/55 text-base mt-4 max-w-2xl leading-relaxed">
                         Thoughts, tutorials, and insights on development and design.<br />
                         <span className="text-black font-semibold">{filteredContents.length}</span> articles
-                        {selectedTag && <> filtered by <span className="text-black px-2 py-0.5 rounded bg-black/10 text-xs uppercase font-bold tracking-wider">{selectedTag}</span></>}
+                        {selectedTag && <> filtered by <span className="text-black px-2 py-0.5 rounded bg-black/10 text-xs font-medium">{selectedTag}</span></>}
                     </p>
                 </div>
             </div>
@@ -45,7 +45,7 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
                         placeholder="Search articles..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3.5 bg-black/[0.02] backdrop-blur-xl border border-black/10 rounded-2xl text-sm text-black placeholder-black/30 focus:outline-none focus:border-accent focus:bg-accent-light transition-all"
+                        className="w-full pl-11 pr-4 py-3 bg-white border border-black/10 rounded-md text-sm text-black placeholder-black/35 focus:outline-none focus:border-accent-hover focus:bg-white transition-all"
                     />
                 </div>
 
@@ -95,7 +95,7 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
             </div>
 
             {filteredContents.length === 0 && (
-                <div className="text-center py-32 border border-dashed border-black/10 rounded-3xl">
+                <div className="text-center py-32 border border-dashed border-black/10 rounded-lg">
                     <p className="text-black/40 text-sm">No articles found matching your criteria</p>
                     <button
                         onClick={() => { setSearchQuery(''); setSelectedTag(null); }}

@@ -40,10 +40,10 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
                 <div>
                     <SectionHeading title="Library" />
-                    <p className="text-black/50 text-base mt-4 max-w-2xl leading-relaxed">
+                    <p className="text-black/55 text-base mt-4 max-w-2xl leading-relaxed">
                         Books I&apos;ve read and the learnings gained from them.<br />
                         <span className="text-black font-semibold">{filteredCount}</span> books
-                        {selectedTag && <> filtered by <span className="text-black px-2 py-0.5 rounded bg-black/10 text-xs uppercase font-bold tracking-wider">{selectedTag}</span></>}
+                        {selectedTag && <> filtered by <span className="text-black px-2 py-0.5 rounded bg-black/10 text-xs font-medium">{selectedTag}</span></>}
                     </p>
                 </div>
             </div>
@@ -59,7 +59,7 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
                             placeholder="Search by title or author..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3.5 bg-black/[0.02] backdrop-blur-xl border border-black/10 rounded-2xl text-sm text-black placeholder-black/30 focus:outline-none focus:border-accent focus:bg-accent-light transition-all"
+                            className="w-full pl-11 pr-4 py-3 bg-white border border-black/10 rounded-md text-sm text-black placeholder-black/35 focus:outline-none focus:border-accent-hover focus:bg-white transition-all"
                         />
                     </div>
 
@@ -121,7 +121,7 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
             </div>
 
             {filteredCount === 0 && (
-                <div className="text-center py-32 border border-dashed border-black/10 rounded-3xl">
+                <div className="text-center py-32 border border-dashed border-black/10 rounded-lg">
                     <p className="text-black/40 text-sm">No books found matching your criteria</p>
                     <button
                         onClick={() => { setSearchQuery(''); setSelectedTag(null); setStatusFilter('all'); }}

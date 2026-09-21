@@ -39,7 +39,7 @@ function LinkCardClientInner({ url, ogpData }: LinkCardClientProps) {
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-row border border-black/10 rounded-3xl overflow-hidden bg-white/50 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:border-black/20 hover:-translate-y-1 max-w-2xl h-36 md:h-40 relative"
+                className="group flex flex-row border border-black/10 rounded-lg overflow-hidden bg-white transition-all duration-200 hover:border-black/25 max-w-2xl h-36 md:h-40 relative"
             >
                 <div className="flex-1 p-6 md:p-8 flex flex-col justify-center min-w-0 overflow-hidden relative z-10">
                     <div className="flex items-center gap-2 mb-3">
@@ -50,10 +50,10 @@ function LinkCardClientInner({ url, ogpData }: LinkCardClientProps) {
                                 <Globe size={10} className="text-black/30" />
                             </div>
                         )}
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/30 truncate">{domain}</span>
+                        <span className="text-xs font-medium text-black/40 truncate">{domain}</span>
                     </div>
 
-                    <h4 className="text-base md:text-lg font-black text-black group-hover:text-accent transition-colors line-clamp-2 leading-tight mb-2">
+                    <h4 className="text-base md:text-lg font-semibold text-black group-hover:text-accent-hover transition-colors line-clamp-2 leading-tight mb-2">
                         {displayTitle}
                     </h4>
 
@@ -69,10 +69,10 @@ function LinkCardClientInner({ url, ogpData }: LinkCardClientProps) {
                         <img
                             src={displayImage}
                             alt=""
-                            className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
+                            className="w-full h-full object-contain"
                         />
-                        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <ArrowUpRight className="text-white drop-shadow-md" size={24} />
+                        <div className="absolute right-3 bottom-3 bg-white border border-black/10 rounded-md p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <ArrowUpRight className="text-black/60" size={14} />
                         </div>
                     </div>
                 )}
@@ -83,4 +83,3 @@ function LinkCardClientInner({ url, ogpData }: LinkCardClientProps) {
 
 // Memoize to prevent re-renders when parent re-renders (e.g., scroll progress)
 export const LinkCardClient = memo(LinkCardClientInner);
-
