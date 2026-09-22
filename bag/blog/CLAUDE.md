@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a personal blog and portfolio built with Next.js 16 (App Router) featuring a dual-content system:
+This is a personal blog and portfolio built with Next.js 16 (App Router) featuring two content collections:
 - **Blog posts**: Longer-form articles, including external links to published articles
-- **Scraps**: Thread-based, evolving notes and thoughts (similar to Zenn Scraps)
+- **Books**: Reading records with optional notes and external book links
 
 The site uses a custom markdown processing pipeline with extended syntax for embeds, alerts, and link cards.
 
@@ -37,15 +37,14 @@ The site uses a custom markdown processing pipeline with extended syntax for emb
    - Can link to external articles via `external_url` field
    - Processed by `src/lib/posts.ts`
 
-2. **Scraps** (`content/scraps/*.md`)
-   - Thread-based notes separated by `---` horizontal rules
-   - Each thread can have optional timestamp headings (e.g., `## 2026-01-04 10:30`)
-   - Status field: `open` or `closed`
-   - Processed by `src/lib/scraps.ts`
+2. **Books** (`content/books/*.md`)
+   - Reading records with optional Markdown notes
+   - Records without notes link directly to the external book page
+   - Processed by `src/lib/books.ts`
 
 **Content locations:**
 - Blog posts: `content/posts/`
-- Scraps: `content/scraps/`
+- Books: `content/books/`
 
 ### Markdown Processing Pipeline
 
@@ -78,16 +77,16 @@ The markdown processing is split across three layers:
 
 **Next.js App Router layout:**
 - `src/app/layout.tsx` - Root layout with metadata
-- `src/app/page.tsx` - Homepage with about, works, and scraps sections
+- `src/app/page.tsx` - Homepage with archive shelves and recent updates
 - `src/app/blog/page.tsx` - Blog list page
 - `src/app/blog/[slug]/page.tsx` - Individual blog post detail
-- `src/app/scrap/page.tsx` - Scrap list page
-- `src/app/scrap/[slug]/page.tsx` - Individual scrap detail with threads
+- `src/app/library/page.tsx` - Reading record list page
+- `src/app/library/[slug]/page.tsx` - Reading record detail page
 
 **Component organization:**
 - `src/components/layout/` - Header, Footer, MobileMenu
-- `src/components/sections/` - Page sections (AboutSection, WorksSection, ScrapSection, BlogHero, BlogNavigation)
-- `src/components/ui/` - Reusable UI components (MagneticButton, ProgressBar, WorkCard, ScrapCard, TagFilterButton)
+- `src/components/sections/` - Page sections (AboutSection, WorksSection, LibrarySection, BlogHero, BlogNavigation)
+- `src/components/ui/` - Reusable UI components (WorkCard, BookCard, TagFilterButton)
 - `src/components/markdown/` - Markdown rendering components (CodeBlock, AlertBlock, LinkCard, Mermaid, EmbedBlock)
 - `src/components/effects/` - Visual effects (Spotlight, NoiseOverlay, AmbientLight)
 
@@ -134,15 +133,13 @@ external_url: "https://example.com/article"  # Optional: for external articles
 ---
 ```
 
-### Scrap Frontmatter
+### Book Frontmatter
 ```yaml
 ---
-title: "Scrap Title"
-date: "Jan 04, 2026"
-status: "open"  # or "closed"
-tags: ["tag1", "tag2"]
-emoji: "💬"
+title: "Book Title"
+author: "Author Name"
+status: "completed"
+externalUrl: "https://example.com/book"
+tags: ["Book"]
 ---
 ```
-
-Threads within scraps are separated by `---` and can optionally include timestamp headings.

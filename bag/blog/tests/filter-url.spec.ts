@@ -1,17 +1,11 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('URL-backed archive filters', () => {
-    test('restores shared search URLs for Blog, Scrap, and Library', async ({ page }) => {
+    test('restores shared search URLs for Blog and Library', async ({ page }) => {
         await page.goto('/blog?q=思考法');
         await expect(page.getByRole('searchbox')).toBeVisible();
         await expect(page.getByRole('searchbox')).toHaveValue('思考法');
         await expect(page.getByRole('heading', { name: /具体.*抽象/ })).toBeVisible();
-        await expect(page.locator('.retro-lead')).toContainText(/全\d+件中\d+件/);
-
-        await page.goto('/scrap?q=ask');
-        await expect(page.getByRole('searchbox')).toBeVisible();
-        await expect(page.getByRole('searchbox')).toHaveValue('ask');
-        await expect(page.getByRole('heading', { name: 'askの使い方' })).toBeVisible();
         await expect(page.locator('.retro-lead')).toContainText(/全\d+件中\d+件/);
 
         await page.goto('/library?q=アジャイル&status=reading&sort=rating-high');

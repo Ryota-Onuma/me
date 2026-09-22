@@ -99,24 +99,11 @@ test.describe('Personal reference room design', () => {
             .toBe(headingId);
     });
 
-    test('searches the fields promised by the blog and Scrap controls', async ({ page }) => {
+    test('searches the fields promised by the blog controls', async ({ page }) => {
         await page.goto('/blog');
         await page.locator('.retro-filter-panel').getByText('テーマ・分類で絞る').click();
         await page.getByRole('searchbox').fill('思考法');
         await expect(page.getByRole('heading', { name: /具体.*抽象/ })).toBeVisible();
-
-        await page.goto('/scrap');
-        await page.locator('.retro-filter-panel').getByText('テーマ・分類で絞る').click();
-        await page.getByRole('searchbox').fill('English');
-        await expect(page.getByRole('heading', { name: /Shadowing Practice/ }).first()).toBeVisible();
-    });
-
-    test('keeps one page h1 and offsets headings inside Scrap posts', async ({ page }) => {
-        await page.goto('/scrap/ask');
-
-        await expect(page.locator('main h1')).toHaveCount(1);
-        await expect(page.locator('.retro-article h1')).toHaveCount(0);
-        await expect(page.locator('.retro-article h2', { hasText: 'askの使い方' })).toBeVisible();
     });
 
     test('uses one static social image for Open Graph and X', async ({ page }) => {
@@ -258,7 +245,7 @@ test.describe('Personal reference room design', () => {
 
     test('keeps every primary archive route inside 320px without horizontal scrolling', async ({ page }) => {
         await page.setViewportSize({ width: 320, height: 720 });
-        for (const path of ['/', '/blog', '/scrap', '/library', '/themes', '/blog/concrete-abstract-thinking', '/scrap/ask', '/library/domain-driven-design-intro', '/missing-record']) {
+        for (const path of ['/', '/blog', '/library', '/themes', '/blog/concrete-abstract-thinking', '/library/domain-driven-design-intro', '/missing-record']) {
             await page.goto(path);
             await page.locator('main').waitFor({ state: 'visible' });
             expect(await page.evaluate(
@@ -290,14 +277,6 @@ test.describe('Personal reference room design', () => {
         expect(await page.locator('.retro-profile').evaluate(element => getComputedStyle(element).transform)).toBe('none');
     });
 
-    test('does not present ordinary Scrap chapters as timestamped posts', async ({ page }) => {
-        await page.goto('/scrap/ask');
-
-        await expect(page.getByText('timestamp unknown')).toHaveCount(0);
-        await expect(page.getByRole('navigation', { name: '目次' })).toBeVisible();
-        await expect(page.locator('.retro-thread')).toHaveCount(1);
-    });
-
     test('uses page-specific metadata and canonical URLs', async ({ page }) => {
         await page.goto('/blog/concrete-abstract-thinking');
 
@@ -309,13 +288,31 @@ test.describe('Personal reference room design', () => {
             'https://ryota.onuma.dev/blog/concrete-abstract-thinking'
         );
 
-        await page.goto('/scrap/ask');
-        await expect(page).toHaveTitle(/askの使い方/);
-        await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /askの使い方/);
-        await expect(page.locator('meta[property="article:published_time"]')).toHaveAttribute('content', /2026-01-04/);
-        await expect(page.locator('meta[property="article:author"]')).toHaveAttribute('content', 'https://ryota.onuma.dev/');
-        await expect(page.locator('meta[property="og:image"]')).toHaveCount(0);
-        await expect(page.locator('meta[name="twitter:image"]')).toHaveCount(0);
-        expect(await page.locator('script[type="application/ld+json"]').textContent()).toContain('BlogPosting');
+    });
+
+    test('returns the standard not-found page for removed Scrap URLs', async ({ page }) => {
+        const indexResponse = await page.goto('/scrap');
+        expect(indexResponse?.status()).toBe(404);
+        await expect(page.locator('.retro-not-found')).toBeVisible();
+
+        const detailResponse = await page.goto('/scrap/ask');
+        expect(detailResponse?.status()).toBe(404);
+        await expect(page.locator('.retro-not-found')).toBeVisible();
+    });
+
+    test('excludes removed Scrap URLs from navigation, RSS, and sitemap', async ({ page, request }) => {
+        await page.goto('/');
+        const navigation = page.getByRole('navigation', { name: '主なページ' });
+        await expect(navigation.locator('span')).toHaveCount(4);
+        await expect(navigation.getByRole('link')).toHaveCount(3);
+        await expect(page.getByRole('heading', { name: '2つの棚' })).toBeVisible();
+        await expect(page.locator('.retro-shelf')).toHaveCount(2);
+
+        const rss = await request.get('/feed.xml');
+        const sitemap = await request.get('/sitemap.xml');
+        expect(rss.ok()).toBe(true);
+        expect(sitemap.ok()).toBe(true);
+        expect(await rss.text()).not.toContain('/scrap');
+        expect(await sitemap.text()).not.toContain('/scrap');
     });
 });

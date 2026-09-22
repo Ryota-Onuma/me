@@ -1,13 +1,12 @@
 import fs from 'fs';
 import path from 'path';
-import { BOOKS_DIRECTORY, DEFAULT_BOOK_COVER, DEFAULT_THUMBNAIL, POSTS_DIRECTORY, SCRAPS_DIRECTORY } from './constants';
+import { BOOKS_DIRECTORY, DEFAULT_BOOK_COVER, DEFAULT_THUMBNAIL, POSTS_DIRECTORY } from './constants';
 import { normalizeTheme } from './themes';
 
 type Frontmatter = Record<string, unknown>;
-type ContentKind = 'post' | 'scrap' | 'book';
+type ContentKind = 'post' | 'book';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const SCRAP_STATUSES = new Set(['open', 'closed', 'growing', 'evergreen', 'archived', 'published']);
 const BOOK_STATUSES = new Set(['yet', 'reading', 'completed']);
 
 export class ContentValidationError extends Error {
@@ -109,15 +108,14 @@ function validateThemes(data: Frontmatter, issues: string[]): void {
     }
 }
 
-function relationSets(): { posts: Set<string>; scraps: Set<string>; books: Set<string>; all: Set<string> } {
+function relationSets(): { posts: Set<string>; books: Set<string>; all: Set<string> } {
     const posts = markdownSlugs(POSTS_DIRECTORY);
-    const scraps = markdownSlugs(SCRAPS_DIRECTORY);
     const books = markdownSlugs(BOOKS_DIRECTORY);
-    return { posts, scraps, books, all: new Set([...posts, ...scraps, ...books]) };
+    return { posts, books, all: new Set([...posts, ...books]) };
 }
 
 export function validateFrontmatter(kind: ContentKind, slug: string, data: Frontmatter): void {
-    const fileName = `${kind === 'post' ? POSTS_DIRECTORY : kind === 'scrap' ? SCRAPS_DIRECTORY : BOOKS_DIRECTORY}/${slug}.md`;
+    const fileName = `${kind === 'post' ? POSTS_DIRECTORY : BOOKS_DIRECTORY}/${slug}.md`;
     const issues: string[] = [];
     const slugs = relationSets();
 
@@ -136,16 +134,6 @@ export function validateFrontmatter(kind: ContentKind, slug: string, data: Front
         if (data.url !== undefined) validateUrl(data, 'url', issues);
         if (data.external_url !== undefined) validateUrl(data, 'external_url', issues);
         validateRelations(data, [
-            { names: ['sourceScraps', 'source_scraps', 'fromScraps', 'from_scraps'], allowed: slugs.scraps, label: 'scrap' },
-            { names: ['sourceBooks', 'source_books', 'fromBooks', 'from_books'], allowed: slugs.books, label: 'book' },
-            { names: ['related', 'relatedPosts', 'related_posts', 'derivedFrom', 'derived_from'], allowed: slugs.all, label: 'content' },
-        ], issues);
-    } else if (kind === 'scrap') {
-        validateDate(data, 'date', issues, true);
-        if (!isNonEmptyString(data.status) || !SCRAP_STATUSES.has(data.status)) {
-            issues.push(`status must be one of: ${Array.from(SCRAP_STATUSES).join(', ')}`);
-        }
-        validateRelations(data, [
             { names: ['sourceBooks', 'source_books', 'fromBooks', 'from_books'], allowed: slugs.books, label: 'book' },
             { names: ['related', 'relatedPosts', 'related_posts', 'derivedFrom', 'derived_from'], allowed: slugs.all, label: 'content' },
         ], issues);
@@ -162,7 +150,6 @@ export function validateFrontmatter(kind: ContentKind, slug: string, data: Front
         }
         validateRelations(data, [
             { names: ['sourcePosts', 'source_posts', 'relatedPosts', 'related_posts'], allowed: slugs.posts, label: 'post' },
-            { names: ['sourceScraps', 'source_scraps', 'relatedScraps', 'related_scraps'], allowed: slugs.scraps, label: 'scrap' },
             { names: ['related', 'derivedFrom', 'derived_from'], allowed: slugs.all, label: 'content' },
         ], issues);
     }

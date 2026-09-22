@@ -502,7 +502,7 @@ summary {
 
 .retro-home-directory-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -518,11 +518,6 @@ summary {
 
 .retro-shelf-blog {
   border-top-color: var(--archive-blue);
-}
-
-.retro-shelf-scrap {
-  border-top-color: var(--archive-red);
-  transform: translateY(11px) rotate(-0.25deg);
 }
 
 .retro-shelf-library {
@@ -685,7 +680,6 @@ summary {
   content: "";
 }
 
-.retro-section-scrap::before { background: var(--archive-red); }
 .retro-section-library::before { background: var(--archive-green); }
 .retro-section-themes::before { background: var(--archive-purple); }
 
@@ -854,7 +848,6 @@ summary {
 
 .retro-entry-body h2,
 .retro-work-card h2,
-.retro-scrap-card h2,
 .retro-book-card h2,
 .retro-theme-list h2,
 .retro-theme-content-list h2 {
@@ -901,10 +894,6 @@ summary {
   font-size: 10px;
 }
 
-.retro-scrap-emoji {
-  font-family: "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
-}
-
 .retro-book-card {
   grid-template-columns: 82px 70px 64px minmax(0, 1fr) 112px;
 }
@@ -938,7 +927,6 @@ summary {
 }
 
 .retro-detail-hero,
-.retro-scrap-hero,
 .retro-book-hero,
 .retro-theme-hero {
   position: relative;
@@ -950,12 +938,10 @@ summary {
   box-shadow: 4px 5px 0 rgba(104, 95, 82, 0.11);
 }
 
-.retro-scrap-hero { border-left-color: var(--archive-red); }
 .retro-book-hero { border-left-color: var(--archive-green); }
 .retro-theme-hero { border-left-color: var(--archive-purple); }
 
 .retro-detail-hero h1,
-.retro-scrap-hero h1,
 .retro-book-hero h1,
 .retro-theme-hero h1 {
   max-width: calc(100% - 155px);
@@ -1051,7 +1037,6 @@ summary {
 }
 
 .retro-article-wrap > .retro-article,
-.retro-article-wrap > .retro-thread,
 .retro-article-wrap > .retro-post-navigation,
 .retro-article-wrap > .retro-related,
 .retro-article-wrap > .retro-end-links {
@@ -1063,7 +1048,6 @@ summary {
 }
 
 .retro-article-wrap:not(:has(> .retro-toc)) > .retro-article,
-.retro-article-wrap:not(:has(> .retro-toc)) > .retro-thread,
 .retro-article-wrap:not(:has(> .retro-toc)) > .retro-post-navigation,
 .retro-article-wrap:not(:has(> .retro-toc)) > .retro-related,
 .retro-article-wrap:not(:has(> .retro-toc)) > .retro-end-links {
@@ -1425,37 +1409,6 @@ summary {
   text-align: right;
 }
 
-.retro-thread-list:not(.retro-article-wrap) {
-  width: min(100%, 680px);
-  margin-inline: auto;
-}
-
-.retro-thread {
-  min-width: 0;
-  margin: 0 0 26px;
-}
-
-.retro-thread:not(.retro-thread-single) {
-  border: 1px solid var(--archive-line-dark);
-  background: rgba(255, 253, 247, 0.5);
-}
-
-.retro-thread > header {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 7px 10px;
-  border-bottom: 1px dashed var(--archive-line);
-  background: var(--archive-paper-deep);
-  color: var(--archive-muted);
-  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  font-size: 11px;
-}
-
-.retro-thread:not(.retro-thread-single) > .retro-article {
-  padding: 10px 20px 20px;
-}
-
 .retro-end-links {
   margin: 28px 0;
   padding-top: 16px;
@@ -1544,16 +1497,10 @@ summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .retro-shelf-library {
-    grid-column: 1 / -1;
-    min-height: 330px;
-  }
-
   .retro-article-wrap { grid-template-columns: minmax(0, 680px); }
 
   .retro-article-wrap > .retro-toc,
   .retro-article-wrap > .retro-article,
-  .retro-article-wrap > .retro-thread,
   .retro-article-wrap > .retro-post-navigation,
   .retro-article-wrap > .retro-related,
   .retro-article-wrap > .retro-end-links {
@@ -1677,8 +1624,6 @@ summary {
     min-height: 330px;
   }
 
-  .retro-shelf-scrap { transform: none; }
-
   .retro-theme-index-block {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -1763,7 +1708,6 @@ summary {
   }
 
   .retro-detail-hero,
-  .retro-scrap-hero,
   .retro-book-hero,
   .retro-theme-hero {
     margin-bottom: 34px;
@@ -1771,7 +1715,6 @@ summary {
   }
 
   .retro-detail-hero h1,
-  .retro-scrap-hero h1,
   .retro-book-hero h1,
   .retro-theme-hero h1 {
     max-width: none;
@@ -1780,7 +1723,6 @@ summary {
   }
 
   .retro-detail-hero > .retro-kicker,
-  .retro-scrap-hero .retro-kicker,
   .retro-book-hero .retro-kicker,
   .retro-theme-hero .retro-kicker {
     margin-top: 72px;
@@ -1866,7 +1808,6 @@ summary {
   }
 
   .retro-profile,
-  .retro-shelf-scrap,
   .retro-theme-index-block > img,
   .retro-record-stamp,
   .retro-book-hero > img { transform: none; }

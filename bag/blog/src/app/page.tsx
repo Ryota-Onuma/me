@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { ClientLayout } from './ClientLayout';
 import { AboutSection } from '@/components/sections';
 import { getAllContents } from '@/lib/posts';
-import { getAllScrapItems } from '@/lib/scraps';
 import { getAllBookItems } from '@/lib/books';
 import { getThemeEntries, getUnifiedContent } from '@/lib/content';
 import { HOME_FEATURED_CONTENT_IDS, HOME_FOCUS_THEME_SLUGS, SITE_DESCRIPTION } from '@/data/site';
@@ -14,7 +13,6 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   const contents = getAllContents();
-  const allScraps = getAllScrapItems();
   const books = getAllBookItems();
   const unified = getUnifiedContent();
   const updates = unified
@@ -55,7 +53,7 @@ export default function HomePage() {
           updates={updates}
           featured={featured}
           themes={themes}
-          archiveCounts={{ blog: contents.length, scrap: allScraps.length, library: books.length }}
+          archiveCounts={{ blog: contents.length, library: books.length }}
         />
       </main>
     </ClientLayout>

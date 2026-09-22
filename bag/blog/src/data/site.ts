@@ -1,7 +1,7 @@
 export const SITE_DESCRIPTION =
     'データベース、ソフトウェア設計、チーム開発の実務と、考えるための読書をつなぐ個人ナレッジページ。';
 
-export const SITE_TAGLINE = '技術と読書、考え途中の紙片を収める個人資料室。';
+export const SITE_TAGLINE = '技術と読書を収める個人資料室。';
 
 export const ARCHIVE_SECTIONS = {
     about: {
@@ -21,15 +21,6 @@ export const ARCHIVE_SECTIONS = {
         accent: '#315ea8',
         illustration: '/illustrations/technical-notes.png',
         accessionPrefix: 'TN',
-    },
-    scrap: {
-        href: '/scrap',
-        navLabel: '雑記帳',
-        title: '雑記帳',
-        subtitle: '書きかけのメモ',
-        accent: '#b34a42',
-        illustration: '/illustrations/scrap-notes.png',
-        accessionPrefix: 'SC',
     },
     library: {
         href: '/library',

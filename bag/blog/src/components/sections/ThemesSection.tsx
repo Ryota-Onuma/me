@@ -10,7 +10,7 @@ interface ThemesSectionProps {
 export const ThemesSection = ({ themes }: ThemesSectionProps) => (
     <section className="retro-page" aria-labelledby="themes-heading">
         <SectionHeading section="themes" />
-        <p className="retro-lead">技術ノート・雑記帳・読書記録を横断する、いままでの関心の地図。</p>
+        <p className="retro-lead">技術ノート・読書記録を横断する、いままでの関心の地図。</p>
         <ul className="retro-theme-list">
             {themes.map((theme, index) => (
                 <li key={theme.slug} className="retro-index-entry">
@@ -23,7 +23,7 @@ export const ThemesSection = ({ themes }: ThemesSectionProps) => (
                     <p className="retro-entry-date retro-theme-count">
                         <b>{theme.count}件</b>
                         <span>
-                        {theme.count} 件（技術 {theme.blogCount} / 雑記 {theme.scrapCount} / 読書 {theme.libraryCount}）
+                        {theme.count} 件（技術 {theme.blogCount} / 読書 {theme.libraryCount}）
                         </span>
                     </p>
                 </li>

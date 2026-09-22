@@ -1,6 +1,5 @@
 import type { MetadataRoute } from 'next';
 import { getAllContents } from '@/lib/posts';
-import { getAllScrapItems } from '@/lib/scraps';
 import { getAllBookItems } from '@/lib/books';
 import { getAllThemeSlugs } from '@/lib/content';
 
@@ -13,7 +12,7 @@ const toDate = (value?: string): Date | undefined => {
 };
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const staticPages: MetadataRoute.Sitemap = ['', '/blog', '/scrap', '/library', '/themes'].map(path => ({
+    const staticPages: MetadataRoute.Sitemap = ['', '/blog', '/library', '/themes'].map(path => ({
         url: `${ORIGIN}${path}`,
         changeFrequency: path === '' ? 'weekly' : 'monthly',
         priority: path === '' ? 1 : 0.8,
@@ -28,13 +27,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.7,
         }));
 
-    const scraps: MetadataRoute.Sitemap = getAllScrapItems().map(item => ({
-        url: `${ORIGIN}/scrap/${item.slug}`,
-        lastModified: toDate(item.lastUpdated),
-        changeFrequency: item.status === 'open' ? 'monthly' : 'yearly',
-        priority: 0.6,
-    }));
-
     const books: MetadataRoute.Sitemap = getAllBookItems().filter(item => item.hasNotes).map(item => ({
         url: `${ORIGIN}/library/${item.slug}`,
         lastModified: toDate(item.updated || item.readDate),
@@ -48,5 +40,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: 0.7,
     }));
 
-    return [...staticPages, ...posts, ...scraps, ...books, ...themes];
+    return [...staticPages, ...posts, ...books, ...themes];
 }

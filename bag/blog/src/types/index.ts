@@ -16,10 +16,9 @@ export interface PostFrontmatter {
     thumbnail?: string;
     url?: string;
     external_url?: string;
-    /** Shared vocabulary used to connect posts, scraps, and books. */
+    /** Shared vocabulary used to connect posts and books. */
     themes?: string[];
-    /** Slugs of scraps/books that informed this post. */
-    sourceScraps?: string[];
+    /** Slugs of books that informed this post. */
     sourceBooks?: string[];
     /** Slugs of related content, regardless of type. */
     related?: string[];
@@ -49,59 +48,10 @@ export interface ContentItem {
     url?: string;
     slug?: string;
     updated?: string;
-    sourceScraps?: string[];
     sourceBooks?: string[];
     related?: string[];
     derivedFrom?: string[];
     hasContent?: boolean;
-}
-
-// ============================================================================
-// Scrap Types
-// ============================================================================
-
-export interface ScrapFrontmatter {
-    title: string;
-    date: string;
-    status: 'open' | 'closed' | 'growing' | 'evergreen' | 'archived' | 'published';
-    tags: string[];
-    themes?: string[];
-    updated?: string;
-    related?: string[];
-    sourceBooks?: string[];
-    emoji?: string;
-    internalOnly?: boolean;
-}
-
-export interface ScrapThread {
-    id: string;
-    timestamp?: string;
-    content: string;
-}
-
-export interface Scrap {
-    slug: string;
-    frontmatter: ScrapFrontmatter;
-    threads: ScrapThread[];
-    isThreaded: boolean;
-    rawContent: string;
-    updatedAt?: string;
-}
-
-export interface ScrapItem {
-    id: string;
-    slug: string;
-    title: string;
-    emoji: string;
-    status: 'open' | 'closed' | 'growing' | 'evergreen' | 'archived' | 'published';
-    date: string;
-    tags: string[];
-    themes?: string[];
-    threadCount: number;
-    isThreaded: boolean;
-    lastUpdated: string;
-    related?: string[];
-    sourceBooks?: string[];
 }
 
 // ============================================================================
@@ -153,7 +103,7 @@ export interface MermaidProps {
 // Error Types
 // ============================================================================
 
-export type ContentType = 'post' | 'scrap';
+export type ContentType = 'post';
 
 export class ContentLoadError extends Error {
     constructor(

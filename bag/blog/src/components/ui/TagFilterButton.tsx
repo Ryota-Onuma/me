@@ -8,7 +8,7 @@ interface TagFilterButtonProps {
 
 /**
  * Reusable tag filter button component
- * Shared between WorksSection and ScrapSection
+ * Shared between archive filter sections
  */
 export const TagFilterButton = ({ label, isSelected, onClick }: TagFilterButtonProps) => {
     return (

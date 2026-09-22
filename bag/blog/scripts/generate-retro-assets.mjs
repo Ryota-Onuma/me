@@ -53,7 +53,7 @@ const ogDocument = `
   <line x1="76" y1="230" x2="1124" y2="230" stroke="#808080" stroke-width="2"/>
   <line x1="76" y1="237" x2="1124" y2="237" stroke="#808080" stroke-width="2"/>
   <text x="76" y="330" fill="#000080" font-family="Osaka, 'Hiragino Kaku Gothic ProN', sans-serif" font-size="42" font-weight="700">ソフトウェアと読書の個人ページ</text>
-  <text x="76" y="398" fill="#000000" font-family="Osaka, 'Hiragino Kaku Gothic ProN', sans-serif" font-size="29">技術ノート ｜ 雑記帳 ｜ 読書記録</text>
+  <text x="76" y="398" fill="#000000" font-family="Osaka, 'Hiragino Kaku Gothic ProN', sans-serif" font-size="29">技術ノート ｜ 読書記録</text>
   <line x1="76" y1="482" x2="1124" y2="482" stroke="#808080" stroke-width="1"/>
   <text x="76" y="535" fill="#333333" font-family="'Courier New', monospace" font-size="24">https://ryota.onuma.dev/</text>
   <text x="1124" y="535" text-anchor="end" fill="#333333" font-family="Osaka, 'Hiragino Kaku Gothic ProN', sans-serif" font-size="22">作者の絵</text>

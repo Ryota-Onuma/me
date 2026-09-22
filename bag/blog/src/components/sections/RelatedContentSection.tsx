@@ -9,7 +9,6 @@ interface RelatedContentSectionProps {
 
 const TYPE_LABELS: Record<UnifiedContent['type'], string> = {
     Blog: '技術',
-    Scrap: '雑記',
     Library: '読書',
 };
 

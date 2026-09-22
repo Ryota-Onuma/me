@@ -27,7 +27,7 @@ interface AboutSectionProps {
         category: string;
     }>;
     themes: ThemeEntry[];
-    archiveCounts: { blog: number; scrap: number; library: number };
+    archiveCounts: { blog: number; library: number };
 }
 
 const formatDate = (date: string): string => {
@@ -42,7 +42,6 @@ const formatDate = (date: string): string => {
 
 const updateTypeLabel: Record<string, string> = {
     Blog: '技術',
-    Scrap: '雑記',
     Library: '読書',
 };
 
@@ -60,7 +59,7 @@ export const AboutSection = ({ updates, featured, themes, archiveCounts }: About
                 <h1><span lang="en">Ryota Onuma</span>の個人資料室</h1>
                 <p className="retro-welcome">集めたものを、あとから取り出せる形に。</p>
                 <p>ソフトウェアエンジニアの<span lang="en">Ryota Onuma</span>です。ここは、{SITE_DESCRIPTION}</p>
-                <p className="retro-room-guide">整理した技術記事、書きかけのメモ、読んだ本を、それぞれの棚と索引からたどれます。</p>
+                <p className="retro-room-guide">整理した技術記事と読んだ本を、それぞれの棚と索引からたどれます。</p>
                 <p><Link href="/blog">最初の棚を見る →</Link></p>
             </div>
 
@@ -104,7 +103,7 @@ export const AboutSection = ({ updates, featured, themes, archiveCounts }: About
                 <header className="retro-home-section-heading">
                     <span>02</span>
                     <div>
-                        <h2 id="archive-heading">3つの棚</h2>
+                        <h2 id="archive-heading">2つの棚</h2>
                         <p>資料の状態に合わせて、収める場所を分けています。</p>
                     </div>
                 </header>
@@ -115,13 +114,6 @@ export const AboutSection = ({ updates, featured, themes, archiveCounts }: About
                         <h3><Link href={ARCHIVE_SECTIONS.blog.href}>{ARCHIVE_SECTIONS.blog.title}</Link></h3>
                         <p>{ARCHIVE_SECTIONS.blog.subtitle}。実装や仕事で得た知見を、読み返せる形にまとめています。</p>
                         <p className="retro-card-meta">収蔵 {archiveCounts.blog}件</p>
-                    </article>
-                    <article className="retro-shelf retro-shelf-scrap">
-                        <Image src={ARCHIVE_SECTIONS.scrap.illustration} alt="" width={1312} height={1199} sizes="180px" />
-                        <p className="retro-kicker">SHELF {ARCHIVE_SECTIONS.scrap.accessionPrefix}</p>
-                        <h3><Link href={ARCHIVE_SECTIONS.scrap.href}>{ARCHIVE_SECTIONS.scrap.title}</Link></h3>
-                        <p>{ARCHIVE_SECTIONS.scrap.subtitle}。小さな発見や、まだ整理しきれていない考えを置いています。</p>
-                        <p className="retro-card-meta">収蔵 {archiveCounts.scrap}件</p>
                     </article>
                     <article className="retro-shelf retro-shelf-library">
                         <Image src={ARCHIVE_SECTIONS.library.illustration} alt="" width={1319} height={1192} sizes="180px" />

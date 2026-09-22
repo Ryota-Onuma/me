@@ -8,7 +8,7 @@ import { TrackedLink } from '@/components/analytics/TrackedLink';
 import { ExternalLink } from '@/components/ui/ExternalLink';
 import { ARCHIVE_SECTIONS, formatAccessionNumber } from '@/data/site';
 
-const TYPE_LABELS = { Blog: '技術', Scrap: '雑記', Library: '読書' } as const;
+const TYPE_LABELS = { Blog: '技術', Library: '読書' } as const;
 
 export function generateStaticParams() {
     return getAllThemeSlugs().map(slug => ({ slug }));
@@ -52,7 +52,7 @@ export default async function ThemeDetailPage({ params }: { params: Promise<{ sl
                 <ul className="retro-theme-content-list">
                     {result.contents.map((item, index) => (
                         <li key={`${item.type}-${item.id}`} className="retro-index-entry">
-                            <p className="retro-accession">{formatAccessionNumber(item.type === 'Blog' ? 'TN' : item.type === 'Scrap' ? 'SC' : 'BK', index)}</p>
+                            <p className="retro-accession">{formatAccessionNumber(item.type === 'Blog' ? 'TN' : 'BK', index)}</p>
                             <p className="retro-entry-type">{TYPE_LABELS[item.type]}</p>
                             <div className="retro-entry-body">
                                 <h2>{item.isExternal ? (

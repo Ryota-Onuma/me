@@ -20,7 +20,6 @@ export interface BookFrontmatter {
     related?: string[];
     derivedFrom?: string[];
     sourcePosts?: string[];
-    sourceScraps?: string[];
     updated?: string;
 }
 
@@ -47,7 +46,6 @@ export interface BookItem {
     updated?: string;
     related?: string[];
     sourcePosts?: string[];
-    sourceScraps?: string[];
 }
 
 const booksPath = path.join(process.cwd(), BOOKS_DIRECTORY);
@@ -100,7 +98,6 @@ export function getBookBySlug(slug: string): Book | null {
             themes: resolveThemes({ themes: data.themes, tags: data.tags, title: typeof data.title === 'string' ? data.title : '' }),
             related: stringArray(data.related ?? data.relatedPosts ?? data.related_posts ?? data.derivedFrom ?? data.derived_from),
             sourcePosts: stringArray(data.sourcePosts ?? data.source_posts ?? data.relatedPosts ?? data.related_posts),
-            sourceScraps: stringArray(data.sourceScraps ?? data.source_scraps ?? data.relatedScraps ?? data.related_scraps),
             updated: typeof data.updated === 'string' ? data.updated : undefined,
         },
         content: processedContent,
@@ -154,6 +151,5 @@ export function getAllBookItems(): BookItem[] {
         updated: book.frontmatter.updated || book.frontmatter.readDate,
         related: book.frontmatter.related,
         sourcePosts: book.frontmatter.sourcePosts,
-        sourceScraps: book.frontmatter.sourceScraps,
     }));
 }

@@ -25,11 +25,10 @@ test.describe('reference room visual snapshots', () => {
         await expect(page).toHaveScreenshot('entrance-390.png', { fullPage: true, animations: 'disabled', maxDiffPixelRatio: 0.02 });
     });
 
-    test('three archive indexes', async ({ page }) => {
+    test('two archive indexes', async ({ page }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
         for (const [path, name] of [
             ['/blog', 'technical-index-1440.png'],
-            ['/scrap', 'scrap-index-1440.png'],
             ['/library', 'library-index-1440.png'],
         ] as const) {
             await page.goto(path);

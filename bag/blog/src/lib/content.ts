@@ -1,9 +1,8 @@
 import { getAllContents } from './posts';
-import { getAllScrapItems } from './scraps';
 import { getAllBookItems } from './books';
 import { getThemeDefinition, getThemeLabel, getThemeSlug } from './themes';
 
-export type UnifiedType = 'Blog' | 'Scrap' | 'Library';
+export type UnifiedType = 'Blog' | 'Library';
 
 export interface UnifiedContent {
     id: string;
@@ -25,7 +24,6 @@ export interface ThemeEntry {
     description: string;
     count: number;
     blogCount: number;
-    scrapCount: number;
     libraryCount: number;
 }
 
@@ -49,16 +47,6 @@ export function getUnifiedContent(): UnifiedContent[] {
         isExternal: item.type === 'external' && !item.hasContent,
         description: item.description,
     }));
-    const scraps = getAllScrapItems().map((item): UnifiedContent => ({
-        id: item.slug,
-        type: 'Scrap',
-        title: item.title,
-        date: item.date,
-        updated: item.lastUpdated,
-        themes: item.themes || [],
-        href: `/scrap/${item.slug}`,
-        isExternal: false,
-    }));
     const books = getAllBookItems().map((item): UnifiedContent => ({
         id: item.slug,
         type: 'Library',
@@ -70,18 +58,17 @@ export function getUnifiedContent(): UnifiedContent[] {
         isExternal: !item.hasNotes,
         hasNotes: item.hasNotes,
     }));
-    return sortNewest([...posts, ...scraps, ...books]);
+    return sortNewest([...posts, ...books]);
 }
 
 export function getThemeEntries(): ThemeEntry[] {
     const contents = getUnifiedContent();
-    const counts = new Map<string, { count: number; blogCount: number; scrapCount: number; libraryCount: number }>();
+    const counts = new Map<string, { count: number; blogCount: number; libraryCount: number }>();
     for (const item of contents) {
         for (const theme of item.themes) {
-            const current = counts.get(theme) || { count: 0, blogCount: 0, scrapCount: 0, libraryCount: 0 };
+            const current = counts.get(theme) || { count: 0, blogCount: 0, libraryCount: 0 };
             current.count += 1;
             if (item.type === 'Blog') current.blogCount += 1;
-            if (item.type === 'Scrap') current.scrapCount += 1;
             if (item.type === 'Library') current.libraryCount += 1;
             counts.set(theme, current);
         }
@@ -123,42 +110,25 @@ export function getAllThemeSlugs(): string[] {
 const relationValues = (value?: string[]): string[] => value || [];
 
 /** Find same-theme and explicitly related records for a detail page. */
-export function getRelatedContent(kind: 'post' | 'scrap' | 'book', slug: string): UnifiedContent[] {
+export function getRelatedContent(kind: 'post' | 'book', slug: string): UnifiedContent[] {
     const posts = getAllContents();
-    const scraps = getAllScrapItems();
     const books = getAllBookItems();
     const currentPost = kind === 'post' ? posts.find(item => item.slug === slug) : undefined;
-    const currentScrap = kind === 'scrap' ? scraps.find(item => item.slug === slug) : undefined;
     const currentBook = kind === 'book' ? books.find(item => item.slug === slug) : undefined;
-    if (!currentPost && !currentScrap && !currentBook) return [];
+    if (!currentPost && !currentBook) return [];
 
-    const currentThemes = currentPost?.themes || currentScrap?.themes || currentBook?.themes || [];
+    const currentThemes = currentPost?.themes || currentBook?.themes || [];
     const explicit = new Set<string>([
         ...relationValues(currentPost?.related),
-        ...relationValues(currentPost?.sourceScraps),
         ...relationValues(currentPost?.sourceBooks),
-        ...relationValues(currentScrap?.related),
-        ...relationValues(currentScrap?.sourceBooks),
         ...relationValues(currentBook?.related),
         ...relationValues(currentBook?.sourcePosts),
-        ...relationValues(currentBook?.sourceScraps),
     ]);
 
-    // Also follow the reverse side of a relation. This lets a Scrap show the
-    // Blog that was distilled from it even when only the Blog declares
-    // `sourceScraps` in its frontmatter.
-    if (currentScrap) {
-        for (const post of posts) if (post.sourceScraps?.includes(slug)) explicit.add(post.slug || post.id);
-        for (const book of books) if (book.sourceScraps?.includes(slug)) explicit.add(book.slug);
-    }
     if (currentPost) {
-        for (const scrap of scraps) if (scrap.related?.includes(slug)) explicit.add(scrap.slug);
         for (const book of books) if (book.sourcePosts?.includes(slug)) explicit.add(book.slug);
     }
-    if (currentBook) {
-        for (const post of posts) if (post.sourceBooks?.includes(slug)) explicit.add(post.slug || post.id);
-        for (const scrap of scraps) if (scrap.sourceBooks?.includes(slug)) explicit.add(scrap.slug);
-    }
+    if (currentBook) for (const post of posts) if (post.sourceBooks?.includes(slug)) explicit.add(post.slug || post.id);
 
     const currentId = slug;
     return getUnifiedContent()

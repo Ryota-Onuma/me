@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { resolveThemes, getThemeSlug } from './themes';
 import { getAllBookItems } from './books';
 import { getAllContents } from './posts';
-import { getAllScrapItems } from './scraps';
 import { getRelatedContent, getUnifiedContent } from './content';
 import { ContentValidationError, validateFrontmatter } from './contentValidation';
 
@@ -59,7 +58,6 @@ describe('shared themes', () => {
 describe('content frontmatter validation', () => {
     it('accepts the current content inventory', () => {
         expect(() => getAllContents()).not.toThrow();
-        expect(() => getAllScrapItems()).not.toThrow();
         expect(() => getAllBookItems()).not.toThrow();
     });
 
@@ -98,13 +96,6 @@ describe('content frontmatter validation', () => {
     });
 
     it('rejects missing required fields and invalid enum or rating values', () => {
-        expect(() => validateFrontmatter('scrap', 'broken-scrap', {
-            date: '2026-01-01',
-            status: 'unknown',
-            tags: [],
-            themes: ['Learning'],
-        })).toThrow(/title must be a non-empty string/);
-
         expect(() => validateFrontmatter('book', 'broken-book', {
             title: 'Broken book',
             author: 'Author',

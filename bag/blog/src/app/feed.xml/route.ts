@@ -1,5 +1,4 @@
 import { getAllContents } from '@/lib/posts';
-import { getAllScrapItems } from '@/lib/scraps';
 import { getAllBookItems } from '@/lib/books';
 import { SITE_DESCRIPTION } from '@/data/site';
 
@@ -26,19 +25,13 @@ export function GET() {
         date: item.date,
         url: item.type === 'external' && !item.hasContent && item.url ? item.url : `${ORIGIN}/blog/${item.slug}`,
     }));
-    const scraps = getAllScrapItems().map(item => ({
-        title: item.title,
-        description: `${item.tags.join('、')}についての雑記`,
-        date: item.lastUpdated,
-        url: `${ORIGIN}/scrap/${item.slug}`,
-    }));
     const books = getAllBookItems().filter(item => item.readDate || item.updated).map(item => ({
         title: item.title,
         description: `${item.author}の読書ログ`,
         date: item.readDate || item.updated || '',
         url: item.hasNotes ? `${ORIGIN}/library/${item.slug}` : item.externalUrl,
     }));
-    const items = [...posts, ...scraps, ...books]
+    const items = [...posts, ...books]
         .sort((a, b) => toTimestamp(b.date) - toTimestamp(a.date))
         .slice(0, 30)
         .map(item => `
