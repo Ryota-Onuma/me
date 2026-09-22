@@ -5,7 +5,7 @@ import { LibrarySection } from '@/components/sections/LibrarySection';
 import { getAllBookItems } from '@/lib/books';
 
 const title = '読書記録 | ryota.onuma.dev';
-const description = '読んだ本と、そこから得た学びの記録。';
+const description = '読んだ本の記録。';
 
 export const metadata: Metadata = {
     title,

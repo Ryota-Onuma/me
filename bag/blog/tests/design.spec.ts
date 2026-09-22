@@ -1,14 +1,14 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Personal reference room design', () => {
-    test('uses a wide paper archive frame and familiar blue links', async ({ page }) => {
+test.describe('Heisei 9 personal homepage design', () => {
+    test('uses a plain gray homepage and familiar blue links', async ({ page }) => {
         await page.goto('/');
 
-        await expect(page.getByRole('link', { name: 'ryota.onuma.dev ホーム' })).toBeVisible();
-        await expect(page.getByText('集めたものを、あとから取り出せる形に。')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'ryota.onuma.dev', level: 1 })).toBeVisible();
+        await expect(page.getByText('技術のメモと、読んだ本。')).toBeVisible();
         await expect(page.getByRole('contentinfo').getByRole('link', { name: 'GitHub' })).toBeVisible();
 
-        const homeLink = page.locator('.retro-index').getByRole('link', { name: '技術ノート' });
+        const homeLink = page.getByRole('navigation', { name: '主なページ' }).getByRole('link', { name: '技術ノート' });
         await expect(homeLink).toHaveAttribute('href', '/blog');
         expect(await homeLink.evaluate(element => getComputedStyle(element).textDecorationLine))
             .toContain('underline');
@@ -17,7 +17,6 @@ test.describe('Personal reference room design', () => {
             const bodyStyle = getComputedStyle(document.body);
             const shellStyle = getComputedStyle(document.querySelector('.site-shell')!);
             const logoStyle = getComputedStyle(document.querySelector('.retro-logo')!);
-            const profileImageStyle = getComputedStyle(document.querySelector('.retro-profile img')!);
 
             return {
                 canvas: bodyStyle.backgroundColor,
@@ -25,21 +24,19 @@ test.describe('Personal reference room design', () => {
                 shellWidth: shellStyle.width,
                 shellShadow: shellStyle.boxShadow,
                 logoFont: logoStyle.fontFamily,
-                imageFilter: profileImageStyle.filter,
             };
         });
 
-        expect(appearance.canvas).toBe('rgb(232, 223, 202)');
-        expect(appearance.backgroundImage).toContain('paper-texture.png');
-        expect(appearance.shellWidth).toBe('1080px');
-        expect(appearance.shellShadow).not.toBe('none');
+        expect(appearance.canvas).toBe('rgb(238, 238, 238)');
+        expect(appearance.backgroundImage).toBe('none');
+        expect(appearance.shellWidth).toBe('720px');
+        expect(appearance.shellShadow).toBe('none');
         expect(appearance.logoFont).not.toContain('Arial Black');
-        expect(appearance.imageFilter).toBe('none');
 
-        const homeHeading = page.getByRole('heading', { name: 'Ryota Onumaの個人資料室' });
+        const homeHeading = page.getByRole('heading', { name: 'ryota.onuma.dev' });
         expect(await homeHeading.evaluate(element => getComputedStyle(element).color))
-            .toBe('rgb(23, 58, 104)');
-        await expect(page.locator('.retro-profile img')).toHaveAttribute('src', /archive-hero/);
+            .toBe('rgb(0, 0, 0)');
+        await expect(page.getByRole('complementary')).toHaveCount(0);
     });
 
     test('keeps the homepage within a narrow mobile viewport', async ({ page }) => {
@@ -51,11 +48,9 @@ test.describe('Personal reference room design', () => {
         );
 
         expect(hasHorizontalOverflow).toBe(false);
-        await expect(page.locator('.retro-profile')).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Ryota Onumaの個人資料室' })).toBeVisible();
-        expect(await page.locator('.retro-home-directory-grid').evaluate(
-            element => getComputedStyle(element).gridTemplateColumns.split(' ').length
-        )).toBe(1);
+        await expect(page.locator('.homepage-updates')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'ryota.onuma.dev' })).toBeVisible();
+        await expect(page.locator('.homepage-updates > li')).toHaveCount(5);
     });
 
     test('keeps search visible and article rows as native links', async ({ page }) => {
@@ -72,12 +67,14 @@ test.describe('Personal reference room design', () => {
             .toContain('underline');
     });
 
-    test('keeps books without notes in the index and links them externally', async ({ page }) => {
+    test('opens books without notes in an internal detail page', async ({ page }) => {
         await page.goto('/library');
 
-        const bookLink = page.getByRole('link', { name: /ソフトウェア設計の結合バランス/ });
-        await expect(bookLink).toHaveAttribute('href', /^https:/);
-        await expect(bookLink).toHaveAttribute('target', '_blank');
+        const bookLink = page.getByRole('link', { name: 'ソフトウェア設計の結合バランス', exact: true });
+        await expect(bookLink).toHaveAttribute('href', '/library/coupling-balance');
+        await bookLink.click();
+        await expect(page).toHaveURL(/\/library\/coupling-balance$/);
+        await expect(page.getByText('この本のメモはまだありません。')).toBeVisible();
     });
 
     test('uses the rendered Japanese heading IDs in the table of contents', async ({ page }) => {
@@ -126,7 +123,7 @@ test.describe('Personal reference room design', () => {
         await expect(page.locator('.retro-progress')).toHaveCount(0);
     });
 
-    test('uses collection headings, paper controls, and a blueprint code listing', async ({ page }) => {
+    test('uses classic collection headings, beveled controls, and code listings', async ({ page }) => {
         await page.goto('/blog');
 
         const sectionHeading = page.locator('.retro-section-heading');
@@ -136,17 +133,17 @@ test.describe('Personal reference room design', () => {
         const filterPanel = page.locator('.retro-filter-panel');
         await filterPanel.getByText('テーマ・分類で絞る').click();
         const selectedButton = filterPanel.getByRole('button', { name: 'すべて' });
-        expect(await selectedButton.evaluate(element => getComputedStyle(element).color)).toBe('rgb(255, 253, 247)');
+        expect(await selectedButton.evaluate(element => getComputedStyle(element).color)).toBe('rgb(255, 255, 255)');
 
         await page.goto('/blog/markdown-syntax-guide');
         const codeBlock = page.locator('.retro-code-block').first();
         await expect(codeBlock).toBeVisible();
         expect(await codeBlock.evaluate(element => getComputedStyle(element).backgroundColor))
-            .toBe('rgb(239, 245, 247)');
+            .toBe('rgb(238, 238, 238)');
         expect(await codeBlock.evaluate(element => getComputedStyle(element).backgroundImage))
-            .not.toBe('none');
+            .toBe('none');
         expect(await page.locator('.retro-detail-hero').evaluate(element => getComputedStyle(element).boxShadow))
-            .not.toBe('none');
+            .toBe('none');
     });
 
     test('keeps code copy, Mermaid, link cards, and embeds functional', async ({ page }) => {
@@ -245,7 +242,7 @@ test.describe('Personal reference room design', () => {
 
     test('keeps every primary archive route inside 320px without horizontal scrolling', async ({ page }) => {
         await page.setViewportSize({ width: 320, height: 720 });
-        for (const path of ['/', '/blog', '/library', '/themes', '/blog/concrete-abstract-thinking', '/library/domain-driven-design-intro', '/missing-record']) {
+        for (const path of ['/', '/blog', '/library', '/themes', '/themes/database', '/blog/concrete-abstract-thinking', '/library/domain-driven-design-intro', '/missing-record']) {
             await page.goto(path);
             await page.locator('main').waitFor({ state: 'visible' });
             expect(await page.evaluate(
@@ -254,7 +251,7 @@ test.describe('Personal reference room design', () => {
         }
     });
 
-    test('uses touch-sized primary controls and releases the sticky toc on mobile', async ({ page }) => {
+    test('uses touch-sized controls and keeps the toc in document flow', async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 });
         await page.goto('/blog');
         const controls = [page.getByRole('searchbox'), page.locator('.retro-filter-panel > summary')];
@@ -267,14 +264,14 @@ test.describe('Personal reference room design', () => {
         expect(await page.locator('.retro-toc').evaluate(element => getComputedStyle(element).position)).toBe('static');
 
         await page.setViewportSize({ width: 1440, height: 900 });
-        expect(await page.locator('.retro-toc').evaluate(element => getComputedStyle(element).position)).toBe('sticky');
+        expect(await page.locator('.retro-toc').evaluate(element => getComputedStyle(element).position)).toBe('static');
     });
 
-    test('stops decorative transforms when reduced motion is requested', async ({ page }) => {
+    test('respects reduced motion for anchor navigation', async ({ page }) => {
         await page.emulateMedia({ reducedMotion: 'reduce' });
         await page.goto('/');
-        await expect(page.locator('.retro-profile')).toBeVisible();
-        expect(await page.locator('.retro-profile').evaluate(element => getComputedStyle(element).transform)).toBe('none');
+        await expect(page.locator('.homepage-updates')).toBeVisible();
+        expect(await page.locator('html').evaluate(element => getComputedStyle(element).scrollBehavior)).toBe('auto');
     });
 
     test('uses page-specific metadata and canonical URLs', async ({ page }) => {
@@ -305,8 +302,7 @@ test.describe('Personal reference room design', () => {
         const navigation = page.getByRole('navigation', { name: '主なページ' });
         await expect(navigation.locator('span')).toHaveCount(4);
         await expect(navigation.getByRole('link')).toHaveCount(3);
-        await expect(page.getByRole('heading', { name: '2つの棚' })).toBeVisible();
-        await expect(page.locator('.retro-shelf')).toHaveCount(2);
+        await expect(page.getByRole('heading', { name: '更新履歴' })).toBeVisible();
 
         const rss = await request.get('/feed.xml');
         const sitemap = await request.get('/sitemap.xml');

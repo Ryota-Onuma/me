@@ -12,7 +12,7 @@ const TYPE_LABELS: Record<UnifiedContent['type'], string> = {
     Library: '読書',
 };
 
-export const RelatedContentSection = ({ contents, title = '同じ引き出し' }: RelatedContentSectionProps) => {
+export const RelatedContentSection = ({ contents, title = '関連する記事・本' }: RelatedContentSectionProps) => {
     if (!contents.length) return null;
     return (
         <section className="retro-related" aria-labelledby="related-heading">

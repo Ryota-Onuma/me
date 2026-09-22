@@ -29,7 +29,7 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
         <section id="blog" className="retro-page">
             <SectionHeading section="blog" />
             <p className="retro-lead" role="status" aria-live="polite">
-                読み返せる形に整理した技術記事と仕事の記録。全{totalItems}件中{filteredContents.length}件
+                全{totalItems}件中{filteredContents.length}件
                 {selectedTheme && <>（テーマ：{getThemeLabel(selectedTheme)} で絞り込み中）</>}
                 {selectedTag && <>（タグ：{selectedTag} で絞り込み中）</>}
             </p>
@@ -90,13 +90,13 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
             )}
 
             <ul className="retro-list">
-                {filteredContents.map((item, index) => {
+                {filteredContents.map((item) => {
                     const isExternal = item.type === 'external' && !item.hasContent;
                     return (
                         <WorkCard
                             key={item.id}
                             title={item.title}
-                            category={item.category}
+                            thumbnail={item.thumbnail}
                             description={item.description}
                             date={item.date}
                             updated={item.updated}
@@ -105,7 +105,6 @@ export const WorksSection = ({ contents }: WorksSectionProps) => {
                             isExternal={isExternal}
                             analyticsId={item.id}
                             href={isExternal && item.url ? item.url : `/blog/${item.slug}`}
-                            index={index}
                         />
                     );
                 })}

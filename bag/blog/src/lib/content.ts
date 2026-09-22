@@ -54,8 +54,8 @@ export function getUnifiedContent(): UnifiedContent[] {
         date: item.readDate || item.updated || '',
         updated: item.updated || item.readDate || '',
         themes: item.themes || [],
-        href: item.hasNotes ? `/library/${item.slug}` : item.externalUrl,
-        isExternal: !item.hasNotes,
+        href: `/library/${item.slug}`,
+        isExternal: false,
         hasNotes: item.hasNotes,
     }));
     return sortNewest([...posts, ...books]);

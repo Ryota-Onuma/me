@@ -1,12 +1,12 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { ThemeLinks } from './ThemeLinks';
 import { DateText } from './DateText';
 import { ExternalLink } from './ExternalLink';
-import { ARCHIVE_SECTIONS, formatAccessionNumber } from '@/data/site';
 
 interface WorkCardProps {
     title: string;
-    category: string;
+    thumbnail?: string;
     description?: string;
     date?: string;
     updated?: string;
@@ -15,26 +15,26 @@ interface WorkCardProps {
     isExternal?: boolean;
     analyticsId?: string;
     href: string;
-    index?: number;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-    Blog: '技術記事',
-    Tutorial: '解説',
-    Thinking: '考察',
-};
-
-export const WorkCard = ({ title, category, description, date, updated, tags, themes, isExternal, analyticsId, href, index = 0 }: WorkCardProps) => {
+export const WorkCard = ({ title, thumbnail, description, date, updated, tags, themes, isExternal, analyticsId, href }: WorkCardProps) => {
     const titleLink = isExternal ? (
         <ExternalLink href={href} showIndicator={false} eventName={analyticsId ? 'external_article_click' : undefined} eventProperties={analyticsId ? { contentId: analyticsId } : undefined}>{title} <small>［外部］</small></ExternalLink>
     ) : (
         <Link href={href}>{title}</Link>
     );
+    const thumbnailImage = <Image src={thumbnail || '/thumbnails/default_blog.png'} alt={`${title}のサムネイル`} width={128} height={96} />;
+    const thumbnailLink = isExternal ? (
+        <ExternalLink href={href} className="retro-entry-image" showIndicator={false} eventName={analyticsId ? 'external_article_click' : undefined} eventProperties={analyticsId ? { contentId: analyticsId } : undefined}>
+            {thumbnailImage}
+        </ExternalLink>
+    ) : (
+        <Link href={href} className="retro-entry-image">{thumbnailImage}</Link>
+    );
 
     return (
         <li className="retro-work-card retro-index-entry">
-            <p className="retro-accession">{formatAccessionNumber(ARCHIVE_SECTIONS.blog.accessionPrefix, index)}</p>
-            <p className="retro-entry-type">{isExternal ? '外部資料' : CATEGORY_LABELS[category] || category}</p>
+            {thumbnailLink}
             <div className="retro-entry-body">
                 <h2>{titleLink}</h2>
                 {description && <p>{description}</p>}

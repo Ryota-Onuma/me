@@ -14,7 +14,7 @@ test.describe('Shared theme archive', () => {
 
     test('shows related records on a finished Blog page', async ({ page }) => {
         await page.goto('/blog/concrete-abstract-thinking');
-        await expect(page.getByRole('heading', { name: '同じ引き出し' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: '関連する記事・本' })).toBeVisible();
         await expect(page.getByRole('link', { name: /具体⇄抽象.*トレーニング/ })).toHaveAttribute('href', '/library/concrete-abstract-training');
     });
 });

@@ -4,8 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ThemeLinks } from './ThemeLinks';
 import { DateText } from './DateText';
-import { ExternalLink } from './ExternalLink';
-import { ARCHIVE_SECTIONS, formatAccessionNumber } from '@/data/site';
 
 interface BookCardProps {
     title: string;
@@ -29,24 +27,24 @@ const STATUS_LABELS: Record<'yet' | 'reading' | 'completed', string> = {
     completed: '読了',
 };
 
-export const BookCard = ({ title, author, status, cover, readDate, updated, rating, tags, themes, hasNotes = true, index = 0, analyticsId, href }: BookCardProps) => {
+export const BookCard = ({ title, author, status, cover, readDate, updated, rating, tags, themes, index = 0, href }: BookCardProps) => {
     const isAboveFold = index < 3;
 
     return (
         <li className="retro-book-card retro-index-entry">
-            <p className="retro-accession">{formatAccessionNumber(ARCHIVE_SECTIONS.library.accessionPrefix, index)}</p>
-            <p className="retro-entry-type">{STATUS_LABELS[status]}</p>
-            <Image
+            <Link href={href} aria-label={`${title}の詳細`}>
+              <Image
                 src={cover || "/books/default_cover.png"}
-                alt=""
-                width={116}
-                height={156}
+                alt={`${title}の表紙`}
+                width={88}
+                height={120}
                 loading={isAboveFold ? "eager" : "lazy"}
                 {...(isAboveFold && { fetchPriority: "high" })}
-            />
+              />
+            </Link>
             <div className="retro-entry-body">
-                <h2>{hasNotes ? <Link href={href}>{title}</Link> : <ExternalLink href={href} showIndicator={false} eventName={analyticsId ? 'external_article_click' : undefined} eventProperties={analyticsId ? { contentId: analyticsId } : undefined}>{title} <small>［書籍情報］</small></ExternalLink>}</h2>
-                <p>著者：{author}</p>
+                <h2><Link href={href}>{title}</Link></h2>
+                <p>{author} ｜ {STATUS_LABELS[status]}</p>
                 <p className="retro-rating" aria-label={rating ? `5段階中${rating}` : '未評価'}>
                     評価: {rating ? `${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}` : '未評価'}
                 </p>

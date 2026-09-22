@@ -8,11 +8,7 @@ import { BlogNavigation } from '@/components/sections/BlogNavigation';
 import { RelatedContentSection } from '@/components/sections/RelatedContentSection';
 import type { ContentItem } from '@/lib/posts';
 
-
-
-
 interface ParsedPost {
-    accession: string;
     title: string;
     date: string;
     tags: string[];

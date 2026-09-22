@@ -29,7 +29,7 @@ export function GET() {
         title: item.title,
         description: `${item.author}の読書ログ`,
         date: item.readDate || item.updated || '',
-        url: item.hasNotes ? `${ORIGIN}/library/${item.slug}` : item.externalUrl,
+        url: `${ORIGIN}/library/${item.slug}`,
     }));
     const items = [...posts, ...books]
         .sort((a, b) => toTimestamp(b.date) - toTimestamp(a.date))

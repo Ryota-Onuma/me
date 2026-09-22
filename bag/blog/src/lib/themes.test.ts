@@ -18,10 +18,14 @@ describe('shared themes', () => {
         expect(themes).not.toContain('audible');
     });
 
-    it('keeps empty-note books in the library while marking them for external links', () => {
+    it('keeps empty-note books in the library while providing an internal detail', () => {
         const coupling = getAllBookItems().find(book => book.slug === 'coupling-balance');
         expect(coupling?.hasNotes).toBe(false);
         expect(coupling?.externalUrl).toMatch(/^https:/);
+        expect(getUnifiedContent().find(item => item.id === 'coupling-balance')).toMatchObject({
+            href: '/library/coupling-balance',
+            isExternal: false,
+        });
     });
 
     it('keeps a contentful external article discoverable through an internal intro', () => {

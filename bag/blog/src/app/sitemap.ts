@@ -27,7 +27,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.7,
         }));
 
-    const books: MetadataRoute.Sitemap = getAllBookItems().filter(item => item.hasNotes).map(item => ({
+    const books: MetadataRoute.Sitemap = getAllBookItems().map(item => ({
         url: `${ORIGIN}/library/${item.slug}`,
         lastModified: toDate(item.updated || item.readDate),
         changeFrequency: item.status === 'reading' ? 'monthly' : 'yearly',

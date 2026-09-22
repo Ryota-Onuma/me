@@ -10,16 +10,18 @@ test.describe('Homepage', () => {
     });
 
     test('should display the main heading', async ({ page }) => {
-        const heading = page.getByRole('heading', { name: 'Ryota Onumaの個人資料室' });
+        const heading = page.getByRole('heading', { name: 'ryota.onuma.dev' });
         await expect(heading).toBeVisible();
     });
 
     test('should describe the site in Japanese', async ({ page }) => {
-        await expect(page.getByText(/データベース、ソフトウェア設計、チーム開発/)).toBeVisible();
+        await expect(page.getByText('技術のメモと、読んだ本。')).toBeVisible();
     });
 
-    test('should display personal bio', async ({ page }) => {
-        await expect(page.getByText(/ソフトウェアエンジニアのRyota Onumaです/)).toBeVisible();
+    test('keeps the homepage limited to recent updates', async ({ page }) => {
+        await expect(page.locator('.homepage-updates > li')).toHaveCount(5);
+        await expect(page.getByRole('heading')).toHaveText(['ryota.onuma.dev', '更新履歴']);
+        await expect(page.getByRole('link', { name: /^GitHub/ })).toHaveCount(1);
     });
 
     test('should contain at least one social link', async ({ page }) => {

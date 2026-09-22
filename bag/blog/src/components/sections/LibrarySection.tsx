@@ -43,7 +43,7 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
         <section id="library" className="retro-page">
             <SectionHeading section="library" />
             <p className="retro-lead" role="status" aria-live="polite">
-                読んだ本と、そこから得た学びの記録。全{totalCount}冊中{filteredCount}冊
+                全{totalCount}冊中{filteredCount}冊
                 {selectedTheme && <>（テーマ：{getThemeLabel(selectedTheme)} で絞り込み中）</>}
                 {selectedTag && <>（タグ：{selectedTag} で絞り込み中）</>}
             </p>
@@ -121,7 +121,7 @@ export const LibrarySection = ({ books }: LibrarySectionProps) => {
                 {filteredBooks.map((book, idx) => (
                     <BookCard
                         key={book.id}
-                        href={book.hasNotes ? `/library/${book.slug}` : book.externalUrl}
+                        href={`/library/${book.slug}`}
                         title={book.title}
                         author={book.author}
                         status={book.status}

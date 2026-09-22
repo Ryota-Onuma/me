@@ -1,19 +1,18 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getBookBySlug, getBookSlugs, getAllBookItems } from '@/lib/books';
+import { getBookBySlug, getBookSlugs } from '@/lib/books';
 import { getRelatedContent } from '@/lib/content';
 import { prefetchOGPData } from '@/lib/prefetchOGP';
 import { BookDetailClient } from './BookDetailClient';
 import { DEFAULT_BOOK_COVER } from '@/lib/constants';
 import { absoluteSiteUrl, serializeJsonLd, SITE_AUTHOR, toIsoDate } from '@/lib/detailSeo';
 import { AnalyticsEvent } from '@/components/analytics/AnalyticsEvent';
-import { ARCHIVE_SECTIONS, formatAccessionNumber } from '@/data/site';
 
 // Generate static paths for all books at build time
 export async function generateStaticParams() {
     return getBookSlugs()
         .map(slug => getBookBySlug(slug))
-        .filter((book): book is NonNullable<ReturnType<typeof getBookBySlug>> => Boolean(book?.content.trim()))
+        .filter((book): book is NonNullable<ReturnType<typeof getBookBySlug>> => Boolean(book))
         .map(book => ({ slug: book.slug }));
 }
 
@@ -25,12 +24,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     if (!book) {
         return { title: 'Book Not Found' };
     }
-    if (!book.content.trim()) {
-        return { title: `${book.frontmatter.title} | 読書記録` };
-    }
-
     const title = `${book.frontmatter.title}（${book.frontmatter.author}） | ryota.onuma.dev`;
-    const description = `読書メモ：${book.frontmatter.title}（${book.frontmatter.author}）`;
+    const description = book.content.trim()
+        ? `読書メモ：${book.frontmatter.title}（${book.frontmatter.author}）`
+        : `書誌情報：${book.frontmatter.title}（${book.frontmatter.author}）`;
     const url = `/library/${slug}`;
     const recordDate = toIsoDate(book.frontmatter.updated || book.frontmatter.readDate);
     const image = book.frontmatter.cover && book.frontmatter.cover !== DEFAULT_BOOK_COVER
@@ -69,13 +66,9 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
     }
     // A record without notes still appears in /library, but does not get an
     // empty internal page. The card links directly to the book information.
-    if (!book.content.trim()) {
-        notFound();
-    }
-
     // Pre-fetch OGP data for link cards at build time
-    const ogpDataMap = await prefetchOGPData(book.content);
-    const archiveIndex = getAllBookItems().findIndex(item => item.slug === slug);
+    const ogpDataMap = book.content.trim() ? await prefetchOGPData(book.content) : {};
+
     const image = book.frontmatter.cover && book.frontmatter.cover !== DEFAULT_BOOK_COVER
         ? absoluteSiteUrl(book.frontmatter.cover)
         : undefined;
@@ -83,8 +76,10 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Review',
-        name: `読書メモ：${book.frontmatter.title}`,
-        description: `読書メモ：${book.frontmatter.title}（${book.frontmatter.author}）`,
+        name: book.content.trim() ? `読書メモ：${book.frontmatter.title}` : `書誌情報：${book.frontmatter.title}`,
+        description: book.content.trim()
+            ? `読書メモ：${book.frontmatter.title}（${book.frontmatter.author}）`
+            : `書誌情報：${book.frontmatter.title}（${book.frontmatter.author}）`,
         author: { '@type': 'Person', ...SITE_AUTHOR },
         datePublished: recordDate,
         dateModified: recordDate,
@@ -110,7 +105,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
             <AnalyticsEvent name="content_open" properties={{ contentType: 'library', contentId: slug }} />
             <BookDetailClient
                 book={{
-                    accession: formatAccessionNumber(ARCHIVE_SECTIONS.library.accessionPrefix, archiveIndex),
                     title: book.frontmatter.title,
                     author: book.frontmatter.author,
                     status: book.frontmatter.status,
